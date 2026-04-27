@@ -77,6 +77,14 @@ struct HomeView: View {
                 #if DEBUG
                 mockToggle
                 #endif
+                Button { showingIdentity = true } label: {
+                    Image(systemName: "gearshape.fill")
+                        .font(.system(size: 16, weight: .semibold))
+                        .foregroundStyle(Theme.mist)
+                        .frame(width: 36, height: 36)
+                        .background(Color.white.opacity(0.07))
+                        .clipShape(Circle())
+                }
             }
             Text("All Hands\non Deck")
                 .font(.system(size: 56, weight: .black, design: .rounded))

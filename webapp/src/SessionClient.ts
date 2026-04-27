@@ -48,21 +48,21 @@ export class SessionClient {
     this.status = 'connecting';
     this.notify();
 
-    const sessionRef = ref(db, `sessions/${this.sessionId}`);
     this.messagesRef = ref(db, `sessions/${this.sessionId}/messages`);
     this.frameRef    = ref(db, `sessions/${this.sessionId}/currentFrame`);
 
-    // Announce ourselves to the host via messages.
-    this.announceJoin();
-    this.status = 'connected';
-    this.notify();
-
-    // Stream incoming messages (reactions from host, countdown, metadata, etc.)
+    // Stream incoming messages BEFORE announcing join so we don't miss the host's
+    // sessionMetadata reply that arrives immediately after participantJoined.
     this.msgUnsub = onChildAdded(this.messagesRef, (snapshot) => {
       const env = snapshot.val() as WireEnvelope | null;
       if (!env?.event || env.senderId === this.participantId) return;
       this.handleEvent(env.event);
     });
+
+    // Announce after listeners are attached so the host's reply is never missed.
+    this.announceJoin();
+    this.status = 'connected';
+    this.notify();
 
     // Stream latest preview frame (host overwrites this node at ~3 fps).
     this.frameUnsub = onValue(this.frameRef, (snapshot) => {

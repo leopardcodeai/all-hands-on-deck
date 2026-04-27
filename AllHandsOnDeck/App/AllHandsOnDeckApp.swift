@@ -16,6 +16,11 @@ struct AllHandsOnDeckApp: App {
                 .environmentObject(linkHandler)
                 .preferredColorScheme(.dark)
                 .tint(Theme.gold)
+                .task {
+                    // Silently authenticate GC on launch if the user is already signed in;
+                    // does not force-enable the GC toggle — user opts in via settings.
+                    await GameCenterService.shared.authenticate()
+                }
                 .onOpenURL { url in
                     // Custom-scheme: allhands://join?session=ABC
                     linkHandler.handle(url: url)

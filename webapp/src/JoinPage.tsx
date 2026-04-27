@@ -89,16 +89,22 @@ export function JoinPage() {
             background: 'rgba(255,255,255,0.08)',
             border: '1px solid rgba(255,255,255,0.12)',
             color: 'var(--bone)',
+            flexShrink: 0,
             width: 40, height: 40, borderRadius: '50%',
             fontSize: 16, fontWeight: 800
           }}
         >‹</button>
         {statusPill}
-        <div style={{ flex: 1 }} />
-        <span className="pill pill-gold" style={{ fontFamily: 'SF Mono, ui-monospace, monospace' }}>
+        <div style={{ flex: 1, minWidth: 0 }} />
+        <span className="pill pill-gold" style={{
+          fontFamily: 'SF Mono, ui-monospace, monospace',
+          maxWidth: 120, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap'
+        }}>
           {sessionId}
         </span>
-        <span className="pill pill-amber" style={{ fontSize: 12 }}>{rank}</span>
+        <span className="pill pill-amber" style={{ fontSize: 11, flexShrink: 0 }}>
+          {rank.split(' ')[0]}
+        </span>
       </div>
 
       <div className="bottom-bar">
@@ -129,7 +135,7 @@ export function JoinPage() {
       <div className={`flash ${flash ? 'on' : ''}`} />
 
       {client.finalPhotoURL && !dismissedPhoto && (
-        <div className="final-photo">
+        <div className="final-photo" style={{ overflowY: 'auto', padding: '24px 16px' }}>
           <img src={client.finalPhotoURL} alt="Final group photo" />
           {'share' in navigator ? (
             <button
@@ -167,11 +173,11 @@ export function JoinPage() {
 
       {(client.status === 'lost' || client.status === 'ended' || client.status === 'notFound') &&
        !client.finalPhotoURL && (
-        <div className="final-photo">
+        <div className="final-photo" style={{ padding: '24px 16px' }}>
           <div className="placeholder-art">
             {client.status === 'ended' ? '⚑' : client.status === 'lost' ? '⚠' : '?'}
           </div>
-          <h2 style={{ margin: 0 }}>
+          <h2 style={{ margin: 0, textAlign: 'center' }}>
             {client.status === 'ended'    ? 'Session beendet' :
              client.status === 'lost'     ? 'Verbindung verloren' :
                                             'Session nicht gefunden'}
