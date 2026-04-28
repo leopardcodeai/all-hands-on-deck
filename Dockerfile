@@ -1,5 +1,5 @@
 # ── Stage 1: build webapp ────────────────────────────────────────────────────
-FROM node:20-alpine AS webapp-build
+FROM node:25-alpine AS webapp-build
 WORKDIR /build/webapp
 COPY webapp/package*.json ./
 RUN npm ci
@@ -8,7 +8,7 @@ RUN npm run build
 # Output lands in /build/webapp/dist/
 
 # ── Stage 2: build server ─────────────────────────────────────────────────────
-FROM node:20-alpine AS server-build
+FROM node:25-alpine AS server-build
 WORKDIR /build/server
 COPY server/package*.json ./
 RUN npm ci
@@ -17,7 +17,7 @@ RUN npm run build
 # Output lands in /build/server/dist/
 
 # ── Stage 3: runtime ──────────────────────────────────────────────────────────
-FROM node:20-alpine
+FROM node:25-alpine
 WORKDIR /app
 
 # Production deps only
