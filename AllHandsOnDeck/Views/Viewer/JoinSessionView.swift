@@ -10,58 +10,61 @@ struct JoinSessionView: View {
     var body: some View {
         ZStack {
             Theme.oceanFog.ignoresSafeArea()
-            VStack(spacing: 24) {
-                VStack(alignment: .leading, spacing: 8) {
-                    Text("Beitreten")
-                        .font(Theme.display(36))
-                        .foregroundStyle(Theme.bone)
-                    Text("Session-Code von Captain eingeben oder QR-Code scannen.")
-                        .font(.system(size: 15, weight: .medium))
-                        .foregroundStyle(Theme.mist)
-                }
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .padding(.horizontal, 24)
-
-                TextField("ABCDEF1234", text: $sessionID)
-                    .textInputAutocapitalization(.characters)
-                    .autocorrectionDisabled()
-                    .font(.system(size: 28, weight: .black, design: .monospaced))
-                    .foregroundStyle(Theme.bone)
-                    .multilineTextAlignment(.center)
-                    .padding(.vertical, 18)
-                    .frame(maxWidth: .infinity)
-                    .background(
-                        RoundedRectangle(cornerRadius: 18, style: .continuous)
-                            .fill(Color.white.opacity(0.06))
-                    )
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 18, style: .continuous)
-                            .stroke(Theme.gold.opacity(0.3), lineWidth: 1)
-                    )
+            ScrollView {
+                VStack(spacing: 24) {
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("Beitreten")
+                            .font(Theme.display(36))
+                            .foregroundStyle(Theme.bone)
+                        Text("Session-Code von Captain eingeben oder QR-Code scannen.")
+                            .font(.system(size: 15, weight: .medium))
+                            .foregroundStyle(Theme.mist)
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
                     .padding(.horizontal, 24)
 
-                VStack(spacing: 10) {
-                    PrimaryButton(title: "Verbinden", systemImage: "arrow.right", style: .primary) {
-                        if !sessionID.isEmpty { connect = true }
-                    }
-                    .disabled(sessionID.isEmpty)
-                    .opacity(sessionID.isEmpty ? 0.5 : 1)
+                    TextField("ABCDEF1234", text: $sessionID)
+                        .textInputAutocapitalization(.characters)
+                        .autocorrectionDisabled()
+                        .font(.system(size: 28, weight: .black, design: .monospaced))
+                        .foregroundStyle(Theme.bone)
+                        .multilineTextAlignment(.center)
+                        .padding(.vertical, 18)
+                        .frame(maxWidth: .infinity)
+                        .background(
+                            RoundedRectangle(cornerRadius: 18, style: .continuous)
+                                .fill(Color.white.opacity(0.06))
+                        )
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 18, style: .continuous)
+                                .stroke(Theme.gold.opacity(0.3), lineWidth: 1)
+                        )
+                        .padding(.horizontal, 24)
 
-                    PrimaryButton(title: "QR-Code scannen", systemImage: "qrcode.viewfinder", style: .secondary) {
-                        showingScanner = true
+                    VStack(spacing: 10) {
+                        PrimaryButton(title: "Verbinden", systemImage: "arrow.right", style: .primary) {
+                            if !sessionID.isEmpty { connect = true }
+                        }
+                        .disabled(sessionID.isEmpty)
+                        .opacity(sessionID.isEmpty ? 0.5 : 1)
+
+                        PrimaryButton(title: "QR-Code scannen", systemImage: "qrcode.viewfinder", style: .secondary) {
+                            showingScanner = true
+                        }
+                    }
+                    .padding(.horizontal, 24)
+
+                    if let err = scanError {
+                        Text(err)
+                            .font(.system(size: 12, weight: .heavy, design: .rounded))
+                            .foregroundStyle(Theme.crimson)
+                            .padding(.horizontal, 24)
                     }
                 }
-                .padding(.horizontal, 24)
-
-                if let err = scanError {
-                    Text(err)
-                        .font(.system(size: 12, weight: .heavy, design: .rounded))
-                        .foregroundStyle(Theme.crimson)
-                }
-
-                Spacer()
+                .padding(.top, 40)
+                .padding(.bottom, 40)
             }
-            .padding(.top, 40)
+            .scrollDismissesKeyboard(.interactively)
         }
         .navigationTitle("Beitreten")
         .navigationBarTitleDisplayMode(.inline)
@@ -80,8 +83,6 @@ struct JoinSessionView: View {
                     if let id = SessionURLParser.sessionID(from: raw) {
                         sessionID = id
                         scanError = nil
-                        // Tiny delay so the cover dismiss animation completes
-                        // before NavigationStack pushes — avoids transition glitches.
                         DispatchQueue.main.asyncAfter(deadline: .now() + 0.25) {
                             connect = true
                         }

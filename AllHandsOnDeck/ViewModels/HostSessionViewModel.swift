@@ -38,6 +38,7 @@ final class HostSessionViewModel: ObservableObject {
     private var lastReactionLabel: String?
     private var lastReactionFrom: String?
     private var isWritingFrame = false
+    private let watchTrigger = PassthroughSubject<Void, Never>()
 
     // MARK: - Init
 
@@ -110,16 +111,17 @@ final class HostSessionViewModel: ObservableObject {
             }
         }
 
-        // Push state to the watch on every relevant change.
-        $participants.sink { [weak self] _ in self?.pushWatchSnapshot() }.store(in: &subs)
-        countdown.$state.sink { [weak self] _ in self?.pushWatchSnapshot() }.store(in: &subs)
-
-        // Forward countdown and camera changes so SwiftUI re-renders host view.
-        countdown.objectWillChange
-            .receive(on: RunLoop.main)
-            .sink { [weak self] _ in self?.objectWillChange.send() }
+        // Push state to the watch — throttled so a live countdown doesn't flood WCSession.
+        $participants.sink { [weak self] _ in self?.watchTrigger.send() }.store(in: &subs)
+        countdown.$state.sink { [weak self] _ in self?.watchTrigger.send() }.store(in: &subs)
+        watchTrigger
+            .throttle(for: .milliseconds(200), scheduler: RunLoop.main, latest: true)
+            .sink { [weak self] _ in self?.pushWatchSnapshot() }
             .store(in: &subs)
-        camera.objectWillChange
+
+        // Forward countdown changes so SwiftUI re-renders host view.
+        // Camera changes are handled by @ObservedObject sub-views in HostSessionView.
+        countdown.objectWillChange
             .receive(on: RunLoop.main)
             .sink { [weak self] _ in self?.objectWillChange.send() }
             .store(in: &subs)
@@ -287,9 +289,11 @@ final class HostSessionViewModel: ObservableObject {
         // even before any viewer is connected.
         inFrameDetector.ingest(jpeg: jpeg)
 
-        // Broadcast once a Multipeer viewer is present, or always when web-join
+        // Broadcast whenever the transport has a connected peer (covers the
+        // Multipeer race where transportStatus goes .connected before the
+        // viewer's participantJoined message arrives), or always when web-join
         // is enabled (web viewers may join before their participantJoined arrives).
-        guard participants.count > 1 || session.allowWebJoin else { return }
+        guard participants.count > 1 || transportStatus == .connected || session.allowWebJoin else { return }
         guard !isWritingFrame else { return }
         isWritingFrame = true
         await transport.send(.previewFrame(jpeg: jpeg, capturedAt: Date()))

@@ -19,6 +19,7 @@ import { URL } from 'url';
 import { readFile } from 'fs/promises';
 import { join, extname, dirname } from 'path';
 import { fileURLToPath } from 'url';
+import { RoomRegistry, parseJoinParams, type Member, type JoinParams } from './rooms.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -37,43 +38,7 @@ const MIME_TYPES: Record<string, string> = {
 const PORT = Number(process.env.PORT ?? 8787);
 const TTL_MS = 30 * 60 * 1000; // 30 minutes idle → garbage collect
 
-type Role = 'host' | 'viewer';
-
-interface Member {
-  ws: WebSocket;
-  role: Role;
-  participantId: string;
-  joinedAt: number;
-}
-
-interface Room {
-  sessionId: string;
-  members: Set<Member>;
-  lastActivity: number;
-}
-
-const rooms = new Map<string, Room>();
-
-function getOrCreateRoom(sessionId: string): Room {
-  let r = rooms.get(sessionId);
-  if (!r) {
-    r = { sessionId, members: new Set(), lastActivity: Date.now() };
-    rooms.set(sessionId, r);
-  }
-  return r;
-}
-
-function broadcast(room: Room, payload: string | Buffer, except?: Member) {
-  for (const m of room.members) {
-    if (m === except) continue;
-    if (m.ws.readyState === WebSocket.OPEN) m.ws.send(payload);
-  }
-}
-
-function host(room: Room): Member | undefined {
-  for (const m of room.members) if (m.role === 'host') return m;
-  return undefined;
-}
+const registry = new RoomRegistry<WebSocket>();
 
 // ---- HTTP server with health endpoint --------------------------------------
 
@@ -104,7 +69,7 @@ const httpServer = createServer(async (req: IncomingMessage, res: ServerResponse
     res.writeHead(200, { 'Content-Type': 'application/json' });
     res.end(JSON.stringify({
       ok: true,
-      rooms: rooms.size,
+      rooms: registry.size,
       uptime: process.uptime()
     }));
     return;
@@ -136,37 +101,28 @@ httpServer.on('upgrade', (req, socket, head) => {
     socket.destroy();
     return;
   }
-  const sessionId = url.searchParams.get('session');
-  const role = url.searchParams.get('role') as Role | null;
-  const participantId = url.searchParams.get('pid');
-
-  if (!sessionId || !role || !participantId || (role !== 'host' && role !== 'viewer')) {
+  const params = parseJoinParams(url.searchParams);
+  if (!params) {
     socket.destroy();
     return;
   }
 
   wss.handleUpgrade(req, socket, head, (ws) => {
-    handleConnection(ws, { sessionId, role, participantId });
+    handleConnection(ws, params);
   });
 });
 
-interface JoinParams {
-  sessionId: string;
-  role: Role;
-  participantId: string;
-}
-
 function handleConnection(ws: WebSocket, p: JoinParams) {
-  const room = getOrCreateRoom(p.sessionId);
+  const room = registry.getOrCreate(p.sessionId);
 
   // Only one host per room.
-  if (p.role === 'host' && host(room)) {
+  if (p.role === 'host' && registry.host(room)) {
     ws.send(JSON.stringify({ kind: 'error', reason: 'host_already_present' }));
     ws.close(1008, 'host_already_present');
     return;
   }
 
-  const member: Member = {
+  const member: Member<WebSocket> = {
     ws,
     role: p.role,
     participantId: p.participantId,
@@ -179,7 +135,7 @@ function handleConnection(ws: WebSocket, p: JoinParams) {
 
   // Notify host of viewer join so it can broadcast metadata back.
   if (p.role === 'viewer') {
-    const h = host(room);
+    const h = registry.host(room);
     if (h) {
       h.ws.send(JSON.stringify({
         kind: 'viewerJoined',
@@ -190,42 +146,30 @@ function handleConnection(ws: WebSocket, p: JoinParams) {
 
   ws.on('message', (data, isBinary) => {
     room.lastActivity = Date.now();
-    // Routing rule:
-    //  - Host → broadcast to all viewers
-    //  - Viewer → forward to host only (control events)
     const payload = isBinary ? (data as Buffer) : data.toString();
-    if (member.role === 'host') {
-      for (const m of room.members) {
-        if (m === member) continue;
-        if (m.ws.readyState === WebSocket.OPEN) m.ws.send(payload);
-      }
-    } else {
-      const h = host(room);
-      if (h && h.ws.readyState === WebSocket.OPEN) h.ws.send(payload);
-    }
+    registry.route(room, member, payload);
   });
 
   ws.on('close', () => {
-    room.members.delete(member);
     if (member.role === 'host') {
-      // Tell every viewer the session ended.
+      // Tell every viewer the session ended, then drop the room.
       const sessionEnded = JSON.stringify({
         sessionId: p.sessionId,
         senderId: 'server',
         createdAt: new Date().toISOString(),
         event: { sessionEnded: {} }
       });
-      broadcast(room, sessionEnded);
-      rooms.delete(p.sessionId);
+      registry.broadcast(room, sessionEnded, member);
+      registry.delete(p.sessionId);
     } else {
-      const h = host(room);
+      registry.removeMember(room, member);
+      const h = registry.host(room);
       if (h) {
         h.ws.send(JSON.stringify({
           kind: 'viewerLeft',
           participantId: p.participantId
         }));
       }
-      if (room.members.size === 0) rooms.delete(p.sessionId);
     }
   });
 
@@ -256,14 +200,7 @@ async function warnIfPlaceholderAASA(): Promise<void> {
   aasaWarned = true;
 }
 
-setInterval(() => {
-  const now = Date.now();
-  for (const [id, room] of rooms) {
-    if (now - room.lastActivity > TTL_MS && room.members.size === 0) {
-      rooms.delete(id);
-    }
-  }
-}, 60_000).unref();
+setInterval(() => registry.reap(TTL_MS), 60_000).unref();
 
 httpServer.listen(PORT, () => {
   console.log(`[allhands] signaling server listening on :${PORT}`);

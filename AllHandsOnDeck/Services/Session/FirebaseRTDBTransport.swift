@@ -178,7 +178,7 @@ final class FirebaseRTDBTransport: NSObject, SessionTransport {
             let key = String(path.dropFirst()) // strip leading "/"
             guard !seenMessageKeys.contains(key),
                   let dict = payload as? [String: Any] else { return }
-            seenMessageKeys.insert(key)
+            insertSeen(key)
             decodeAndEmit(dict: dict)
         }
     }
@@ -195,7 +195,7 @@ final class FirebaseRTDBTransport: NSObject, SessionTransport {
             let key = String(path.dropFirst("/messages/".count))
             guard !seenMessageKeys.contains(key),
                   let dict = payload as? [String: Any] else { return }
-            seenMessageKeys.insert(key)
+            insertSeen(key)
             decodeAndEmit(dict: dict)
         } else if path == "/messages" {
             if let msgs = payload as? [String: Any] { processMessageDict(msgs) }
@@ -205,8 +205,15 @@ final class FirebaseRTDBTransport: NSObject, SessionTransport {
     private func processMessageDict(_ msgs: [String: Any]) {
         for (key, value) in msgs {
             guard !seenMessageKeys.contains(key), let dict = value as? [String: Any] else { continue }
-            seenMessageKeys.insert(key)
+            insertSeen(key)
             decodeAndEmit(dict: dict)
+        }
+    }
+
+    private func insertSeen(_ key: String) {
+        seenMessageKeys.insert(key)
+        if seenMessageKeys.count > 200 {
+            seenMessageKeys.removeFirst()
         }
     }
 

@@ -151,6 +151,8 @@ a { color: var(--gold); }
   flex-direction: column;
   gap: 12px;
   align-items: center;
+  max-height: 50vh;
+  overflow-y: auto;
 }
 
 .countdown {
