@@ -7,8 +7,6 @@ struct HostSessionView: View {
     @State private var baseZoom: CGFloat = 1.0
     @State private var showZoomLabel: Bool = false
     @State private var zoomHideTask: Task<Void, Never>? = nil
-    @State private var postCaptureSecsLeft: Int? = nil
-    @State private var postCaptureTask: Task<Void, Never>? = nil
     let onSessionCreated: (String) -> Void
 
     init(hostName: String, allowWebJoin: Bool = false, onSessionCreated: @escaping (String) -> Void) {
@@ -21,28 +19,18 @@ struct HostSessionView: View {
 
     var body: some View {
         ZStack {
-            // Background camera preview, or permission gate.
-            if vm.camera.authorization == .authorized {
-                CameraPreviewView(session: vm.camera.session)
-                    .ignoresSafeArea()
-                    .gesture(
-                        MagnificationGesture()
-                            .onChanged { scale in
-                                vm.camera.setZoom(baseZoom * scale)
-                                flashZoomLabel()
-                            }
-                            .onEnded { scale in
-                                baseZoom = min(max(1.0, baseZoom * scale), vm.camera.maxZoom)
-                            }
-                    )
-                SafeGridOverlayView()
-                    .ignoresSafeArea()
-                    .allowsHitTesting(false)
-            } else if vm.camera.authorization == .denied {
-                deniedView
-            } else {
-                Color.black.ignoresSafeArea()
-            }
+            // Camera preview, safe-grid overlay, or permission gate — each observes
+            // CameraService directly so only this branch re-renders on camera changes.
+            CameraAuthBranch(
+                camera: vm.camera,
+                onMagnifyChanged: { scale in
+                    vm.camera.setZoom(baseZoom * scale)
+                    flashZoomLabel()
+                },
+                onMagnifyEnded: { scale in
+                    baseZoom = min(max(1.0, baseZoom * scale), vm.camera.maxZoom)
+                }
+            )
 
             // Soft gradient so chrome reads on bright frames.
             LinearGradient(
@@ -57,15 +45,8 @@ struct HostSessionView: View {
                     .padding(.horizontal, 16)
                     .padding(.top, 8)
                 Spacer()
-                if showZoomLabel {
-                    Text(String(format: "%.1f×", vm.camera.zoomFactor))
-                        .font(.system(size: 14, weight: .heavy, design: .rounded))
-                        .foregroundStyle(.black)
-                        .padding(.horizontal, 12).padding(.vertical, 6)
-                        .background(Theme.gold, in: Capsule())
-                        .transition(.scale.combined(with: .opacity))
-                        .padding(.bottom, 4)
-                }
+                // Observes camera.zoomFactor directly — parent doesn't re-render during pinch.
+                ZoomLabelView(camera: vm.camera, visible: showZoomLabel)
                 if showQR {
                     QRCodePanelView(payload: vm.qrPayload, sessionID: vm.session.id)
                         .frame(maxWidth: 320)
@@ -136,8 +117,6 @@ struct HostSessionView: View {
         }
         .animation(.spring(response: 0.4, dampingFraction: 0.85), value: showQR)
         .animation(.spring(response: 0.4, dampingFraction: 0.85), value: showSettings)
-        .onChange(of: vm.camera.isFrontCamera) { _ in baseZoom = 1.0 }
-        .onChange(of: vm.camera.currentLens) { _ in baseZoom = 1.0 }
     }
 
     // MARK: - Chrome
@@ -152,29 +131,6 @@ struct HostSessionView: View {
             guard !Task.isCancelled else { return }
             await MainActor.run {
                 withAnimation(.easeOut(duration: 0.4)) { showZoomLabel = false }
-            }
-        }
-    }
-
-    private var lensSelector: some View {
-        HStack(spacing: 6) {
-            ForEach(vm.camera.availableLenses, id: \.self) { lens in
-                Button {
-                    withAnimation(.spring(response: 0.25)) { baseZoom = 1.0 }
-                    vm.camera.switchLens(lens)
-                } label: {
-                    Text(lens.label)
-                        .font(.system(size: 13, weight: .heavy, design: .rounded))
-                        .foregroundStyle(vm.camera.currentLens == lens ? .black : Theme.bone)
-                        .frame(width: 44, height: 32)
-                        .background(
-                            vm.camera.currentLens == lens
-                                ? AnyShapeStyle(Theme.goldShine)
-                                : AnyShapeStyle(.ultraThinMaterial),
-                            in: Capsule()
-                        )
-                }
-                .buttonStyle(.plain)
             }
         }
     }
@@ -224,32 +180,11 @@ struct HostSessionView: View {
             }
             .buttonStyle(.plain)
 
-            if !vm.camera.isFrontCamera {
-                Button {
-                    vm.camera.toggleTorch()
-                } label: {
-                    Image(systemName: vm.camera.isTorchOn ? "flashlight.on.fill" : "flashlight.off.fill")
-                        .font(.system(size: 16, weight: .heavy))
-                        .foregroundStyle(vm.camera.isTorchOn ? .black : Theme.bone)
-                        .frame(width: 40, height: 40)
-                        .background(vm.camera.isTorchOn ? AnyShapeStyle(Theme.goldShine) : AnyShapeStyle(.ultraThinMaterial), in: Circle())
-                }
-                .buttonStyle(.plain)
-            }
-
-            Button {
-                withAnimation(.spring(response: 0.35, dampingFraction: 0.7)) {
-                    baseZoom = 1.0
-                }
+            // Torch + flip — observe camera directly so only these buttons re-render.
+            CameraButtons(camera: vm.camera, onFlip: {
+                withAnimation(.spring(response: 0.35, dampingFraction: 0.7)) { baseZoom = 1.0 }
                 vm.camera.flipCamera()
-            } label: {
-                Image(systemName: "camera.rotate.fill")
-                    .font(.system(size: 16, weight: .heavy))
-                    .foregroundStyle(Theme.bone)
-                    .frame(width: 40, height: 40)
-                    .background(.ultraThinMaterial, in: Circle())
-            }
-            .buttonStyle(.plain)
+            })
 
             Button {
                 withAnimation { showSettings.toggle() }
@@ -283,9 +218,10 @@ struct HostSessionView: View {
                     .clipShape(Capsule())
             }
 
-            if !vm.camera.isFrontCamera && vm.camera.availableLenses.count > 1 {
-                lensSelector
-            }
+            LensSelectorView(camera: vm.camera, onSelect: { lens in
+                withAnimation(.spring(response: 0.25)) { baseZoom = 1.0 }
+                vm.camera.switchLens(lens)
+            })
 
             HStack(spacing: 12) {
                 if vm.countdown.state.isActive {
@@ -366,28 +302,7 @@ struct HostSessionView: View {
                     .stroke(Color.white.opacity(0.06), lineWidth: 1)
             )
 
-            HStack(spacing: 12) {
-                Image(systemName: "camera.aperture")
-                    .foregroundStyle(vm.camera.isHighResEnabled ? Theme.gold : Theme.mist)
-                VStack(alignment: .leading, spacing: 2) {
-                    Text("Hohe Auflösung (48 MP)")
-                        .font(.system(size: 14, weight: .heavy, design: .rounded))
-                        .foregroundStyle(Theme.bone)
-                    Text("Maximale Auflösung — langsamere Verarbeitung.")
-                        .font(.system(size: 11, weight: .medium))
-                        .foregroundStyle(Theme.mist)
-                }
-                Spacer()
-                Toggle("", isOn: Binding(
-                    get: { vm.camera.isHighResEnabled },
-                    set: { _ in vm.camera.toggleHighRes() }
-                ))
-                .labelsHidden()
-                .tint(Theme.gold)
-            }
-            .padding(.horizontal, 14).padding(.vertical, 10)
-            .background(RoundedRectangle(cornerRadius: 14, style: .continuous).fill(Color.white.opacity(0.04)))
-            .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous).stroke(Color.white.opacity(0.06), lineWidth: 1))
+            HighResRow(camera: vm.camera)
 
             ParticipantListView(
                 participants: vm.participants,
@@ -416,15 +331,6 @@ struct HostSessionView: View {
         .ignoresSafeArea(edges: .bottom)
     }
 
-    private var deniedView: some View {
-        PermissionView {
-            // User must enable in Settings.app — open it directly.
-            if let url = URL(string: UIApplication.openSettingsURLString) {
-                UIApplication.shared.open(url)
-            }
-        }
-    }
-
     @ViewBuilder
     private func resultOverlay(photo: CapturedPhoto) -> some View {
         ZStack {
@@ -437,31 +343,16 @@ struct HostSessionView: View {
                         .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
                         .padding(.horizontal, 16)
                 }
-                if let secs = postCaptureSecsLeft {
-                    HStack {
-                        Text(String(format: String(localized: "result.closingIn"), secs))
-                            .font(.system(size: 13, weight: .heavy, design: .rounded))
-                            .foregroundStyle(Theme.mist)
-                        Spacer()
-                        PrimaryButton(title: "Schließen", style: .ghost) {
-                            cancelPostCapture()
-                            vm.discardCapture()
-                        }
+                HStack(spacing: 10) {
+                    PrimaryButton(title: "Noch einmal", systemImage: "arrow.counterclockwise", style: .secondary) {
+                        vm.discardCapture()
                     }
-                    .padding(.horizontal, 16)
-                    .padding(.bottom, 24)
-                } else {
-                    HStack(spacing: 10) {
-                        PrimaryButton(title: "Noch einmal", systemImage: "arrow.counterclockwise", style: .secondary) {
-                            vm.discardCapture()
-                        }
-                        PrimaryButton(title: "Speichern", systemImage: "square.and.arrow.down", style: .primary) {
-                            savePhoto(photo)
-                        }
+                    PrimaryButton(title: "Speichern", systemImage: "square.and.arrow.down", style: .primary) {
+                        savePhoto(photo)
                     }
-                    .padding(.horizontal, 16)
-                    .padding(.bottom, 24)
                 }
+                .padding(.horizontal, 16)
+                .padding(.bottom, 24)
             }
         }
     }
@@ -470,28 +361,145 @@ struct HostSessionView: View {
         guard let img = photo.uiImage else { return }
         UIImageWriteToSavedPhotosAlbum(img, nil, nil, nil)
         Haptics.success()
-        startPostCaptureCountdown()
+        vm.discardCapture()
     }
+}
 
-    private func startPostCaptureCountdown() {
-        postCaptureTask?.cancel()
-        postCaptureSecsLeft = 10
-        postCaptureTask = Task { @MainActor in
-            for i in stride(from: 10, through: 0, by: -1) {
-                guard !Task.isCancelled else { return }
-                postCaptureSecsLeft = i
-                if i == 0 { break }
-                try? await Task.sleep(nanoseconds: 1_000_000_000)
+// MARK: - Camera sub-views
+// Each holds @ObservedObject var camera so only it re-renders on camera changes,
+// not the full HostSessionView body.
+
+private struct CameraAuthBranch: View {
+    @ObservedObject var camera: CameraService
+    let onMagnifyChanged: (CGFloat) -> Void
+    let onMagnifyEnded: (CGFloat) -> Void
+
+    var body: some View {
+        if camera.authorization == .authorized {
+            ZStack {
+                CameraPreviewView(session: camera.session)
+                    .ignoresSafeArea()
+                    .gesture(
+                        MagnificationGesture()
+                            .onChanged { onMagnifyChanged($0) }
+                            .onEnded { onMagnifyEnded($0) }
+                    )
+                SafeGridOverlayView()
+                    .ignoresSafeArea()
+                    .allowsHitTesting(false)
             }
-            guard !Task.isCancelled else { return }
-            postCaptureSecsLeft = nil
-            vm.discardCapture()
+        } else if camera.authorization == .denied {
+            PermissionView {
+                if let url = URL(string: UIApplication.openSettingsURLString) {
+                    UIApplication.shared.open(url)
+                }
+            }
+        } else {
+            Color.black.ignoresSafeArea()
         }
     }
+}
 
-    private func cancelPostCapture() {
-        postCaptureTask?.cancel()
-        postCaptureTask = nil
-        postCaptureSecsLeft = nil
+private struct ZoomLabelView: View {
+    @ObservedObject var camera: CameraService
+    let visible: Bool
+
+    var body: some View {
+        if visible {
+            Text(String(format: "%.1f×", camera.zoomFactor))
+                .font(.system(size: 14, weight: .heavy, design: .rounded))
+                .foregroundStyle(.black)
+                .padding(.horizontal, 12).padding(.vertical, 6)
+                .background(Theme.gold, in: Capsule())
+                .transition(.scale.combined(with: .opacity))
+                .padding(.bottom, 4)
+        }
+    }
+}
+
+private struct CameraButtons: View {
+    @ObservedObject var camera: CameraService
+    let onFlip: () -> Void
+
+    var body: some View {
+        HStack(spacing: 10) {
+            if !camera.isFrontCamera {
+                Button { camera.toggleTorch() } label: {
+                    Image(systemName: camera.isTorchOn ? "flashlight.on.fill" : "flashlight.off.fill")
+                        .font(.system(size: 16, weight: .heavy))
+                        .foregroundStyle(camera.isTorchOn ? .black : Theme.bone)
+                        .frame(width: 40, height: 40)
+                        .background(
+                            camera.isTorchOn ? AnyShapeStyle(Theme.goldShine) : AnyShapeStyle(.ultraThinMaterial),
+                            in: Circle()
+                        )
+                }
+                .buttonStyle(.plain)
+            }
+            Button { onFlip() } label: {
+                Image(systemName: "camera.rotate.fill")
+                    .font(.system(size: 16, weight: .heavy))
+                    .foregroundStyle(Theme.bone)
+                    .frame(width: 40, height: 40)
+                    .background(.ultraThinMaterial, in: Circle())
+            }
+            .buttonStyle(.plain)
+        }
+    }
+}
+
+private struct LensSelectorView: View {
+    @ObservedObject var camera: CameraService
+    let onSelect: (CameraService.LensType) -> Void
+
+    var body: some View {
+        if !camera.isFrontCamera && camera.availableLenses.count > 1 {
+            HStack(spacing: 6) {
+                ForEach(camera.availableLenses, id: \.self) { lens in
+                    Button { onSelect(lens) } label: {
+                        Text(lens.label)
+                            .font(.system(size: 13, weight: .heavy, design: .rounded))
+                            .foregroundStyle(camera.currentLens == lens ? .black : Theme.bone)
+                            .frame(width: 44, height: 32)
+                            .background(
+                                camera.currentLens == lens
+                                    ? AnyShapeStyle(Theme.goldShine)
+                                    : AnyShapeStyle(.ultraThinMaterial),
+                                in: Capsule()
+                            )
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+        }
+    }
+}
+
+private struct HighResRow: View {
+    @ObservedObject var camera: CameraService
+
+    var body: some View {
+        HStack(spacing: 12) {
+            Image(systemName: "camera.aperture")
+                .foregroundStyle(camera.isHighResEnabled ? Theme.gold : Theme.mist)
+            VStack(alignment: .leading, spacing: 2) {
+                Text("Hohe Auflösung (48 MP)")
+                    .font(.system(size: 14, weight: .heavy, design: .rounded))
+                    .foregroundStyle(Theme.bone)
+                Text("Maximale Auflösung — langsamere Verarbeitung.")
+                    .font(.system(size: 11, weight: .medium))
+                    .foregroundStyle(Theme.mist)
+            }
+            Spacer()
+            Toggle("", isOn: Binding(
+                get: { camera.isHighResEnabled },
+                set: { _ in camera.toggleHighRes() }
+            ))
+            .labelsHidden()
+            .tint(Theme.gold)
+        }
+        .padding(.horizontal, 14).padding(.vertical, 10)
+        .background(RoundedRectangle(cornerRadius: 14, style: .continuous).fill(Color.white.opacity(0.04)))
+        .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous).stroke(Color.white.opacity(0.06), lineWidth: 1))
     }
 }

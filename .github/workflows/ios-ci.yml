@@ -1,0 +1,112 @@
+name: iOS CI
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'AllHandsOnDeck/**'
+      - 'AllHandsOnDeckTests/**'
+      - 'AllHandsOnDeckWatch/**'
+      - 'project.yml'
+      - '.github/workflows/ios-ci.yml'
+  pull_request:
+    paths:
+      - 'AllHandsOnDeck/**'
+      - 'AllHandsOnDeckTests/**'
+      - 'AllHandsOnDeckWatch/**'
+      - 'project.yml'
+      - '.github/workflows/ios-ci.yml'
+
+permissions:
+  contents: read
+
+# Opt JS-based actions into Node 24; Node 20 is being removed Sep 2026.
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
+
+jobs:
+  build-test:
+    runs-on: macos-14
+    timeout-minutes: 30
+    env:
+      SCHEME: AllHandsOnDeck
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Select latest Xcode 16+
+        run: |
+          # Pick the newest installed Xcode ≥ 16 — GitHub's macos-14 image keeps
+          # multiple side by side and rotates through them as Apple releases.
+          XC_PATH="$(find /Applications -maxdepth 1 -type d -name 'Xcode_*.app' 2>/dev/null \
+            | sort -V | tail -1)"
+          if [ -z "$XC_PATH" ]; then
+            echo "::error::No Xcode found in /Applications" && exit 1
+          fi
+          sudo xcode-select -s "$XC_PATH"
+          xcodebuild -version
+
+      - name: Install build tooling
+        run: |
+          brew list xcodegen >/dev/null 2>&1 || brew install xcodegen
+          brew list xcbeautify >/dev/null 2>&1 || brew install xcbeautify
+
+      - name: Generate project
+        run: xcodegen generate
+
+      - name: Pick a destination simulator
+        id: sim
+        run: |
+          # Pin to a specific (name, OS) pair — `OS=latest` triggers xcodebuild's
+          # "multiple matching destinations" warning when several runtimes are installed.
+          PICKED_NAME=""
+          PICKED_OS=""
+          for NAME in "iPhone 17" "iPhone 16" "iPhone 15" "iPhone 14"; do
+            # First match per device wins; jq isn't always present, so parse with awk.
+            OS_VER="$(xcrun simctl list devices available \
+              | awk -v name="$NAME" '
+                  /^-- iOS / { ver=$3; next }
+                  $0 ~ name " \\(" && ver != "" { print ver; exit }
+                ')"
+            if [ -n "$OS_VER" ]; then
+              PICKED_NAME="$NAME"
+              PICKED_OS="$OS_VER"
+              break
+            fi
+          done
+          if [ -z "$PICKED_NAME" ]; then
+            echo "::error::No supported iPhone simulator available"
+            xcrun simctl list devices available
+            exit 1
+          fi
+          DEST="platform=iOS Simulator,name=$PICKED_NAME,OS=$PICKED_OS"
+          echo "Using destination: $DEST"
+          echo "destination=$DEST" >> "$GITHUB_OUTPUT"
+
+      - name: Resolve dependencies
+        run: |
+          xcodebuild -resolvePackageDependencies \
+            -project AllHandsOnDeck.xcodeproj \
+            -scheme "$SCHEME"
+
+      - name: Build & run unit tests
+        run: |
+          set -o pipefail
+          xcodebuild test \
+            -project AllHandsOnDeck.xcodeproj \
+            -scheme "$SCHEME" \
+            -destination "${{ steps.sim.outputs.destination }}" \
+            -enableCodeCoverage YES \
+            -resultBundlePath TestResults.xcresult \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGN_IDENTITY= \
+            DEVELOPMENT_TEAM= \
+            | xcbeautify --renderer github-actions
+
+      - name: Upload xcresult bundle
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ios-test-results
+          path: TestResults.xcresult
+          retention-days: 7

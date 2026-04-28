@@ -1,5 +1,10 @@
 # All Hands on Deck
 
+[![iOS CI](https://github.com/alexanderbrunker-star/AllHandsOnDeck/actions/workflows/ios-ci.yml/badge.svg)](https://github.com/alexanderbrunker-star/AllHandsOnDeck/actions/workflows/ios-ci.yml)
+[![Webapp CI](https://github.com/alexanderbrunker-star/AllHandsOnDeck/actions/workflows/webapp-ci.yml/badge.svg)](https://github.com/alexanderbrunker-star/AllHandsOnDeck/actions/workflows/webapp-ci.yml)
+[![Server CI](https://github.com/alexanderbrunker-star/AllHandsOnDeck/actions/workflows/server-ci.yml/badge.svg)](https://github.com/alexanderbrunker-star/AllHandsOnDeck/actions/workflows/server-ci.yml)
+[![CodeQL](https://github.com/alexanderbrunker-star/AllHandsOnDeck/actions/workflows/codeql.yml/badge.svg)](https://github.com/alexanderbrunker-star/AllHandsOnDeck/actions/workflows/codeql.yml)
+
 > by Captain Leopard 🏴‍☠️🐆
 > *"Alle sehen das Gruppenfoto, bevor es aufgenommen wird."*
 
@@ -283,9 +288,37 @@ Coverage:
 - `MockSessionTransportTests` — Broker-Isolation, kein Self-Echo
 - `ImageCompressionTests` — Downscale + Garbage-Passthrough
 
+Webapp + Server-seitig:
+- `webapp/` — Vitest. `applyEvent` Reducer (alle Wire-Events), `pirateRank`
+  Persistenz, Wire-Format-Golden-Tests gegen iOS-konforme Envelopes.
+- `server/` — `node:test` via `tsx`. `RoomRegistry` Routing-Regeln (host →
+  alle Viewer, viewer → host only), Closed-Socket-Skip, GC, Join-Param-Validation.
+
 Was nicht gecovert ist (AVFoundation, Multipeer, WebSocket, Vision) sind
 Integration-Pfade die Hardware oder Live-Server brauchen — manuell via die
 Test-Pläne oben durchziehen.
+
+### CI
+
+Drei GitHub-Actions-Workflows in `.github/workflows/`:
+- `ios-ci.yml` — `xcodegen generate` + `xcodebuild test` auf macOS-14.
+- `webapp-ci.yml` — `npm ci` → `tsc -b` → `vitest run` → `vite build`.
+- `server-ci.yml` — `npm ci` → `tsc --noEmit` → `node:test` → `tsc` →
+  `docker buildx` Smoke-Build des produktiven Images.
+
+Jeder Workflow läuft nur, wenn der dazugehörige Pfad sich geändert hat
+(siehe `paths:` Filter), damit ein Web-PR keine 15-Minuten-iOS-Build-Queue
+auslöst. CodeQL läuft zusätzlich auf jeden Push und wöchentlich.
+
+Lokal alles gleichzeitig laufen lassen:
+
+```bash
+( cd webapp && npm ci && npm run typecheck && npm test && npm run build )
+( cd server && npm ci && npm run typecheck && npm test && npm run build )
+xcodegen generate && xcodebuild test \
+  -project AllHandsOnDeck.xcodeproj -scheme AllHandsOnDeck \
+  -destination 'platform=iOS Simulator,name=iPhone 15,OS=latest'
+```
 
 ## Step 10 — App-Store-Readiness
 

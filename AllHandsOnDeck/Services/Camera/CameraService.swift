@@ -53,7 +53,9 @@ final class CameraService: NSObject, ObservableObject {
         var isFrontCamera: Bool = false
     }
     nonisolated(unsafe) private let pipeline = FramePipeline()
-    private let ciContext = CIContext(options: [.useSoftwareRenderer: false])
+    // CIContext is documented thread-safe; nonisolated(unsafe) lets the nonisolated
+    // captureOutput delegate method touch it without crossing the @MainActor boundary.
+    nonisolated(unsafe) private let ciContext = CIContext(options: [.useSoftwareRenderer: false])
 
     var previewFrameConsumer: (@Sendable (Data) -> Void)? {
         didSet {
@@ -240,7 +242,7 @@ final class CameraService: NSObject, ObservableObject {
             throw NSError(domain: "Camera", code: -2,
                           userInfo: [NSLocalizedDescriptionKey: "Capture already in progress."])
         }
-        let orientation = currentVideoOrientation()
+        let angle = currentVideoRotationAngle()
         return try await withCheckedThrowingContinuation { continuation in
             self.photoContinuation = continuation
             sessionQueue.async { [weak self] in
@@ -248,20 +250,21 @@ final class CameraService: NSObject, ObservableObject {
                 let settings = AVCapturePhotoSettings()
                 settings.photoQualityPrioritization = .quality
                 if let connection = self.photoOutput.connection(with: .video),
-                   connection.isVideoOrientationSupported {
-                    connection.videoOrientation = orientation
+                   connection.isVideoRotationAngleSupported(angle) {
+                    connection.videoRotationAngle = angle
                 }
                 self.photoOutput.capturePhoto(with: settings, delegate: self)
             }
         }
     }
 
-    private func currentVideoOrientation() -> AVCaptureVideoOrientation {
+    private func currentVideoRotationAngle() -> CGFloat {
+        // iOS 17 replaced AVCaptureVideoOrientation with degrees-from-natural-portrait.
         switch UIDevice.current.orientation {
-        case .landscapeLeft:      return .landscapeRight
-        case .landscapeRight:     return .landscapeLeft
-        case .portraitUpsideDown: return .portraitUpsideDown
-        default:                  return .portrait
+        case .landscapeLeft:      return 0    // was .landscapeRight
+        case .landscapeRight:     return 180  // was .landscapeLeft
+        case .portraitUpsideDown: return 270
+        default:                  return 90   // portrait
         }
     }
 

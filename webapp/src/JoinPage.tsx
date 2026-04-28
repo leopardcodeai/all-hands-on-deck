@@ -1,8 +1,43 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { memo, useEffect, useMemo, useRef, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { SessionClient } from './SessionClient';
 import { ReactionStrip } from './ReactionStrip';
 import { getOrAssignRank } from './pirateRank';
+
+// Isolated frame viewer — updates img.src via DOM ref so the parent never
+// re-renders at 3fps. Only re-renders once when the first frame arrives.
+const FrameImage = memo(function FrameImage({ client }: { client: SessionClient }) {
+  const imgRef   = useRef<HTMLImageElement>(null);
+  const shownRef = useRef(!!client.latestFrameURL);
+  const [hasFrame, setHasFrame] = useState(!!client.latestFrameURL);
+
+  useEffect(() => {
+    return client.subscribeFrame((url) => {
+      if (imgRef.current) imgRef.current.src = url;
+      if (!shownRef.current) {
+        shownRef.current = true;
+        setHasFrame(true);
+      }
+    });
+  }, [client]);
+
+  return (
+    <>
+      <img
+        ref={imgRef}
+        src={hasFrame ? (client.latestFrameURL ?? '') : ''}
+        alt="Live preview"
+        style={{ display: hasFrame ? undefined : 'none' }}
+      />
+      {!hasFrame && (
+        <div className="center-stack">
+          <div className="placeholder-art">📷</div>
+          <p className="subtitle">Warte auf Captain&apos;s Bildausschnitt…</p>
+        </div>
+      )}
+    </>
+  );
+});
 
 export function JoinPage() {
   const { sessionId } = useParams<{ sessionId: string }>();
@@ -19,6 +54,7 @@ export function JoinPage() {
   useEffect(() => { setDismissedPhoto(false); }, [client.finalPhotoURL]);
 
   useEffect(() => {
+    // General events only — frame updates are handled by FrameImage via subscribeFrame.
     const unsub = client.subscribe(() => force(n => n + 1));
     client.connect();
     return () => {
@@ -70,14 +106,7 @@ export function JoinPage() {
 
   return (
     <div className="preview-stage">
-      {client.latestFrameURL ? (
-        <img src={client.latestFrameURL} alt="Live preview" />
-      ) : (
-        <div className="center-stack">
-          <div className="placeholder-art">📷</div>
-          <p className="subtitle">Warte auf Captain&apos;s Bildausschnitt…</p>
-        </div>
-      )}
+      <FrameImage client={client} />
 
       <div className="scrim-top" />
       <div className="scrim-bottom" />
@@ -89,16 +118,22 @@ export function JoinPage() {
             background: 'rgba(255,255,255,0.08)',
             border: '1px solid rgba(255,255,255,0.12)',
             color: 'var(--bone)',
+            flexShrink: 0,
             width: 40, height: 40, borderRadius: '50%',
             fontSize: 16, fontWeight: 800
           }}
         >‹</button>
         {statusPill}
-        <div style={{ flex: 1 }} />
-        <span className="pill pill-gold" style={{ fontFamily: 'SF Mono, ui-monospace, monospace' }}>
+        <div style={{ flex: 1, minWidth: 0 }} />
+        <span className="pill pill-gold" style={{
+          fontFamily: 'SF Mono, ui-monospace, monospace',
+          maxWidth: 120, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap'
+        }}>
           {sessionId}
         </span>
-        <span className="pill pill-amber" style={{ fontSize: 12 }}>{rank}</span>
+        <span className="pill pill-amber" style={{ fontSize: 11, flexShrink: 0 }}>
+          {rank.split(' ')[0]}
+        </span>
       </div>
 
       <div className="bottom-bar">
@@ -129,7 +164,7 @@ export function JoinPage() {
       <div className={`flash ${flash ? 'on' : ''}`} />
 
       {client.finalPhotoURL && !dismissedPhoto && (
-        <div className="final-photo">
+        <div className="final-photo" style={{ overflowY: 'auto', padding: '24px 16px' }}>
           <img src={client.finalPhotoURL} alt="Final group photo" />
           {'share' in navigator ? (
             <button
@@ -167,11 +202,11 @@ export function JoinPage() {
 
       {(client.status === 'lost' || client.status === 'ended' || client.status === 'notFound') &&
        !client.finalPhotoURL && (
-        <div className="final-photo">
+        <div className="final-photo" style={{ padding: '24px 16px' }}>
           <div className="placeholder-art">
             {client.status === 'ended' ? '⚑' : client.status === 'lost' ? '⚠' : '?'}
           </div>
-          <h2 style={{ margin: 0 }}>
+          <h2 style={{ margin: 0, textAlign: 'center' }}>
             {client.status === 'ended'    ? 'Session beendet' :
              client.status === 'lost'     ? 'Verbindung verloren' :
                                             'Session nicht gefunden'}

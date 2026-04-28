@@ -109,7 +109,11 @@ final class MultipeerSessionTransport: NSObject, SessionTransport {
             createdAt: Date(),
             event: event
         )
-        let mode: MCSessionSendDataMode = (envelope.kind == .previewFrame) ? .unreliable : .reliable
+        // Preview frames use .reliable — JSON/base64 encoding inflates them
+        // to 40-60 KB which can exceed MCSession's unreliable-mode threshold
+        // and silently drop. isWritingFrame in HostSessionViewModel already
+        // ensures only one frame is in-flight, preventing reliable-mode queuing.
+        let mode: MCSessionSendDataMode = .reliable
 
         do {
             let data = try envelope.encoded()

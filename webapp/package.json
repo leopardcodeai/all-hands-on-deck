@@ -6,7 +6,10 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc -b --noEmit"
   },
   "dependencies": {
     "firebase": "^12.12.1",
@@ -18,7 +21,9 @@
     "@types/react": "^18.3.12",
     "@types/react-dom": "^18.3.1",
     "@vitejs/plugin-react": "^4.3.4",
+    "jsdom": "^29.1.0",
     "typescript": "^5.7.2",
-    "vite": "^5.4.11"
+    "vite": "^7.3.2",
+    "vitest": "^3.2.4"
   }
 }

@@ -1,0 +1,54 @@
+name: Webapp CI
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'webapp/**'
+      - '.github/workflows/webapp-ci.yml'
+  pull_request:
+    paths:
+      - 'webapp/**'
+      - '.github/workflows/webapp-ci.yml'
+
+permissions:
+  contents: read
+
+# Opt JS-based actions into Node 24; Node 20 is being removed Sep 2026.
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
+
+jobs:
+  build-test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: webapp
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+          cache-dependency-path: webapp/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Type-check
+        run: npm run typecheck
+
+      - name: Unit tests
+        run: npm test
+
+      - name: Production build
+        run: npm run build
+
+      - name: Upload dist artifact
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: webapp-dist
+          path: webapp/dist
+          retention-days: 7
