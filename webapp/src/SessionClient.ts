@@ -30,8 +30,11 @@ export class SessionClient {
   private msgUnsub?: Unsubscribe;
   private frameUnsub?: Unsubscribe;
 
-  constructor(sessionId: string) {
+  readonly displayName: string;
+
+  constructor(sessionId: string, displayName: string) {
     this.sessionId = sessionId;
+    this.displayName = displayName;
   }
 
   subscribe(l: Listener): () => void {
@@ -98,7 +101,7 @@ export class SessionClient {
     this.send({
       participantJoined: {
         id: this.participantId,
-        displayName: 'Web Viewer',
+        displayName: this.displayName,
         role: 'viewer' as const,
         joinedAt: new Date().toISOString(),
         isReady: false,

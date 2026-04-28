@@ -4,9 +4,11 @@ struct HomeView: View {
     @EnvironmentObject private var appState: AppState
     @EnvironmentObject private var linkHandler: UniversalLinkHandler
     @StateObject private var vm = HomeViewModel()
+    @ObservedObject private var identity = IdentityService.shared
     @State private var showingHost = false
     @State private var showingJoin = false
     @State private var showingNearby = false
+    @State private var showingIdentity = false
     @State private var deepLinkSession: PhotoSession?
     @State private var allowWebJoin: Bool = UserDefaults.standard.bool(forKey: "allowWebJoinDefault")
     #if DEBUG
@@ -39,6 +41,9 @@ struct HomeView: View {
             }
             .navigationDestination(isPresented: $showingNearby) {
                 NearbySessionsView(displayName: vm.hostName)
+            }
+            .sheet(isPresented: $showingIdentity) {
+                IdentitySettingsView()
             }
             .navigationDestination(item: $deepLinkSession) { session in
                 ViewerSessionView(session: session, displayName: vm.hostName)
@@ -86,19 +91,7 @@ struct HomeView: View {
 
     private var actions: some View {
         VStack(spacing: 14) {
-            HStack(spacing: 12) {
-                Image(systemName: "person.fill.badge.plus")
-                    .foregroundStyle(.black.opacity(0.7))
-                TextField("Dein Name", text: $vm.hostName)
-                    .textFieldStyle(.plain)
-                    .foregroundStyle(.black)
-                    .tint(.black)
-                    .submitLabel(.done)
-            }
-            .padding(.horizontal, 18)
-            .frame(height: 52)
-            .background(Theme.bone)
-            .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+            identityChip
 
             PrimaryButton(title: "Gruppenfoto starten", systemImage: "camera.fill", style: .primary) {
                 showingHost = true
@@ -143,6 +136,32 @@ struct HomeView: View {
                 RoundedRectangle(cornerRadius: 14, style: .continuous)
                     .stroke(allowWebJoin && !webAvailable ? Theme.crimson.opacity(0.5) : Color.white.opacity(0.06), lineWidth: 1)
             )
+        }
+    }
+
+    private var identityChip: some View {
+        Button { showingIdentity = true } label: {
+            HStack(spacing: 12) {
+                Text(identity.earnedRank.emoji)
+                    .font(.system(size: 22))
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(vm.hostName)
+                        .font(.system(size: 15, weight: .heavy, design: .rounded))
+                        .foregroundStyle(.black)
+                        .lineLimit(1)
+                    Text(identity.rankBadge)
+                        .font(.system(size: 11, weight: .medium, design: .rounded))
+                        .foregroundStyle(.black.opacity(0.5))
+                }
+                Spacer()
+                Image(systemName: "chevron.right")
+                    .font(.system(size: 12, weight: .bold))
+                    .foregroundStyle(.black.opacity(0.4))
+            }
+            .padding(.horizontal, 18)
+            .frame(height: 56)
+            .background(Theme.bone)
+            .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
         }
     }
 

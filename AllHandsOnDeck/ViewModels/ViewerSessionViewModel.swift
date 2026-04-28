@@ -28,6 +28,7 @@ final class ViewerSessionViewModel: ObservableObject {
     // MARK: - Lifecycle
 
     func onAppear() async {
+        IdentityService.shared.record(.joinSession)
         do {
             try await transport.start(session: session)
         } catch {
@@ -88,6 +89,7 @@ final class ViewerSessionViewModel: ObservableObject {
     }
 
     func sendReaction(_ reaction: Reaction) async {
+        IdentityService.shared.record(.sendReaction)
         await transport.send(.reactionSent(
             by: transport.localParticipantID,
             reaction: reaction.rawValue

@@ -2,11 +2,13 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { SessionClient } from './SessionClient';
 import { ReactionStrip } from './ReactionStrip';
+import { getOrAssignRank } from './pirateRank';
 
 export function JoinPage() {
   const { sessionId } = useParams<{ sessionId: string }>();
   const navigate = useNavigate();
-  const client = useMemo(() => new SessionClient(sessionId ?? ''), [sessionId]);
+  const rank = useMemo(() => getOrAssignRank(), []);
+  const client = useMemo(() => new SessionClient(sessionId ?? '', rank), [sessionId, rank]);
 
   const [, force] = useState(0);
   const [flash, setFlash] = useState(false);
@@ -96,6 +98,7 @@ export function JoinPage() {
         <span className="pill pill-gold" style={{ fontFamily: 'SF Mono, ui-monospace, monospace' }}>
           {sessionId}
         </span>
+        <span className="pill pill-amber" style={{ fontSize: 12 }}>{rank}</span>
       </div>
 
       <div className="bottom-bar">

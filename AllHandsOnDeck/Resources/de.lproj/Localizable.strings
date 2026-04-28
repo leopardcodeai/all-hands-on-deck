@@ -102,3 +102,27 @@
 "trigger.everyoneCanStartTimer.subtitle" = "Jeder an Bord kann den Timer starten.";
 "trigger.viewersCanRequest.title" = "Crew fragt — Captain entscheidet";
 "trigger.viewersCanRequest.subtitle" = "Anfrage an dich, du bestätigst.";
+
+/* ── Pirate Ranks ── */
+"rank.cabinBoy"      = "Schiffsjunge";
+"rank.deckhand"      = "Matrose";
+"rank.boatswain"     = "Bootsmann";
+"rank.gunner"        = "Kanonier";
+"rank.navigator"     = "Navigator";
+"rank.quartermaster" = "Quartiermeister";
+"rank.firstMate"     = "Erster Offizier";
+"rank.captain"       = "Kapitän";
+
+/* ── Identity Settings ── */
+"identity.settings.title"           = "Identität";
+"identity.customName.label"         = "Eigener Name";
+"identity.customName.placeholder"   = "z.B. Alex";
+"identity.customName.hint"          = "Überschreibt alles — kein Rang angehängt.";
+"identity.gamecenter.label"         = "Game Center";
+"identity.gamecenter.connected"     = "Verbunden";
+"identity.gamecenter.disconnected"  = "Nicht angemeldet";
+"identity.gamecenter.notSignedIn"   = "Im App-Store unter Einstellungen → Game Center anmelden.";
+"identity.progress.label"           = "Rang-Fortschritt";
+"identity.progress.points"          = "Punkte";
+"identity.progress.hint"            = "Sessions hosten, Fotos machen, Reaktionen senden — alles zählt.";
+"identity.progress.maxRank"         = "Maximaler Rang erreicht. Legende der sieben Meere! 🏴‍☠️";

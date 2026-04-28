@@ -102,3 +102,27 @@
 "trigger.everyoneCanStartTimer.subtitle" = "Anyone on board can start the timer.";
 "trigger.viewersCanRequest.title" = "Crew asks — Captain decides";
 "trigger.viewersCanRequest.subtitle" = "Request to you, you confirm.";
+
+/* ── Pirate Ranks ── */
+"rank.cabinBoy"      = "Cabin Boy";
+"rank.deckhand"      = "Deckhand";
+"rank.boatswain"     = "Boatswain";
+"rank.gunner"        = "Gunner";
+"rank.navigator"     = "Navigator";
+"rank.quartermaster" = "Quartermaster";
+"rank.firstMate"     = "First Mate";
+"rank.captain"       = "Captain";
+
+/* ── Identity Settings ── */
+"identity.settings.title"           = "Identity";
+"identity.customName.label"         = "Custom Name";
+"identity.customName.placeholder"   = "e.g. Alex";
+"identity.customName.hint"          = "Overrides everything — no rank appended.";
+"identity.gamecenter.label"         = "Game Center";
+"identity.gamecenter.connected"     = "Connected";
+"identity.gamecenter.disconnected"  = "Not signed in";
+"identity.gamecenter.notSignedIn"   = "Sign in to Game Center in Settings → Game Center.";
+"identity.progress.label"           = "Rank Progress";
+"identity.progress.points"          = "points";
+"identity.progress.hint"            = "Host sessions, take photos, send reactions — everything counts.";
+"identity.progress.maxRank"         = "Maximum rank reached. Legend of the seven seas! 🏴‍☠️";

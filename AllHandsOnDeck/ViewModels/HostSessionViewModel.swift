@@ -67,6 +67,7 @@ final class HostSessionViewModel: ObservableObject {
     // MARK: - Lifecycle
 
     func onAppear() async {
+        IdentityService.shared.record(.hostSession)
         await camera.requestPermissionIfNeeded()
         camera.start()
 
@@ -210,6 +211,7 @@ final class HostSessionViewModel: ObservableObject {
             let photo = CapturedPhoto(imageData: data)
             self.capturedPhoto = photo
             countdown.markCompleted()
+            IdentityService.shared.record(.capturePhoto)
             await transport.send(.photoCaptured(at: photo.capturedAt))
             let preview = ImageCompression.scaledJPEG(data: data, maxWidth: 1280, quality: 0.7)
             await transport.send(.finalPhotoAvailable(photoID: photo.id, jpeg: preview))
@@ -247,6 +249,7 @@ final class HostSessionViewModel: ObservableObject {
         capturedPhoto = photo
         burstCandidates = []
         burstScores = []
+        IdentityService.shared.record(.acceptBurst)
         let preview = ImageCompression.scaledJPEG(
             data: photo.imageData, maxWidth: 1280, quality: 0.7
         )
