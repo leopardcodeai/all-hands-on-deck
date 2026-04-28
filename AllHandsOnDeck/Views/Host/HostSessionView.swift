@@ -7,6 +7,8 @@ struct HostSessionView: View {
     @State private var baseZoom: CGFloat = 1.0
     @State private var showZoomLabel: Bool = false
     @State private var zoomHideTask: Task<Void, Never>? = nil
+    @State private var postCaptureSecsLeft: Int? = nil
+    @State private var postCaptureTask: Task<Void, Never>? = nil
     let onSessionCreated: (String) -> Void
 
     init(hostName: String, allowWebJoin: Bool = false, onSessionCreated: @escaping (String) -> Void) {
@@ -323,7 +325,7 @@ struct HostSessionView: View {
                         get: { vm.session.timerDuration },
                         set: { vm.setTimerDuration($0) }
                     ),
-                    options: [10, 20, 30]
+                    options: [5, 10, 20, 30]
                 )
             }
 
@@ -368,7 +370,7 @@ struct HostSessionView: View {
                 Image(systemName: "camera.aperture")
                     .foregroundStyle(vm.camera.isHighResEnabled ? Theme.gold : Theme.mist)
                 VStack(alignment: .leading, spacing: 2) {
-                    Text("High Resolution (48 MP)")
+                    Text("Hohe Auflösung (48 MP)")
                         .font(.system(size: 14, weight: .heavy, design: .rounded))
                         .foregroundStyle(Theme.bone)
                     Text("Maximale Auflösung — langsamere Verarbeitung.")
@@ -435,16 +437,31 @@ struct HostSessionView: View {
                         .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
                         .padding(.horizontal, 16)
                 }
-                HStack(spacing: 10) {
-                    PrimaryButton(title: "Noch einmal", systemImage: "arrow.counterclockwise", style: .secondary) {
-                        vm.discardCapture()
+                if let secs = postCaptureSecsLeft {
+                    HStack {
+                        Text(String(format: String(localized: "result.closingIn"), secs))
+                            .font(.system(size: 13, weight: .heavy, design: .rounded))
+                            .foregroundStyle(Theme.mist)
+                        Spacer()
+                        PrimaryButton(title: "Schließen", style: .ghost) {
+                            cancelPostCapture()
+                            vm.discardCapture()
+                        }
                     }
-                    PrimaryButton(title: "Speichern", systemImage: "square.and.arrow.down", style: .primary) {
-                        savePhoto(photo)
+                    .padding(.horizontal, 16)
+                    .padding(.bottom, 24)
+                } else {
+                    HStack(spacing: 10) {
+                        PrimaryButton(title: "Noch einmal", systemImage: "arrow.counterclockwise", style: .secondary) {
+                            vm.discardCapture()
+                        }
+                        PrimaryButton(title: "Speichern", systemImage: "square.and.arrow.down", style: .primary) {
+                            savePhoto(photo)
+                        }
                     }
+                    .padding(.horizontal, 16)
+                    .padding(.bottom, 24)
                 }
-                .padding(.horizontal, 16)
-                .padding(.bottom, 24)
             }
         }
     }
@@ -453,6 +470,28 @@ struct HostSessionView: View {
         guard let img = photo.uiImage else { return }
         UIImageWriteToSavedPhotosAlbum(img, nil, nil, nil)
         Haptics.success()
-        vm.discardCapture()
+        startPostCaptureCountdown()
+    }
+
+    private func startPostCaptureCountdown() {
+        postCaptureTask?.cancel()
+        postCaptureSecsLeft = 10
+        postCaptureTask = Task { @MainActor in
+            for i in stride(from: 10, through: 0, by: -1) {
+                guard !Task.isCancelled else { return }
+                postCaptureSecsLeft = i
+                if i == 0 { break }
+                try? await Task.sleep(nanoseconds: 1_000_000_000)
+            }
+            guard !Task.isCancelled else { return }
+            postCaptureSecsLeft = nil
+            vm.discardCapture()
+        }
+    }
+
+    private func cancelPostCapture() {
+        postCaptureTask?.cancel()
+        postCaptureTask = nil
+        postCaptureSecsLeft = nil
     }
 }

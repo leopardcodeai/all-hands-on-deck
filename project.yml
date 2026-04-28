@@ -10,6 +10,7 @@ options:
   xcodeVersion: "16.0"
   groupSortPosition: top
   developmentLanguage: de
+  organizationName: "Alexander Brunker"
 
 # ─── Shared build settings ───────────────────────────────────────────────────
 settings:

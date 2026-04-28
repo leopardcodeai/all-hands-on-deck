@@ -179,6 +179,7 @@ final class CameraService: NSObject, ObservableObject {
             Task { @MainActor in
                 self.isFrontCamera = front
                 self.zoomFactor = 1.0
+                self.isHighResEnabled = false
                 if front { self.isTorchOn = false }
             }
         }
@@ -193,7 +194,10 @@ final class CameraService: NSObject, ObservableObject {
             if let device = self.currentInput?.device, !device.hasTorch {
                 Task { @MainActor in self.isTorchOn = false }
             }
-            Task { @MainActor in self.zoomFactor = 1.0 }
+            Task { @MainActor in
+                self.zoomFactor = 1.0
+                self.isHighResEnabled = false
+            }
         }
     }
 
@@ -201,17 +205,14 @@ final class CameraService: NSObject, ObservableObject {
         let enable = !isHighResEnabled
         sessionQueue.async { [weak self] in
             guard let self, let device = self.currentInput?.device else { return }
+            let dims = device.activeFormat.supportedMaxPhotoDimensions
+            guard !dims.isEmpty else { return }
+            let target = enable
+                ? dims.max(by: { Int($0.width) * Int($0.height) < Int($1.width) * Int($1.height) })
+                : dims.min(by: { Int($0.width) * Int($0.height) < Int($1.width) * Int($1.height) })
+            guard let target else { return }
             self.session.beginConfiguration()
-            if enable {
-                let maxDims = device.activeFormat.supportedMaxPhotoDimensions
-                    .max(by: { Int($0.width) * Int($0.height) < Int($1.width) * Int($1.height) })
-                if let dims = maxDims {
-                    self.photoOutput.maxPhotoDimensions = dims
-                }
-            } else {
-                // Reset to default (0,0 lets AVFoundation choose)
-                self.photoOutput.maxPhotoDimensions = CMVideoDimensions(width: 0, height: 0)
-            }
+            self.photoOutput.maxPhotoDimensions = target
             self.session.commitConfiguration()
             Task { @MainActor in self.isHighResEnabled = enable }
         }

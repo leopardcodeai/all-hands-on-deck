@@ -12,6 +12,8 @@
 /* ── HostSessionView ── */
 "OK" = "OK";
 "Schließen" = "Schließen";
+"Hohe Auflösung (48 MP)" = "Hohe Auflösung (48 MP)";
+"Maximale Auflösung — langsamere Verarbeitung." = "Maximale Auflösung — langsamere Verarbeitung.";
 "Sessions enden automatisch nach Ablauf der TTL — kein Speichern, keine Accounts, keine Spuren." = "Sessions enden automatisch nach Ablauf der TTL — kein Speichern, keine Accounts, keine Spuren.";
 "Anfrage von der Crew — bestätige in den Einstellungen." = "Anfrage von der Crew — bestätige in den Einstellungen.";
 "Abbrechen" = "Abbrechen";
@@ -69,6 +71,7 @@
 "nearby.hostStartingSession" = "%@ startet ein Gruppenfoto";
 "burst.shotNumber" = "Aufnahme %d";
 "host.startTimer" = "Start %ds";
+"result.closingIn" = "Schließt in %d…";
 
 /* ── Alert titles ── */
 "Hinweis" = "Hinweis";

@@ -113,8 +113,12 @@ final class HostSessionViewModel: ObservableObject {
         $participants.sink { [weak self] _ in self?.pushWatchSnapshot() }.store(in: &subs)
         countdown.$state.sink { [weak self] _ in self?.pushWatchSnapshot() }.store(in: &subs)
 
-        // Forward countdown changes so SwiftUI re-renders host view.
+        // Forward countdown and camera changes so SwiftUI re-renders host view.
         countdown.objectWillChange
+            .receive(on: RunLoop.main)
+            .sink { [weak self] _ in self?.objectWillChange.send() }
+            .store(in: &subs)
+        camera.objectWillChange
             .receive(on: RunLoop.main)
             .sink { [weak self] _ in self?.objectWillChange.send() }
             .store(in: &subs)

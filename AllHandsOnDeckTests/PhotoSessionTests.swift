@@ -53,7 +53,7 @@ final class PhotoSessionTests: XCTestCase {
         let s = PhotoSession(id: "ABCDEF1234", hostName: "Captain")
         XCTAssertEqual(
             s.joinURL.absoluteString,
-            "https://allhands.captainleopard.app/join/ABCDEF1234"
+            "https://all-hands-on-deck-ae29e.web.app/join/ABCDEF1234"
         )
     }
 }
