@@ -19,7 +19,7 @@ struct PhotoSession: Identifiable, Hashable, Codable, Sendable {
         createdAt: Date = Date(),
         ttlMinutes: Int = 10,
         timerDuration: Int = 10,
-        triggerPermission: TriggerPermission = .hostOnly,
+        triggerPermission: TriggerPermission = .everyoneCanStartTimer,
         isDiscoverableNearby: Bool = true,
         allowWebJoin: Bool = true,
         allowFinalPhotoDownload: Bool = true,

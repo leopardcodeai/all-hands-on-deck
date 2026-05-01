@@ -13,6 +13,7 @@ enum SessionEvent: Codable, Sendable, Equatable {
     case countdownStarted(photoAt: Date, duration: Int, startedBy: String)
     case countdownCancelled(by: String)
     case captureRequested(by: String)
+    case captureNowRequested(by: String)
     case captureApproved(approvedBy: String)
     case captureDenied(deniedBy: String)
     case photoCaptured(at: Date)

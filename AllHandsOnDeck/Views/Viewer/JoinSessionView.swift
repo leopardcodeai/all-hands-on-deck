@@ -13,10 +13,10 @@ struct JoinSessionView: View {
             ScrollView {
                 VStack(spacing: 24) {
                     VStack(alignment: .leading, spacing: 8) {
-                        Text("Beitreten")
+                        Text("Join")
                             .font(Theme.display(36))
                             .foregroundStyle(Theme.bone)
-                        Text("Session-Code von Captain eingeben oder QR-Code scannen.")
+                        Text("Enter the Captain's session code or scan a QR code.")
                             .font(.system(size: 15, weight: .medium))
                             .foregroundStyle(Theme.mist)
                     }
@@ -42,13 +42,13 @@ struct JoinSessionView: View {
                         .padding(.horizontal, 24)
 
                     VStack(spacing: 10) {
-                        PrimaryButton(title: "Verbinden", systemImage: "arrow.right", style: .primary) {
+                        PrimaryButton(title: "Connect", systemImage: "arrow.right", style: .primary) {
                             if !sessionID.isEmpty { connect = true }
                         }
                         .disabled(sessionID.isEmpty)
                         .opacity(sessionID.isEmpty ? 0.5 : 1)
 
-                        PrimaryButton(title: "QR-Code scannen", systemImage: "qrcode.viewfinder", style: .secondary) {
+                        PrimaryButton(title: "Scan QR Code", systemImage: "qrcode.viewfinder", style: .secondary) {
                             showingScanner = true
                         }
                     }
@@ -66,7 +66,7 @@ struct JoinSessionView: View {
             }
             .scrollDismissesKeyboard(.interactively)
         }
-        .navigationTitle("Beitreten")
+        .navigationTitle("Join")
         .navigationBarTitleDisplayMode(.inline)
         .toolbarBackground(Theme.abyss, for: .navigationBar)
         .toolbarColorScheme(.dark, for: .navigationBar)
@@ -87,7 +87,7 @@ struct JoinSessionView: View {
                             connect = true
                         }
                     } else {
-                        scanError = "QR-Code enthält keine Session-ID."
+                        scanError = "QR code doesn't contain a session ID."
                     }
                 },
                 onCancel: { showingScanner = false }

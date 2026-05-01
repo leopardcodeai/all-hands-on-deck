@@ -1,4 +1,5 @@
 import AVFoundation
+import CoreMedia
 import UIKit
 
 @MainActor
@@ -25,6 +26,22 @@ final class CameraService: NSObject, ObservableObject {
         }
     }
 
+    /// Three-state HD policy. `.off` = standard photo size, `.half` = roughly half
+    /// the sensor's max (good middle-ground for older phones), `.full` = device max
+    /// (48 MP class on iPhone 14 Pro and newer).
+    enum HighResMode: String, CaseIterable {
+        case off, half, full
+
+        /// Short German label shown in the transient capsule and settings row.
+        var label: String {
+            switch self {
+            case .off:  return "Standard"
+            case .half: return "HD"
+            case .full: return "HD+ (max)"
+            }
+        }
+    }
+
     @Published private(set) var authorization: AuthorizationState = .notDetermined
     @Published private(set) var isRunning: Bool = false
     @Published private(set) var lastError: String?
@@ -34,7 +51,27 @@ final class CameraService: NSObject, ObservableObject {
     @Published private(set) var maxZoom: CGFloat = 10.0
     @Published private(set) var currentLens: LensType = .wide
     @Published private(set) var availableLenses: [LensType] = [.wide]
-    @Published private(set) var isHighResEnabled: Bool = false
+    @Published private(set) var highResMode: HighResMode = .off
+    @Published private(set) var supportsFullRes: Bool = false
+    @Published private(set) var maxDimensions: CMVideoDimensions = CMVideoDimensions(width: 0, height: 0)
+    /// Wide-equivalent zoom shown to the user (0.5–10). Tracks across lens switches.
+    @Published private(set) var virtualZoom: CGFloat = 1.0
+    /// Optical zoom of the tele lens relative to wide, computed from field-of-view on first use.
+    @Published private(set) var teleEquivalentZoom: CGFloat = 3.0
+
+    /// Derived for legacy bindings — anything observing `highResMode` re-renders too.
+    var isHighResEnabled: Bool { highResMode != .off }
+
+    /// Modes the UI may offer: `.full` is hidden on devices that lack a 48 MP-class
+    /// sensor (anything older than iPhone 14 Pro). `.off → .half` is universal.
+    var allowedHighResModes: [HighResMode] {
+        supportsFullRes ? [.off, .half, .full] : [.off, .half]
+    }
+
+    var minVirtualZoom: CGFloat { availableLenses.contains(.ultraWide) ? 0.5 : 1.0 }
+
+    // Stored on sessionQueue; used to derive teleEquivalentZoom via FOV comparison.
+    nonisolated(unsafe) private var wideFovDegrees: Float = 0
 
     nonisolated(unsafe) let session = AVCaptureSession()
     nonisolated(unsafe) private var currentInput: AVCaptureDeviceInput?
@@ -55,7 +92,7 @@ final class CameraService: NSObject, ObservableObject {
     nonisolated(unsafe) private let pipeline = FramePipeline()
     // CIContext is documented thread-safe; nonisolated(unsafe) lets the nonisolated
     // captureOutput delegate method touch it without crossing the @MainActor boundary.
-    nonisolated(unsafe) private let ciContext = CIContext(options: [.useSoftwareRenderer: false])
+    private let ciContext = CIContext(options: [.useSoftwareRenderer: false])
 
     var previewFrameConsumer: (@Sendable (Data) -> Void)? {
         didSet {
@@ -134,12 +171,6 @@ final class CameraService: NSObject, ObservableObject {
             }
         }
 
-        Task { @MainActor in
-            self.maxZoom = cappedMax
-            self.currentLens = lens
-            if position == .back { self.availableLenses = found }
-        }
-
         if session.outputs.isEmpty {
             if session.canAddOutput(photoOutput) {
                 session.addOutput(photoOutput)
@@ -153,7 +184,46 @@ final class CameraService: NSObject, ObservableObject {
             if session.canAddOutput(videoOutput) { session.addOutput(videoOutput) }
         }
 
+        // Field-of-view for deriving the tele optical multiplier without hardcoding per device.
+        let fov = device.activeFormat.videoFieldOfView
+        if lens == .wide { wideFovDegrees = fov }
+        let computedTeleEq: CGFloat? = (lens == .tele && wideFovDegrees > 0)
+            ? max(2.0, CGFloat(wideFovDegrees / fov))
+            : nil
+
+        // Virtual zoom this lens represents at device factor 1.0.
+        let nativeVirtual: CGFloat
+        switch lens {
+        case .ultraWide: nativeVirtual = 0.5
+        case .wide:      nativeVirtual = 1.0
+        case .tele:      nativeVirtual = computedTeleEq ?? 3.0
+        }
+
+        // Inspect the active format's supported photo dimensions to decide capability.
+        // iPhone 14 Pro / 15 / 16 / 17 expose dimensions ≥ 7000 wide (8064 × 6048 = 48 MP).
+        let supportedDims = device.activeFormat.supportedMaxPhotoDimensions
+        let largest = supportedDims.max(by: { Int($0.width) * Int($0.height) < Int($1.width) * Int($1.height) })
+        let supportsFull = supportedDims.contains(where: { $0.width >= 7000 })
+        let activeDims = largest ?? CMVideoDimensions(width: 0, height: 0)
+
+        // Reset photo dimensions to the format default whenever we reconfigure —
+        // any prior `.half` / `.full` selection is bound to the old lens.
+        if !supportedDims.isEmpty, let first = supportedDims.first {
+            photoOutput.maxPhotoDimensions = first
+        }
+
         session.commitConfiguration()
+
+        Task { @MainActor in
+            self.maxZoom = cappedMax
+            self.currentLens = lens
+            if position == .back { self.availableLenses = found }
+            self.supportsFullRes = supportsFull
+            self.maxDimensions = activeDims
+            self.highResMode = .off
+            self.virtualZoom = nativeVirtual
+            if let t = computedTeleEq { self.teleEquivalentZoom = t }
+        }
     }
 
     // MARK: - Camera controls
@@ -174,6 +244,7 @@ final class CameraService: NSObject, ObservableObject {
         let front = newPosition == .front
         sessionQueue.async { [weak self] in
             guard let self else { return }
+            // configureSession resets highResMode/zoom-related published state.
             self.configureSession(position: newPosition, lens: .wide)
             self.pipeline.lock.lock()
             self.pipeline.isFrontCamera = front
@@ -181,7 +252,7 @@ final class CameraService: NSObject, ObservableObject {
             Task { @MainActor in
                 self.isFrontCamera = front
                 self.zoomFactor = 1.0
-                self.isHighResEnabled = false
+                self.virtualZoom = 1.0
                 if front { self.isTorchOn = false }
             }
         }
@@ -196,28 +267,91 @@ final class CameraService: NSObject, ObservableObject {
             if let device = self.currentInput?.device, !device.hasTorch {
                 Task { @MainActor in self.isTorchOn = false }
             }
-            Task { @MainActor in
-                self.zoomFactor = 1.0
-                self.isHighResEnabled = false
-            }
+            Task { @MainActor in self.zoomFactor = 1.0 }
+            // virtualZoom is set by configureSession's Task to the lens's nativeVirtual.
         }
     }
 
-    func toggleHighRes() {
-        let enable = !isHighResEnabled
+    /// Continuous zoom spanning all lenses. `factor` is wide-equivalent (0.5 = ultraWide native,
+    /// 1.0 = wide native, teleEquivalentZoom = tele native). Switches lenses automatically when
+    /// crossing their native thresholds.
+    func smartZoom(_ factor: CGFloat) {
+        guard !isFrontCamera else {
+            setZoom(factor)
+            virtualZoom = max(1.0, factor)
+            return
+        }
+        let lo = minVirtualZoom
+        let clamped = max(lo, min(factor, 10.0))
+
+        let targetLens: LensType
+        let deviceFactor: CGFloat
+
+        if clamped < 1.0 && availableLenses.contains(.ultraWide) {
+            // 0.5× virtual → ultraWide at device 1.0; 1.0× → ultraWide at device 2.0
+            targetLens = .ultraWide
+            deviceFactor = max(1.0, clamped / 0.5)
+        } else if clamped >= teleEquivalentZoom * 0.85 && availableLenses.contains(.tele) {
+            // Enter tele just before its native zoom to feel seamless
+            targetLens = .tele
+            deviceFactor = max(1.0, clamped / teleEquivalentZoom)
+        } else {
+            targetLens = .wide
+            deviceFactor = max(1.0, clamped)
+        }
+
+        if targetLens != currentLens { switchLens(targetLens) }
+        setZoom(deviceFactor)
+        virtualZoom = clamped
+    }
+
+    /// Apply a tri-state HD mode. `.full` is silently capped to `.half` on devices
+    /// that don't expose a 48 MP-class sensor — UI hides `.full` for those, but we
+    /// also gate it here so a stale binding can't corrupt state.
+    func setHighResMode(_ mode: HighResMode) {
+        let resolved: HighResMode = (mode == .full && !supportsFullRes) ? highResMode : mode
+        guard resolved != highResMode else { return }
+        highResMode = resolved
         sessionQueue.async { [weak self] in
             guard let self, let device = self.currentInput?.device else { return }
             let dims = device.activeFormat.supportedMaxPhotoDimensions
+
+            // iOS 17 deployment target guarantees `supportedMaxPhotoDimensions`. If a
+            // device returned an empty list, treat HD as a no-op rather than calling
+            // the deprecated boolean API.
             guard !dims.isEmpty else { return }
-            let target = enable
-                ? dims.max(by: { Int($0.width) * Int($0.height) < Int($1.width) * Int($1.height) })
-                : dims.min(by: { Int($0.width) * Int($0.height) < Int($1.width) * Int($1.height) })
-            guard let target else { return }
+
+            let sortedAscending = dims.sorted { Int($0.width) * Int($0.height) < Int($1.width) * Int($1.height) }
+            let smallest = sortedAscending.first!
+            let largest = sortedAscending.last!
+
+            let target: CMVideoDimensions
+            switch resolved {
+            case .off:
+                target = smallest
+            case .full:
+                target = largest
+            case .half:
+                // Pick the supported dimension whose width is closest to half of largest.
+                let half = Int(largest.width) / 2
+                target = sortedAscending.min(by: {
+                    abs(Int($0.width) - half) < abs(Int($1.width) - half)
+                }) ?? largest
+            }
+
             self.session.beginConfiguration()
             self.photoOutput.maxPhotoDimensions = target
             self.session.commitConfiguration()
-            Task { @MainActor in self.isHighResEnabled = enable }
         }
+    }
+
+    /// Cycle through the device's allowed HD modes — used by the icon button.
+    func cycleHighResMode() {
+        let modes = allowedHighResModes
+        guard !modes.isEmpty else { return }
+        let idx = modes.firstIndex(of: highResMode) ?? 0
+        let next = modes[(idx + 1) % modes.count]
+        setHighResMode(next)
     }
 
     func toggleTorch() {
@@ -332,12 +466,19 @@ extension CameraService: AVCaptureVideoDataOutputSampleBufferDelegate {
         let ci = CIImage(cvPixelBuffer: pixelBuffer)
         let targetWidth: CGFloat = 640
         let scale = targetWidth / ci.extent.width
-        let scaled = ci.transformed(by: CGAffineTransform(scaleX: scale, y: scale))
-        guard let cg = ciContext.createCGImage(scaled, from: scaled.extent) else { return }
-        // Front camera sensor output is mirrored; .leftMirrored gives natural portrait selfie
-        let orientation: UIImage.Orientation = front ? .leftMirrored : .right
-        let ui = UIImage(cgImage: cg, scale: 1, orientation: orientation)
-        guard let jpeg = ui.jpegData(compressionQuality: 0.5) else { return }
+        // Front camera sensor output is mirrored; .leftMirrored gives natural portrait selfie.
+        // .oriented() bakes the rotation into the CIImage graph so jpegRepresentation renders
+        // correctly without needing an intermediate CGImage pixel buffer.
+        let cgOrientation: CGImagePropertyOrientation = front ? .leftMirrored : .right
+        let scaled = ci
+            .transformed(by: CGAffineTransform(scaleX: scale, y: scale))
+            .oriented(cgOrientation)
+        let colorSpace = scaled.colorSpace ?? CGColorSpaceCreateDeviceRGB()
+        let opts: [CIImageRepresentationOption: Any] = [
+            .init(rawValue: kCGImageDestinationLossyCompressionQuality as String): 0.5
+        ]
+        guard let jpeg = ciContext.jpegRepresentation(of: scaled, colorSpace: colorSpace,
+                                                      options: opts) else { return }
 
         handler(jpeg)
     }

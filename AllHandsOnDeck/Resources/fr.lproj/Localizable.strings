@@ -1,0 +1,128 @@
+/* ── HomeView ── */
+"AllHands\nOnDeck" = "AllHands\nOnDeck";
+"The Captain's Live Crew Photo Preview" = "L'aperçu en direct de la photo d'équipage du Capitaine";
+"Gruppenfoto starten" = "Démarrer la photo d'équipage";
+"Session beitreten" = "Rejoindre la session";
+"Nearby Sessions" = "Sessions à proximité";
+"Web-Viewer erlauben" = "Autoriser les spectateurs web";
+"\"Alle sehen das Gruppenfoto, bevor es aufgenommen wird.\"" = "« Tout le monde voit la photo d'équipage avant qu'elle ne soit prise. »";
+"Aus für reine Nearby-Nutzung." = "Désactivé pour utilisation à proximité uniquement.";
+"Backend bereit – Web-Viewer können beitreten." = "Backend prêt — les spectateurs web peuvent rejoindre.";
+
+/* ── HostSessionView ── */
+"OK" = "OK";
+"Schließen" = "Fermer";
+"Auflösung" = "Résolution";
+"Sessions enden automatisch nach Ablauf der TTL — kein Speichern, keine Accounts, keine Spuren." = "Les sessions se terminent automatiquement à l'expiration du TTL — pas de sauvegarde, pas de compte, pas de trace.";
+"Anfrage von der Crew — bestätige in den Einstellungen." = "Demande de l'équipage — confirme dans les réglages.";
+"Abbrechen" = "Annuler";
+"Jetzt" = "Maintenant";
+"Timer" = "Minuteur";
+"Wer darf auslösen?" = "Qui peut déclencher ?";
+"Best-Shot Burst" = "Rafale meilleur cliché";
+"5 Aufnahmen, KI wählt die beste." = "5 prises, l'IA choisit la meilleure.";
+"Noch einmal" = "À nouveau";
+"Speichern" = "Enregistrer";
+
+/* ── BurstPickerView ── */
+"Best Shot Burst" = "Rafale meilleur cliché";
+"KI-Ranking nach Gesichtern, offenen Augen und Schärfe." = "Classement par IA selon les visages, les yeux ouverts et la netteté.";
+"⭐︎ Beste" = "⭐︎ Meilleure";
+"Bewerte…" = "Évaluation…";
+"Verwerfen" = "Rejeter";
+
+/* ── NearbySessionsView ── */
+"Sessions in deinem WLAN / Bluetooth-Bereich." = "Sessions à portée de votre Wi-Fi / Bluetooth.";
+"Suche Sessions in der Nähe…" = "Recherche de sessions à proximité…";
+"Beim ersten Mal fragt iOS nach einer\nLocal-Network-Berechtigung." = "La première fois, iOS demandera\nl'autorisation du réseau local.";
+"Beide Geräte müssen App geöffnet, im selben WLAN sein und Local-Network-Zugriff erlaubt haben." = "Les deux appareils doivent avoir l'app ouverte, être sur le même Wi-Fi et avoir autorisé l'accès au réseau local.";
+
+/* ── PermissionView ── */
+"Kamera-Zugriff benötigt" = "Accès à la caméra requis";
+"Damit deine Crew sehen kann, was die Kamera sieht, brauchen wir Zugriff auf die iPhone-Kamera." = "Pour que ton équipage voie ce que la caméra voit, nous avons besoin d'accéder à la caméra de l'iPhone.";
+"Zugriff erlauben" = "Autoriser l'accès";
+
+/* ── ViewerSessionView ── */
+"Verbindung verloren" = "Connexion perdue";
+"Captain ist außer Reichweite. Versuch es noch einmal von der Nearby-Liste aus." = "Le Capitaine est hors de portée. Réessaie depuis la liste À proximité.";
+"Session nicht gefunden" = "Session introuvable";
+"Stelle sicher, dass beide im selben WLAN sind und die App offen ist." = "Assure-toi que les deux sont sur le même Wi-Fi et que l'app est ouverte.";
+"Warte auf Captain's Bildausschnitt…" = "En attente du cadrage du Capitaine…";
+"Stillhalten — gleich klickt's." = "Ne bouge pas — ça déclenche.";
+"Verbinde mit Session…" = "Connexion à la session…";
+"Session beendet" = "Session terminée";
+"Zurück" = "Retour";
+
+/* ── JoinSessionView ── */
+"Beitreten" = "Rejoindre";
+"Session-Code von Captain eingeben oder QR-Code scannen." = "Saisis le code de session du Capitaine ou scanne le QR code.";
+"Verbinden" = "Connecter";
+"QR-Code scannen" = "Scanner le QR code";
+"QR-Code enthält keine Session-ID." = "Le QR code ne contient pas d'ID de session.";
+
+/* ── Misc ── */
+"Code" = "Code";
+"Crew" = "Équipage";
+"Bereit" = "Prêt";
+"Kamera nicht verfügbar." = "Caméra non disponible.";
+
+/* ── Dynamic format strings ── */
+"nearby.hostStartingSession" = "%@ démarre une photo d'équipage";
+"burst.shotNumber" = "Prise %d";
+"host.startTimer" = "Départ %ds";
+"home.resumeIn" = "Reprendre (%ds)";
+"result.closingIn" = "Fermeture dans %d…";
+
+/* ── Alert titles ── */
+"Hinweis" = "Info";
+"Session abgelaufen" = "Session expirée";
+
+/* ── Reactions (Reaction.label) ── */
+"reaction.ready" = "Prêt";
+"reaction.waitMoment" = "Attends un instant";
+"reaction.again" = "Encore";
+"reaction.cantSeeMe" = "Je ne suis pas visible";
+"reaction.raiseCamera" = "Caméra plus haut";
+"reaction.moveLeft" = "Plus à gauche";
+"reaction.moveRight" = "Plus à droite";
+
+/* ── In-frame hints (InFrameStatus.headline) ── */
+"inframe.noFaces" = "Personne dans le cadre";
+"inframe.allInside" = "Tout le monde dedans";
+"inframe.someClipped" = "Quelqu'un est coupé";
+"inframe.skewedLeft" = "Le groupe est trop à gauche";
+"inframe.skewedRight" = "Le groupe est trop à droite";
+"inframe.tooHigh" = "Position de la caméra trop basse";
+"inframe.tooLow" = "Position de la caméra trop haute";
+
+/* ── TriggerPermission ── */
+"trigger.hostOnly.title" = "Capitaine uniquement";
+"trigger.hostOnly.subtitle" = "Toi seul donnes l'ordre.";
+"trigger.everyoneCanStartTimer.title" = "L'équipage peut déclencher";
+"trigger.everyoneCanStartTimer.subtitle" = "N'importe qui à bord peut lancer le minuteur.";
+"trigger.viewersCanRequest.title" = "L'équipage demande — le Capitaine décide";
+"trigger.viewersCanRequest.subtitle" = "Demande t'est envoyée, tu confirmes.";
+
+/* ── Pirate Ranks ── */
+"rank.cabinBoy"      = "Mousse";
+"rank.deckhand"      = "Matelot";
+"rank.boatswain"     = "Maître d'équipage";
+"rank.gunner"        = "Canonnier";
+"rank.navigator"     = "Navigateur";
+"rank.quartermaster" = "Quartier-maître";
+"rank.firstMate"     = "Second";
+"rank.captain"       = "Capitaine";
+
+/* ── Identity Settings ── */
+"identity.settings.title"           = "Identité";
+"identity.customName.label"         = "Nom personnalisé";
+"identity.customName.placeholder"   = "p. ex. Alex";
+"identity.customName.hint"          = "Remplace tout — aucun grade ajouté.";
+"identity.gamecenter.label"         = "Game Center";
+"identity.gamecenter.connected"     = "Connecté";
+"identity.gamecenter.disconnected"  = "Non connecté";
+"identity.gamecenter.notSignedIn"   = "Connecte-toi à Game Center via Réglages → Game Center.";
+"identity.progress.label"           = "Progression du grade";
+"identity.progress.points"          = "points";
+"identity.progress.hint"            = "Héberge des sessions, prends des photos, envoie des réactions — tout compte.";
+"identity.progress.maxRank"         = "Grade maximal atteint. Légende des sept mers ! 🏴‍☠️";

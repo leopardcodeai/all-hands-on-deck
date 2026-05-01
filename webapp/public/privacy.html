@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Privacy Policy — All Hands On Deck</title>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+           max-width: 720px; margin: 2.5rem auto; padding: 0 1.25rem; line-height: 1.55;
+           color: #1c1c1e; background: #f8f8f8; }
+    h1 { font-size: 1.75rem; margin-bottom: .25rem; }
+    h2 { font-size: 1.1rem; margin-top: 2rem; }
+    p, li { font-size: 0.95rem; }
+    code { background: #ececec; padding: 1px 5px; border-radius: 3px; font-size: 0.85em; }
+    .meta { color: #666; font-size: .85rem; margin-bottom: 1.5rem; }
+    a { color: #0a7aff; }
+    footer { margin-top: 3rem; font-size: .8rem; color: #888; border-top: 1px solid #ddd; padding-top: 1rem; }
+  </style>
+</head>
+<body>
+  <h1>Privacy Policy</h1>
+  <p class="meta">All Hands On Deck · Last updated: 2026-05-01</p>
+
+  <p>
+    This policy describes what data the All Hands On Deck app and web viewer
+    handle, and why. The app is built around <strong>ephemeral group-photo
+    sessions</strong>: there are no accounts, no persistent profiles, and no
+    long-term storage. Whenever possible, data stays on your device.
+  </p>
+
+  <h2>1. Who we are</h2>
+  <p>
+    All Hands On Deck is operated by <strong>Alexander Brunker</strong>
+    (contact: <a href="mailto:alexander.brunker@gmail.com">alexander.brunker@gmail.com</a>).
+    See the <a href="/imprint">Imprint</a> page for the full legal address.
+  </p>
+
+  <h2>2. What data we process</h2>
+  <ul>
+    <li>
+      <strong>Camera frames &amp; final photos.</strong> While a session is
+      live, low-resolution preview frames (~640px JPEG) and the captured group
+      photo are relayed through Google Firebase Realtime Database to other
+      participants of the same session. They are never written to long-term
+      storage on our side and are removed when the session expires (TTL,
+      typically under 1 hour).
+    </li>
+    <li>
+      <strong>Session ID + display name.</strong> Each session has a random
+      6–16 character ID and the participants' chosen display names (which can
+      be a pseudonym such as a Game Center alias or a pirate rank). Both are
+      transmitted to other session participants.
+    </li>
+    <li>
+      <strong>Local device data.</strong> The iOS app stores user preferences
+      (language, grid/level toggles, web-join default) in Apple's
+      <code>UserDefaults</code> on your device. This data never leaves the
+      device.
+    </li>
+    <li>
+      <strong>Network metadata.</strong> Firebase logs IP addresses and
+      timestamps for the duration the connection lasts, as is standard for
+      any internet service. We do not link IP addresses to identities.
+    </li>
+    <li>
+      <strong>Crash diagnostics.</strong> If you opt in via iOS Settings
+      (Settings → Privacy &amp; Security → Analytics), Apple may share
+      crash reports with us. These are anonymous.
+    </li>
+  </ul>
+
+  <h2>3. What data we do NOT collect</h2>
+  <ul>
+    <li>No advertising identifiers (IDFA), no tracking SDKs, no analytics SDK.</li>
+    <li>No persistent user accounts, no email or phone collection.</li>
+    <li>No location data.</li>
+    <li>No persistent chat or message history outside the live session.</li>
+  </ul>
+
+  <h2>4. Legal basis (GDPR)</h2>
+  <p>
+    The lawful basis for processing the camera-frame and session data above is
+    <strong>Art. 6(1)(b) GDPR</strong> — performance of the service you
+    requested by joining or hosting a session. No further processing takes
+    place after the session ends.
+  </p>
+
+  <h2>5. Sub-processors</h2>
+  <p>
+    We use <strong>Google Firebase</strong> (Hosting, Realtime Database) as a
+    sub-processor for relaying session data. Firebase processes data in line
+    with Google's
+    <a href="https://firebase.google.com/support/privacy">Firebase privacy &amp; security</a>
+    documentation and provides an EU Standard Contractual Clauses-based
+    Data Processing Addendum.
+  </p>
+
+  <h2>6. Your rights</h2>
+  <p>
+    Under GDPR you have the right to access, correct, and request deletion of
+    personal data we hold. Because the service is account-less and ephemeral,
+    in practice we have no data to return or delete after a session ends.
+    For any concerns, contact
+    <a href="mailto:alexander.brunker@gmail.com">alexander.brunker@gmail.com</a>.
+    You may also lodge a complaint with the data-protection authority of
+    your residence.
+  </p>
+
+  <h2>7. Changes</h2>
+  <p>
+    Material changes to this policy will be reflected in the "Last updated"
+    date and announced in the app where reasonable.
+  </p>
+
+  <footer>
+    <a href="/">← Back to app</a> · <a href="/imprint">Imprint</a>
+  </footer>
+</body>
+</html>

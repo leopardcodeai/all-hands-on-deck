@@ -5,7 +5,7 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>
-	<string>All Hands</string>
+	<string>AllHandsOnDeck</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
@@ -13,7 +13,7 @@
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
 	<key>CFBundleName</key>
-	<string>All Hands on Deck</string>
+	<string>AllHandsOnDeck</string>
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>
@@ -31,13 +31,15 @@
 	</array>
 	<key>CFBundleVersion</key>
 	<string>1</string>
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
 	<key>NSBonjourServices</key>
 	<array>
 		<string>_allhands._tcp</string>
 		<string>_allhands._udp</string>
 	</array>
 	<key>NSCameraUsageDescription</key>
-	<string>All Hands on Deck nutzt die Kamera, um den Bildausschnitt live an deine Crew zu streamen — und um QR-Codes zum Beitreten zu scannen.</string>
+	<string>AllHandsOnDeck nutzt die Kamera, um den Bildausschnitt live an deine Crew zu streamen — und um QR-Codes zum Beitreten zu scannen.</string>
 	<key>NSLocalNetworkUsageDescription</key>
 	<string>Findet andere iPhones in der Nähe für die Live-Vorschau eurer Gruppenfoto-Session.</string>
 	<key>NSPhotoLibraryAddUsageDescription</key>

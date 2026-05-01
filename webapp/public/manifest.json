@@ -1,6 +1,6 @@
 {
-  "name": "All Hands on Deck",
-  "short_name": "All Hands",
+  "name": "AllHandsOnDeck",
+  "short_name": "AllHandsOnDeck",
   "description": "The Pirate Crew Picture App",
   "start_url": "/",
   "display": "standalone",

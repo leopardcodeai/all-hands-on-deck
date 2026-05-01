@@ -33,7 +33,7 @@ final class ViewerSessionViewModel: ObservableObject {
             try await transport.start(session: session)
         } catch {
             status = .notFound
-            errorMessage = "Verbindung fehlgeschlagen."
+            errorMessage = "Connection failed."
             return
         }
 
@@ -67,17 +67,29 @@ final class ViewerSessionViewModel: ObservableObject {
         }
     }
 
+    /// Direct "shoot now" — only meaningful when everyone can start the timer.
+    /// Mirrors the webapp's "⚡ Now" button.
+    var canTriggerNow: Bool {
+        session.triggerPermission == .everyoneCanStartTimer
+    }
+
     var triggerLabel: String {
         switch session.triggerPermission {
-        case .everyoneCanStartTimer: return "Timer starten"
-        case .viewersCanRequest: return "Foto anfragen"
-        case .hostOnly: return ""
+        case .everyoneCanStartTimer: return "Timer"
+        case .viewersCanRequest:     return "Request photo"
+        case .hostOnly:              return ""
         }
     }
 
     func tapTrigger() async {
         guard canTrigger, !countdown.state.isActive else { return }
         await transport.send(.captureRequested(by: transport.localParticipantID))
+        Haptics.tap()
+    }
+
+    func tapTriggerNow() async {
+        guard canTriggerNow, !countdown.state.isActive else { return }
+        await transport.send(.captureNowRequested(by: transport.localParticipantID))
         Haptics.tap()
     }
 

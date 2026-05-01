@@ -37,6 +37,7 @@ final class SessionWireMessageTests: XCTestCase {
             (.previewFrame(jpeg: Data([0xFF]), capturedAt: Date()),                       .previewFrame),
             (.finalPhotoAvailable(photoID: "x", jpeg: Data([0xFF])),                      .finalPhoto),
             (.captureRequested(by: "id"),                                                 .triggerRequest),
+            (.captureNowRequested(by: "id"),                                              .triggerRequest),
             (.reactionSent(by: "id", reaction: Reaction.ready.rawValue),                  .reaction),
             (.countdownStarted(photoAt: Date(), duration: 10, startedBy: "id"),           .event)
         ]
@@ -46,6 +47,20 @@ final class SessionWireMessageTests: XCTestCase {
                 createdAt: Date(), event: event
             )
             XCTAssertEqual(wm.kind, expected, "kind for \(event)")
+        }
+    }
+
+    func test_captureNowRequested_roundTrip() throws {
+        // The webapp's "⚡ Now" button sends this event; iOS host must decode
+        // it back to the matching enum case so triggerPermission routing works.
+        let event: SessionEvent = .captureNowRequested(by: "viewer-42")
+        let wm = SessionWireMessage(sessionId: "ABCDEF", senderId: "viewer-42",
+                                    createdAt: Date(), event: event)
+        let decoded = try SessionWireMessage.decode(wm.encoded())
+        if case .captureNowRequested(let by) = decoded.event {
+            XCTAssertEqual(by, "viewer-42")
+        } else {
+            XCTFail("Expected .captureNowRequested, got \(decoded.event)")
         }
     }
 

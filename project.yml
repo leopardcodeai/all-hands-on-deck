@@ -39,9 +39,9 @@ targets:
     info:
       path: AllHandsOnDeck/Resources/Info.plist
       properties:
-        CFBundleName: All Hands on Deck
-        CFBundleDisplayName: All Hands
-        NSCameraUsageDescription: "All Hands on Deck nutzt die Kamera, um den Bildausschnitt live an deine Crew zu streamen — und um QR-Codes zum Beitreten zu scannen."
+        CFBundleName: AllHandsOnDeck
+        CFBundleDisplayName: AllHandsOnDeck
+        NSCameraUsageDescription: "AllHandsOnDeck nutzt die Kamera, um den Bildausschnitt live an deine Crew zu streamen — und um QR-Codes zum Beitreten zu scannen."
         NSPhotoLibraryAddUsageDescription: "Damit das fertige Gruppenfoto in deiner Mediathek landet."
         NSLocalNetworkUsageDescription: "Findet andere iPhones in der Nähe für die Live-Vorschau eurer Gruppenfoto-Session."
         NSBonjourServices:
@@ -55,18 +55,20 @@ targets:
           - UIInterfaceOrientationPortrait
         UILaunchScreen: {}            # Solid launch screen (no storyboard needed)
         UIApplicationSupportsIndirectInputEvents: true
+        # App Store export-compliance shortcut: HTTPS-only counts as exempt
+        # so we don't need a per-release encryption-export filing.
+        ITSAppUsesNonExemptEncryption: false
 
-    # entitlements:                              # re-enable with paid dev account
-    #   path: AllHandsOnDeck/AllHandsOnDeck.entitlements
-    #   properties:
-    #     com.apple.developer.associated-domains:
-    #       - "applinks:all-hands-on-deck-ae29e.web.app"
+    entitlements:
+      path: AllHandsOnDeck/AllHandsOnDeck.entitlements
 
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: app.captainleopard.allhands
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
         ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES: YES
+        DEVELOPMENT_TEAM: LPHP8KBWW8
+        CODE_SIGN_STYLE: Automatic
 
     dependencies:
       - sdk: GameKit.framework
@@ -116,6 +118,9 @@ targets:
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: app.captainleopard.allhands.tests
+        GENERATE_INFOPLIST_FILE: YES
+        DEVELOPMENT_TEAM: LPHP8KBWW8
+        CODE_SIGN_STYLE: Automatic
 
     dependencies:
       - target: AllHandsOnDeck

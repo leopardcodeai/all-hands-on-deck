@@ -7,13 +7,16 @@ struct HostSessionView: View {
     @State private var baseZoom: CGFloat = 1.0
     @State private var showZoomLabel: Bool = false
     @State private var zoomHideTask: Task<Void, Never>? = nil
+    @AppStorage("camera.showGrid")  private var showGrid: Bool = true
+    @AppStorage("camera.showLevel") private var showLevel: Bool = true
     let onSessionCreated: (String) -> Void
 
     init(hostName: String, allowWebJoin: Bool = false, onSessionCreated: @escaping (String) -> Void) {
-        _vm = StateObject(wrappedValue: HostSessionViewModel(
-            hostName: hostName,
-            allowWebJoin: allowWebJoin
-        ))
+        // Resume a parked VM if the captain re-entered within the grace window;
+        // otherwise spin up a fresh session.
+        let vm = HostSessionRetention.shared.consume()
+            ?? HostSessionViewModel(hostName: hostName, allowWebJoin: allowWebJoin)
+        _vm = StateObject(wrappedValue: vm)
         self.onSessionCreated = onSessionCreated
     }
 
@@ -23,12 +26,14 @@ struct HostSessionView: View {
             // CameraService directly so only this branch re-renders on camera changes.
             CameraAuthBranch(
                 camera: vm.camera,
+                showGrid: showGrid,
+                showLevel: showLevel,
                 onMagnifyChanged: { scale in
-                    vm.camera.setZoom(baseZoom * scale)
+                    vm.camera.smartZoom(baseZoom * scale)
                     flashZoomLabel()
                 },
-                onMagnifyEnded: { scale in
-                    baseZoom = min(max(1.0, baseZoom * scale), vm.camera.maxZoom)
+                onMagnifyEnded: { _ in
+                    baseZoom = vm.camera.virtualZoom
                 }
             )
 
@@ -45,8 +50,6 @@ struct HostSessionView: View {
                     .padding(.horizontal, 16)
                     .padding(.top, 8)
                 Spacer()
-                // Observes camera.zoomFactor directly — parent doesn't re-render during pinch.
-                ZoomLabelView(camera: vm.camera, visible: showZoomLabel)
                 if showQR {
                     QRCodePanelView(payload: vm.qrPayload, sessionID: vm.session.id)
                         .frame(maxWidth: 320)
@@ -57,6 +60,10 @@ struct HostSessionView: View {
                     .padding(.horizontal, 16)
                     .padding(.bottom, 8)
             }
+
+            // Centered floating zoom HUD — observes camera directly so the
+            // parent doesn't re-render at gesture rate.
+            ZoomLabelView(camera: vm.camera, visible: showZoomLabel)
 
             if showSettings {
                 settingsSheet
@@ -98,8 +105,17 @@ struct HostSessionView: View {
             await vm.onAppear()
             onSessionCreated(vm.session.id)
         }
-        .onDisappear { vm.onDisappear() }
-        .alert("Hinweis", isPresented: .init(
+        .onDisappear {
+            // If the session ended on its own (TTL expiry), tear down now.
+            // Otherwise park the VM so the captain can briefly drop to Home
+            // and resume within 10s without losing the session.
+            if vm.didExpire {
+                vm.shutdown()
+            } else {
+                HostSessionRetention.shared.park(vm)
+            }
+        }
+        .alert("Notice", isPresented: .init(
             get: { vm.errorMessage != nil },
             set: { if !$0 { vm.errorMessage = nil } }
         )) {
@@ -107,13 +123,13 @@ struct HostSessionView: View {
         } message: {
             Text(vm.errorMessage ?? "")
         }
-        .alert("Session abgelaufen", isPresented: .init(
+        .alert("Session expired", isPresented: .init(
             get: { vm.didExpire },
             set: { _ in }
         )) {
-            Button("Schließen") { dismiss() }
+            Button("Close") { dismiss() }
         } message: {
-            Text("Sessions enden automatisch nach Ablauf der TTL — kein Speichern, keine Accounts, keine Spuren.")
+            Text("Sessions end automatically after TTL — no saving, no accounts, no traces.")
         }
         .animation(.spring(response: 0.4, dampingFraction: 0.85), value: showQR)
         .animation(.spring(response: 0.4, dampingFraction: 0.85), value: showSettings)
@@ -136,66 +152,92 @@ struct HostSessionView: View {
     }
 
     private var topBar: some View {
-        HStack(spacing: 10) {
-            Button {
-                dismiss()
-            } label: {
-                Image(systemName: "chevron.backward")
-                    .font(.system(size: 16, weight: .heavy))
-                    .foregroundStyle(Theme.bone)
-                    .frame(width: 40, height: 40)
-                    .background(.ultraThinMaterial, in: Circle())
+        // Two compact rows so nothing clips on narrow iPhones (SE/mini width ≈ 320pt).
+        // Row 1: identity + connection state. Row 2: camera-mode chrome.
+        VStack(spacing: 8) {
+            HStack(spacing: 10) {
+                Button {
+                    dismiss()
+                } label: {
+                    Image(systemName: "chevron.backward")
+                        .font(.system(size: 16, weight: .heavy))
+                        .foregroundStyle(Theme.bone)
+                        .frame(width: 40, height: 40)
+                        .background(.ultraThinMaterial, in: Circle())
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel("Back")
+                .accessibilityHint("Returns to the home screen")
+
+                StatusPill(
+                    label: vm.statusLabel,
+                    systemImage: "dot.radiowaves.left.and.right",
+                    tint: vm.transportStatus == .connected || vm.transportStatus == .advertising
+                        ? Theme.signal
+                        : Theme.amber
+                )
+
+                Spacer(minLength: 8)
+
+                HStack(spacing: 4) {
+                    Image(systemName: "person.2.fill")
+                        .font(.system(size: 12, weight: .heavy))
+                    Text("\(vm.participants.count)")
+                        .font(.system(size: 13, weight: .heavy, design: .rounded))
+                }
+                .foregroundStyle(Theme.bone)
+                .padding(.horizontal, 10)
+                .padding(.vertical, 8)
+                .background(.ultraThinMaterial, in: Capsule())
+
+                Button {
+                    withAnimation { showSettings.toggle() }
+                } label: {
+                    Image(systemName: "slider.horizontal.3")
+                        .font(.system(size: 16, weight: .heavy))
+                        .foregroundStyle(Theme.bone)
+                        .frame(width: 40, height: 40)
+                        .background(.ultraThinMaterial, in: Circle())
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel("Settings")
+                .accessibilityHint("Open timer, permissions, grid and HD options")
             }
-            .buttonStyle(.plain)
 
-            StatusPill(
-                label: vm.statusLabel,
-                systemImage: "dot.radiowaves.left.and.right",
-                tint: vm.transportStatus == .connected || vm.transportStatus == .advertising
-                    ? Theme.signal
-                    : Theme.amber
-            )
+            HStack(spacing: 10) {
+                Button {
+                    withAnimation { showQR.toggle() }
+                } label: {
+                    Image(systemName: showQR ? "qrcode" : "qrcode.viewfinder")
+                        .font(.system(size: 16, weight: .heavy))
+                        .foregroundStyle(showQR ? .black : Theme.bone)
+                        .frame(width: 40, height: 40)
+                        .background(showQR ? AnyShapeStyle(Theme.goldShine) : AnyShapeStyle(.ultraThinMaterial), in: Circle())
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel(showQR ? "Hide QR code" : "Show QR code")
+                .accessibilityHint("Lets crew members scan to join the session")
 
-            Spacer()
+                LensSelectorView(camera: vm.camera, onSelect: { lens in
+                    vm.camera.switchLens(lens)
+                    switch lens {
+                    case .ultraWide: baseZoom = vm.camera.minVirtualZoom
+                    case .wide:      baseZoom = 1.0
+                    case .tele:      baseZoom = vm.camera.teleEquivalentZoom
+                    }
+                    flashZoomLabel()
+                })
 
-            HStack(spacing: 4) {
-                Image(systemName: "person.2.fill")
-                    .font(.system(size: 12, weight: .heavy))
-                Text("\(vm.participants.count)")
-                    .font(.system(size: 13, weight: .heavy, design: .rounded))
+                Spacer()
+
+                HighResButton(camera: vm.camera)
+
+                // Torch + flip — observes camera directly so only these buttons re-render.
+                CameraButtons(camera: vm.camera, onFlip: {
+                    withAnimation(.spring(response: 0.35, dampingFraction: 0.7)) { baseZoom = 1.0 }
+                    vm.camera.flipCamera()
+                })
             }
-            .foregroundStyle(Theme.bone)
-            .padding(.horizontal, 10)
-            .padding(.vertical, 8)
-            .background(.ultraThinMaterial, in: Capsule())
-
-            Button {
-                withAnimation { showQR.toggle() }
-            } label: {
-                Image(systemName: showQR ? "qrcode" : "qrcode.viewfinder")
-                    .font(.system(size: 16, weight: .heavy))
-                    .foregroundStyle(showQR ? .black : Theme.bone)
-                    .frame(width: 40, height: 40)
-                    .background(showQR ? AnyShapeStyle(Theme.goldShine) : AnyShapeStyle(.ultraThinMaterial), in: Circle())
-            }
-            .buttonStyle(.plain)
-
-            // Torch + flip — observe camera directly so only these buttons re-render.
-            CameraButtons(camera: vm.camera, onFlip: {
-                withAnimation(.spring(response: 0.35, dampingFraction: 0.7)) { baseZoom = 1.0 }
-                vm.camera.flipCamera()
-            })
-
-            Button {
-                withAnimation { showSettings.toggle() }
-            } label: {
-                Image(systemName: "slider.horizontal.3")
-                    .font(.system(size: 16, weight: .heavy))
-                    .foregroundStyle(Theme.bone)
-                    .frame(width: 40, height: 40)
-                    .background(.ultraThinMaterial, in: Circle())
-            }
-            .buttonStyle(.plain)
         }
     }
 
@@ -210,18 +252,13 @@ struct HostSessionView: View {
                     .transition(.scale.combined(with: .opacity))
             }
             if !vm.pendingCaptureRequests.isEmpty {
-                Text("Anfrage von der Crew — bestätige in den Einstellungen.")
+                Text("Request from crew — confirm in settings.")
                     .font(.system(size: 12, weight: .heavy, design: .rounded))
                     .foregroundStyle(.black)
                     .padding(.horizontal, 12).padding(.vertical, 6)
                     .background(Theme.gold)
                     .clipShape(Capsule())
             }
-
-            LensSelectorView(camera: vm.camera, onSelect: { lens in
-                withAnimation(.spring(response: 0.25)) { baseZoom = 1.0 }
-                vm.camera.switchLens(lens)
-            })
 
             HStack(spacing: 12) {
                 if vm.countdown.state.isActive {
@@ -242,6 +279,31 @@ struct HostSessionView: View {
                 }
             }
         }
+    }
+
+    private func settingsToggleRow(systemImage: String,
+                                   title: String,
+                                   subtitle: String,
+                                   isOn: Binding<Bool>) -> some View {
+        HStack(spacing: 12) {
+            Image(systemName: systemImage)
+                .foregroundStyle(isOn.wrappedValue ? Theme.gold : Theme.mist)
+            VStack(alignment: .leading, spacing: 2) {
+                Text(title)
+                    .font(.system(size: 14, weight: .heavy, design: .rounded))
+                    .foregroundStyle(Theme.bone)
+                Text(subtitle)
+                    .font(.system(size: 11, weight: .medium))
+                    .foregroundStyle(Theme.mist)
+            }
+            Spacer()
+            Toggle("", isOn: isOn)
+                .labelsHidden()
+                .tint(Theme.gold)
+        }
+        .padding(.horizontal, 14).padding(.vertical, 10)
+        .background(RoundedRectangle(cornerRadius: 14, style: .continuous).fill(Color.white.opacity(0.04)))
+        .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous).stroke(Color.white.opacity(0.06), lineWidth: 1))
     }
 
     private var settingsSheet: some View {
@@ -266,7 +328,7 @@ struct HostSessionView: View {
             }
 
             VStack(alignment: .leading, spacing: 10) {
-                Text("Wer darf auslösen?")
+                Text("Who can trigger?")
                     .font(.system(size: 13, weight: .heavy, design: .rounded))
                     .tracking(1.0)
                     .foregroundStyle(Theme.mist)
@@ -283,7 +345,7 @@ struct HostSessionView: View {
                     Text("Best-Shot Burst")
                         .font(.system(size: 14, weight: .heavy, design: .rounded))
                         .foregroundStyle(Theme.bone)
-                    Text("5 Aufnahmen, KI wählt die beste.")
+                    Text("5 shots, AI picks the best.")
                         .font(.system(size: 11, weight: .medium))
                         .foregroundStyle(Theme.mist)
                 }
@@ -304,6 +366,19 @@ struct HostSessionView: View {
 
             HighResRow(camera: vm.camera)
 
+            settingsToggleRow(
+                systemImage: "grid",
+                title: "Grid",
+                subtitle: "Rule-of-thirds + safe-area frame.",
+                isOn: $showGrid
+            )
+            settingsToggleRow(
+                systemImage: "level",
+                title: "Level",
+                subtitle: "Horizon indicator turns yellow when level.",
+                isOn: $showLevel
+            )
+
             ParticipantListView(
                 participants: vm.participants,
                 pendingRequestIDs: vm.pendingCaptureRequests,
@@ -311,7 +386,7 @@ struct HostSessionView: View {
                 onDeny: { id in Task { await vm.deny(participantID: id) } }
             )
 
-            PrimaryButton(title: "Schließen", style: .ghost) {
+            PrimaryButton(title: "Close", style: .ghost) {
                 withAnimation { showSettings = false }
             }
         }
@@ -371,6 +446,8 @@ struct HostSessionView: View {
 
 private struct CameraAuthBranch: View {
     @ObservedObject var camera: CameraService
+    let showGrid: Bool
+    let showLevel: Bool
     let onMagnifyChanged: (CGFloat) -> Void
     let onMagnifyEnded: (CGFloat) -> Void
 
@@ -384,9 +461,15 @@ private struct CameraAuthBranch: View {
                             .onChanged { onMagnifyChanged($0) }
                             .onEnded { onMagnifyEnded($0) }
                     )
-                SafeGridOverlayView()
-                    .ignoresSafeArea()
-                    .allowsHitTesting(false)
+                if showGrid {
+                    SafeGridOverlayView()
+                        .ignoresSafeArea()
+                        .allowsHitTesting(false)
+                }
+                if showLevel {
+                    LevelIndicatorView()
+                        .allowsHitTesting(false)
+                }
             }
         } else if camera.authorization == .denied {
             PermissionView {
@@ -395,25 +478,80 @@ private struct CameraAuthBranch: View {
                 }
             }
         } else {
-            Color.black.ignoresSafeArea()
+            // .notDetermined — context behind the iOS permission prompt.
+            // Apple rejects apps that show only a black screen here; the
+            // priming text reinforces NSCameraUsageDescription.
+            CameraPrimingView()
         }
     }
 }
 
+private struct CameraPrimingView: View {
+    var body: some View {
+        ZStack {
+            Theme.oceanFog.ignoresSafeArea()
+            VStack(spacing: 18) {
+                Image(systemName: "camera.viewfinder")
+                    .font(.system(size: 56, weight: .bold))
+                    .foregroundStyle(Theme.gold)
+                Text("Just a moment…")
+                    .font(.system(size: 22, weight: .heavy, design: .rounded))
+                    .foregroundStyle(Theme.bone)
+                Text("AllHandsOnDeck needs camera access so your crew can see what you see.")
+                    .font(.system(size: 14, weight: .medium))
+                    .foregroundStyle(Theme.mist)
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal, 40)
+                ProgressView()
+                    .tint(Theme.mist)
+                    .padding(.top, 4)
+            }
+        }
+    }
+}
+
+/// Apple-style centered zoom indicator that fades in during pinch and out 1.5s after.
+/// Larger, bolder, yellow — matches the iOS Camera app look.
 private struct ZoomLabelView: View {
     @ObservedObject var camera: CameraService
     let visible: Bool
 
     var body: some View {
-        if visible {
-            Text(String(format: "%.1f×", camera.zoomFactor))
-                .font(.system(size: 14, weight: .heavy, design: .rounded))
-                .foregroundStyle(.black)
-                .padding(.horizontal, 12).padding(.vertical, 6)
-                .background(Theme.gold, in: Capsule())
-                .transition(.scale.combined(with: .opacity))
-                .padding(.bottom, 4)
+        Text(String(format: "%.1f×", camera.virtualZoom))
+            .font(.system(size: 28, weight: .heavy, design: .rounded))
+            .foregroundStyle(Color.yellow)
+            .shadow(color: .black.opacity(0.7), radius: 6, y: 1)
+            .padding(.horizontal, 16).padding(.vertical, 8)
+            .background(.ultraThinMaterial, in: Capsule())
+            .overlay(Capsule().stroke(Color.yellow.opacity(0.5), lineWidth: 1))
+            .scaleEffect(visible ? 1.0 : 0.85)
+            .opacity(visible ? 1.0 : 0)
+            .animation(.spring(response: 0.25, dampingFraction: 0.75), value: visible)
+            .allowsHitTesting(false)
+    }
+}
+
+/// Subtle horizon indicator. Two short bars in the center: a fixed reference
+/// and a tilted one that rotates with device roll. Both turn yellow when the
+/// device is within ±2° of level — matching iOS Camera's level affordance.
+private struct LevelIndicatorView: View {
+    @StateObject private var level = LevelService.shared
+
+    var body: some View {
+        let isLevel = level.isLevel
+        ZStack {
+            Capsule()
+                .fill(isLevel ? Color.yellow : Color.white.opacity(0.45))
+                .frame(width: 44, height: 1)
+            Capsule()
+                .fill(isLevel ? Color.yellow : Color.white.opacity(0.85))
+                .frame(width: 88, height: 1)
+                .rotationEffect(.degrees(-level.rollDegrees))
         }
+        .shadow(color: .black.opacity(0.6), radius: 2)
+        .animation(.easeOut(duration: 0.18), value: isLevel)
+        .onAppear { level.start() }
+        .onDisappear { level.stop() }
     }
 }
 
@@ -435,6 +573,7 @@ private struct CameraButtons: View {
                         )
                 }
                 .buttonStyle(.plain)
+                .accessibilityLabel(camera.isTorchOn ? "Turn off flashlight" : "Turn on flashlight")
             }
             Button { onFlip() } label: {
                 Image(systemName: "camera.rotate.fill")
@@ -444,33 +583,68 @@ private struct CameraButtons: View {
                     .background(.ultraThinMaterial, in: Circle())
             }
             .buttonStyle(.plain)
+            .accessibilityLabel(camera.isFrontCamera ? "Switch to back camera" : "Switch to front camera")
         }
     }
 }
 
+/// Apple-style lens picker: a single dark blurred capsule containing all lens
+/// options. Active lens is bolder/larger and wrapped in a filled circle that
+/// slides smoothly between options via `matchedGeometryEffect`.
 private struct LensSelectorView: View {
     @ObservedObject var camera: CameraService
     let onSelect: (CameraService.LensType) -> Void
+    @Namespace private var ns
 
     var body: some View {
         if !camera.isFrontCamera && camera.availableLenses.count > 1 {
-            HStack(spacing: 6) {
+            HStack(spacing: 2) {
                 ForEach(camera.availableLenses, id: \.self) { lens in
+                    let isActive = camera.currentLens == lens
                     Button { onSelect(lens) } label: {
-                        Text(lens.label)
-                            .font(.system(size: 13, weight: .heavy, design: .rounded))
-                            .foregroundStyle(camera.currentLens == lens ? .black : Theme.bone)
-                            .frame(width: 44, height: 32)
-                            .background(
-                                camera.currentLens == lens
-                                    ? AnyShapeStyle(Theme.goldShine)
-                                    : AnyShapeStyle(.ultraThinMaterial),
-                                in: Capsule()
-                            )
+                        ZStack {
+                            if isActive {
+                                Circle()
+                                    .fill(Color.black.opacity(0.55))
+                                    .matchedGeometryEffect(id: "lens-bg", in: ns)
+                            }
+                            Text(label(for: lens, active: isActive))
+                                .font(.system(size: isActive ? 13 : 11,
+                                              weight: .heavy, design: .rounded))
+                                .foregroundStyle(isActive ? Color.yellow : Theme.bone)
+                        }
+                        .frame(width: 32, height: 32)
                     }
                     .buttonStyle(.plain)
+                    .accessibilityLabel(accessibilityLabel(for: lens))
+                    .accessibilityAddTraits(isActive ? .isSelected : [])
                 }
             }
+            .padding(4)
+            .background(.ultraThinMaterial, in: Capsule())
+            .overlay(Capsule().stroke(Color.white.opacity(0.08), lineWidth: 0.5))
+            .animation(.spring(response: 0.3, dampingFraction: 0.75),
+                       value: camera.currentLens)
+        }
+    }
+
+    private func label(for lens: CameraService.LensType, active: Bool) -> String {
+        switch lens {
+        case .ultraWide: return active ? ".5×" : ".5"
+        case .wide:      return active ? "1×"  : "1"
+        case .tele:
+            let n = max(2, Int(camera.teleEquivalentZoom.rounded()))
+            return active ? "\(n)×" : "\(n)"
+        }
+    }
+
+    private func accessibilityLabel(for lens: CameraService.LensType) -> String {
+        switch lens {
+        case .ultraWide: return "Ultra-wide lens, half magnification"
+        case .wide:      return "Wide lens, one times magnification"
+        case .tele:
+            let n = max(2, Int(camera.teleEquivalentZoom.rounded()))
+            return "Telephoto lens, \(n) times magnification"
         }
     }
 }
@@ -479,27 +653,86 @@ private struct HighResRow: View {
     @ObservedObject var camera: CameraService
 
     var body: some View {
-        HStack(spacing: 12) {
-            Image(systemName: "camera.aperture")
-                .foregroundStyle(camera.isHighResEnabled ? Theme.gold : Theme.mist)
-            VStack(alignment: .leading, spacing: 2) {
-                Text("Hohe Auflösung (48 MP)")
-                    .font(.system(size: 14, weight: .heavy, design: .rounded))
-                    .foregroundStyle(Theme.bone)
-                Text("Maximale Auflösung — langsamere Verarbeitung.")
-                    .font(.system(size: 11, weight: .medium))
-                    .foregroundStyle(Theme.mist)
+        VStack(alignment: .leading, spacing: 8) {
+            HStack(spacing: 12) {
+                Image(systemName: "camera.aperture")
+                    .foregroundStyle(camera.highResMode != .off ? Theme.gold : Theme.mist)
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Resolution")
+                        .font(.system(size: 14, weight: .heavy, design: .rounded))
+                        .foregroundStyle(Theme.bone)
+                    Text(subtitle)
+                        .font(.system(size: 11, weight: .medium))
+                        .foregroundStyle(Theme.mist)
+                }
+                Spacer()
             }
-            Spacer()
-            Toggle("", isOn: Binding(
-                get: { camera.isHighResEnabled },
-                set: { _ in camera.toggleHighRes() }
-            ))
-            .labelsHidden()
-            .tint(Theme.gold)
+            Picker("Resolution", selection: Binding(
+                get: { camera.highResMode },
+                set: { camera.setHighResMode($0) }
+            )) {
+                ForEach(camera.allowedHighResModes, id: \.self) { mode in
+                    Text(mode.label).tag(mode)
+                }
+            }
+            .pickerStyle(.segmented)
         }
         .padding(.horizontal, 14).padding(.vertical, 10)
         .background(RoundedRectangle(cornerRadius: 14, style: .continuous).fill(Color.white.opacity(0.04)))
         .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous).stroke(Color.white.opacity(0.06), lineWidth: 1))
+    }
+
+    private var subtitle: String {
+        switch camera.highResMode {
+        case .off:  return "Standard — fast and light."
+        case .half: return "HD — middle ground, works on older iPhones."
+        case .full: return "HD+ — 48 MP, slower processing."
+        }
+    }
+}
+
+/// Compact icon button next to torch/flip — cycles `off → half → full` (the latter
+/// only on devices with a 48 MP sensor). Visible in photo mode so power users
+/// don't have to open settings to bump quality.
+private struct HighResButton: View {
+    @ObservedObject var camera: CameraService
+
+    var body: some View {
+        Button { camera.cycleHighResMode() } label: {
+            VStack(spacing: 0) {
+                Image(systemName: "camera.aperture")
+                    .font(.system(size: 14, weight: .heavy))
+                Text(badge)
+                    .font(.system(size: 8, weight: .heavy, design: .rounded))
+                    .tracking(0.5)
+            }
+            .foregroundStyle(camera.highResMode != .off ? .black : Theme.bone)
+            .frame(width: 40, height: 40)
+            .background(
+                camera.highResMode != .off
+                    ? AnyShapeStyle(Theme.goldShine)
+                    : AnyShapeStyle(.ultraThinMaterial),
+                in: Circle()
+            )
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel("Resolution: \(accessibleName)")
+        .accessibilityHint("Tap to cycle through resolution modes")
+    }
+
+    private var badge: String {
+        switch camera.highResMode {
+        case .off:  return "SD"
+        case .half: return "HD"
+        case .full: return "48"
+        }
+    }
+
+    private var accessibleName: String {
+        switch camera.highResMode {
+        case .off:  return "Standard"
+        case .half: return "High definition"
+        case .full: return "48 megapixel"
+        }
     }
 }

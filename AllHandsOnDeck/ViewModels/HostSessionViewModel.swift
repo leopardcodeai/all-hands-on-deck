@@ -39,6 +39,7 @@ final class HostSessionViewModel: ObservableObject {
     private var lastReactionFrom: String?
     private var isWritingFrame = false
     private let watchTrigger = PassthroughSubject<Void, Never>()
+    private var isStarted = false
 
     // MARK: - Init
 
@@ -68,6 +69,11 @@ final class HostSessionViewModel: ObservableObject {
     // MARK: - Lifecycle
 
     func onAppear() async {
+        // Idempotent: HostSessionRetention may resume a parked VM, in which
+        // case the transport, camera, and Combine subs are already wired.
+        guard !isStarted else { return }
+        isStarted = true
+
         IdentityService.shared.record(.hostSession)
         await camera.requestPermissionIfNeeded()
         camera.start()
@@ -147,7 +153,12 @@ final class HostSessionViewModel: ObservableObject {
         }
     }
 
-    func onDisappear() {
+    /// Tear the session down: stop camera, notify peers, drop transport.
+    /// Called either by `HostSessionRetention` after the 10s park window or
+    /// directly when the session expires.
+    func shutdown() {
+        guard isStarted else { return }
+        isStarted = false
         expiryTask?.cancel()
         reactionDismissTask?.cancel()
         camera.previewFrameConsumer = nil
@@ -215,7 +226,9 @@ final class HostSessionViewModel: ObservableObject {
             countdown.markCompleted()
             IdentityService.shared.record(.capturePhoto)
             await transport.send(.photoCaptured(at: photo.capturedAt))
-            let preview = ImageCompression.scaledJPEG(data: data, maxWidth: 1280, quality: 0.7)
+            let preview = await Task.detached(priority: .userInitiated) {
+                ImageCompression.scaledJPEG(data: data, maxWidth: 1280, quality: 0.7)
+            }.value
             await transport.send(.finalPhotoAvailable(photoID: photo.id, jpeg: preview))
             Haptics.success()
         } catch {
@@ -252,9 +265,10 @@ final class HostSessionViewModel: ObservableObject {
         burstCandidates = []
         burstScores = []
         IdentityService.shared.record(.acceptBurst)
-        let preview = ImageCompression.scaledJPEG(
-            data: photo.imageData, maxWidth: 1280, quality: 0.7
-        )
+        let imageData = photo.imageData
+        let preview = await Task.detached(priority: .userInitiated) {
+            ImageCompression.scaledJPEG(data: imageData, maxWidth: 1280, quality: 0.7)
+        }.value
         await transport.send(.finalPhotoAvailable(photoID: photo.id, jpeg: preview))
     }
 
@@ -302,7 +316,9 @@ final class HostSessionViewModel: ObservableObject {
 
     // MARK: - Inbound events
 
-    private func handle(_ event: SessionEvent) {
+    /// Internal so tests can drive permission gating without standing up the
+    /// full Combine + camera pipeline that `onAppear()` wires.
+    func handle(_ event: SessionEvent) {
         switch event {
         case .participantJoined(let p):
             if !participants.contains(where: { $0.id == p.id }) {
@@ -356,6 +372,11 @@ final class HostSessionViewModel: ObservableObject {
                 }
             case .hostOnly:
                 break
+            }
+
+        case .captureNowRequested:
+            if session.triggerPermission == .everyoneCanStartTimer {
+                Task { await captureNow() }
             }
 
         default:

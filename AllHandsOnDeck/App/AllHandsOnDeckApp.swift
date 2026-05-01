@@ -17,8 +17,9 @@ struct AllHandsOnDeckApp: App {
                 .preferredColorScheme(.dark)
                 .tint(Theme.gold)
                 .task {
-                    // Silently authenticate GC on launch if the user is already signed in;
-                    // does not force-enable the GC toggle — user opts in via settings.
+                    // Only authenticate if the user previously opted in; avoids GK log
+                    // spam on devices where the entitlement isn't wired up yet.
+                    guard UserDefaults.standard.bool(forKey: "identity.useGameCenter") else { return }
                     await GameCenterService.shared.authenticate()
                 }
                 .onOpenURL { url in

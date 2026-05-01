@@ -30,7 +30,7 @@ struct SessionWireMessage: Codable, Sendable {
         case .sessionMetadata: return .metadata
         case .previewFrame: return .previewFrame
         case .finalPhotoAvailable: return .finalPhoto
-        case .captureRequested: return .triggerRequest
+        case .captureRequested, .captureNowRequested: return .triggerRequest
         case .reactionSent: return .reaction
         default: return .event
         }
