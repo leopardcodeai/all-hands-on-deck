@@ -7,7 +7,6 @@ import Combine
 /// all other events to `messages/` (push, append-only). SSE streams inbound events.
 @MainActor
 final class FirebaseRTDBTransport: NSObject, SessionTransport {
-
     // MARK: - Config
 
     static let databaseURL = "https://all-hands-on-deck-ae29e-default-rtdb.firebaseio.com"

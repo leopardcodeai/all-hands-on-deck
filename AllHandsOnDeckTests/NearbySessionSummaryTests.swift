@@ -2,7 +2,6 @@ import XCTest
 @testable import AllHandsOnDeck
 
 final class NearbySessionSummaryTests: XCTestCase {
-
     func test_full_discoveryInfo_decodes() {
         let info: [String: String] = [
             "sessionId": "ABCDEF1234",

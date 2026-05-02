@@ -82,12 +82,12 @@ extension WatchConnectivityBridge: WCSessionDelegate {
     }
 
     nonisolated func session(_ session: WCSession,
-                             didReceiveMessage message: [String : Any]) {
+                             didReceiveMessage message: [String: Any]) {
         handleIncoming(message)
     }
 
     nonisolated func session(_ session: WCSession,
-                             didReceiveUserInfo userInfo: [String : Any] = [:]) {
+                             didReceiveUserInfo userInfo: [String: Any] = [:]) {
         handleIncoming(userInfo)
     }
 

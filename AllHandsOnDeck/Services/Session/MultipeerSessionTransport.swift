@@ -265,7 +265,7 @@ extension MultipeerSessionTransport: MCNearbyServiceAdvertiserDelegate {
 extension MultipeerSessionTransport: MCNearbyServiceBrowserDelegate {
     nonisolated func browser(_ browser: MCNearbyServiceBrowser,
                              foundPeer peerID: MCPeerID,
-                             withDiscoveryInfo info: [String : String]?) {
+                             withDiscoveryInfo info: [String: String]?) {
         Task { @MainActor in
             guard self.role == .viewer else { return }
             guard let target = self.photoSession?.id else { return }
@@ -290,4 +290,3 @@ extension MultipeerSessionTransport: MCNearbyServiceBrowserDelegate {
         AppLog.transport.error("browser failed: \(error.localizedDescription)")
     }
 }
-

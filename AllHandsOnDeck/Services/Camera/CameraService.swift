@@ -53,7 +53,7 @@ final class CameraService: NSObject, ObservableObject {
     @Published private(set) var availableLenses: [LensType] = [.wide]
     @Published private(set) var highResMode: HighResMode = .off
     @Published private(set) var supportsFullRes: Bool = false
-    @Published private(set) var maxDimensions: CMVideoDimensions = CMVideoDimensions(width: 0, height: 0)
+    @Published private(set) var maxDimensions = CMVideoDimensions(width: 0, height: 0)
     /// Wide-equivalent zoom shown to the user (0.5–10). Tracks across lens switches.
     @Published private(set) var virtualZoom: CGFloat = 1.0
     /// Optical zoom of the tele lens relative to wide, computed from field-of-view on first use.
@@ -483,4 +483,3 @@ extension CameraService: AVCaptureVideoDataOutputSampleBufferDelegate {
         handler(jpeg)
     }
 }
-

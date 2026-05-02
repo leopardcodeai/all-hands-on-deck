@@ -29,10 +29,10 @@ final class EndToEndHappyPathTests: XCTestCase {
         // the lowest-friction flow the webapp uses.
         session.triggerPermission = .everyoneCanStartTimer
 
-        let host   = MockSessionTransport(role: .host,   displayName: "Captain")
+        let host   = MockSessionTransport(role: .host, displayName: "Captain")
         let viewer = MockSessionTransport(role: .viewer, displayName: "Crew")
 
-        var hostInbox:   [SessionEvent] = []
+        var hostInbox: [SessionEvent] = []
         var viewerInbox: [SessionEvent] = []
         host.events.sink   { hostInbox.append($0)   }.store(in: &subs)
         viewer.events.sink { viewerInbox.append($0) }.store(in: &subs)
@@ -107,7 +107,7 @@ final class EndToEndHappyPathTests: XCTestCase {
         var session = PhotoSession(id: "HOSTONLYAA", hostName: "Captain")
         session.triggerPermission = .hostOnly
 
-        let host   = MockSessionTransport(role: .host,   displayName: "Captain")
+        let host   = MockSessionTransport(role: .host, displayName: "Captain")
         let viewer = MockSessionTransport(role: .viewer, displayName: "Crew")
 
         var hostInbox: [SessionEvent] = []
@@ -141,7 +141,7 @@ final class EndToEndHappyPathTests: XCTestCase {
         var session = PhotoSession(id: "TIMERROOM1", hostName: "Captain")
         session.timerDuration = 3
 
-        let host   = MockSessionTransport(role: .host,   displayName: "Captain")
+        let host   = MockSessionTransport(role: .host, displayName: "Captain")
         let viewer = MockSessionTransport(role: .viewer, displayName: "Crew")
 
         var viewerInbox: [SessionEvent] = []
@@ -183,7 +183,7 @@ final class EndToEndHappyPathTests: XCTestCase {
     func test_happyPath_countdownCancelled_noPhoto() async throws {
         let session = PhotoSession(id: "CANCELROOM", hostName: "Captain")
 
-        let host   = MockSessionTransport(role: .host,   displayName: "Captain")
+        let host   = MockSessionTransport(role: .host, displayName: "Captain")
         let viewer = MockSessionTransport(role: .viewer, displayName: "Crew")
 
         var viewerInbox: [SessionEvent] = []
@@ -251,7 +251,7 @@ final class EndToEndHappyPathTests: XCTestCase {
         var session = PhotoSession(id: "APPROVALAB", hostName: "Captain")
         session.triggerPermission = .viewersCanRequest
 
-        let host   = MockSessionTransport(role: .host,   displayName: "Captain")
+        let host   = MockSessionTransport(role: .host, displayName: "Captain")
         let viewer = MockSessionTransport(role: .viewer, displayName: "Crew")
 
         var hostInbox: [SessionEvent] = []
@@ -289,7 +289,7 @@ final class EndToEndHappyPathTests: XCTestCase {
     // to the typed `Reaction` enum.
     func test_happyPath_reactionFromViewer_reachesHost() async throws {
         let session = PhotoSession(id: "REACTROOM1", hostName: "Captain")
-        let host   = MockSessionTransport(role: .host,   displayName: "Captain")
+        let host   = MockSessionTransport(role: .host, displayName: "Captain")
         let viewer = MockSessionTransport(role: .viewer, displayName: "Crew")
 
         var hostInbox: [SessionEvent] = []
@@ -314,7 +314,7 @@ final class EndToEndHappyPathTests: XCTestCase {
     // receive each frame's bytes (unique per frame, so we can detect lost ones).
     func test_happyPath_previewFramesStream() async throws {
         let session = PhotoSession(id: "FRAMEROOM1", hostName: "Captain")
-        let host   = MockSessionTransport(role: .host,   displayName: "Captain")
+        let host   = MockSessionTransport(role: .host, displayName: "Captain")
         let viewer = MockSessionTransport(role: .viewer, displayName: "Crew")
 
         var receivedFrames: [Data] = []
@@ -342,7 +342,7 @@ final class EndToEndHappyPathTests: XCTestCase {
     // `.sessionEnded` so they can clear state and dismiss to home.
     func test_happyPath_sessionEnded_notifiesViewers() async throws {
         let session = PhotoSession(id: "ENDROOMABC", hostName: "Captain")
-        let host   = MockSessionTransport(role: .host,   displayName: "Captain")
+        let host   = MockSessionTransport(role: .host, displayName: "Captain")
         let viewer = MockSessionTransport(role: .viewer, displayName: "Crew")
 
         var viewerInbox: [SessionEvent] = []

@@ -6,7 +6,7 @@ struct HostSessionView: View {
     @State private var showSettings: Bool = false
     @State private var baseZoom: CGFloat = 1.0
     @State private var showZoomLabel: Bool = false
-    @State private var zoomHideTask: Task<Void, Never>? = nil
+    @State private var zoomHideTask: Task<Void, Never>?
     @AppStorage("camera.showGrid")  private var showGrid: Bool = true
     @AppStorage("camera.showLevel") private var showLevel: Bool = true
     let onSessionCreated: (String) -> Void

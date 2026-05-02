@@ -3,7 +3,6 @@ import XCTest
 
 @MainActor
 final class HostSessionRetentionTests: XCTestCase {
-
     func test_initialState_noParkedVM() {
         let r = HostSessionRetention.shared
         // Shared instance starts clean (or has expired); not deeply testable

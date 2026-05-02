@@ -14,7 +14,6 @@ import XCTest
 /// circuits before reaching the camera-capture call.
 @MainActor
 final class HostSessionViewModelPermissionTests: XCTestCase {
-
     // ── hostOnly ───────────────────────────────────────────────────────────
     //
     // The strictest setting — viewer requests must be silently dropped, no

@@ -2,7 +2,6 @@ import XCTest
 @testable import AllHandsOnDeck
 
 final class SessionWireMessageTests: XCTestCase {
-
     func test_envelope_roundTrip_preservesEverything() throws {
         let event: SessionEvent = .countdownStarted(
             photoAt: Date(timeIntervalSinceReferenceDate: 1_000),
@@ -33,13 +32,13 @@ final class SessionWireMessageTests: XCTestCase {
     func test_kind_routing() {
         let session = PhotoSession(hostName: "Captain")
         let cases: [(SessionEvent, SessionWireMessage.Kind)] = [
-            (.sessionMetadata(session),                                                  .metadata),
-            (.previewFrame(jpeg: Data([0xFF]), capturedAt: Date()),                       .previewFrame),
-            (.finalPhotoAvailable(photoID: "x", jpeg: Data([0xFF])),                      .finalPhoto),
-            (.captureRequested(by: "id"),                                                 .triggerRequest),
-            (.captureNowRequested(by: "id"),                                              .triggerRequest),
-            (.reactionSent(by: "id", reaction: Reaction.ready.rawValue),                  .reaction),
-            (.countdownStarted(photoAt: Date(), duration: 10, startedBy: "id"),           .event)
+            (.sessionMetadata(session), .metadata),
+            (.previewFrame(jpeg: Data([0xFF]), capturedAt: Date()), .previewFrame),
+            (.finalPhotoAvailable(photoID: "x", jpeg: Data([0xFF])), .finalPhoto),
+            (.captureRequested(by: "id"), .triggerRequest),
+            (.captureNowRequested(by: "id"), .triggerRequest),
+            (.reactionSent(by: "id", reaction: Reaction.ready.rawValue), .reaction),
+            (.countdownStarted(photoAt: Date(), duration: 10, startedBy: "id"), .event)
         ]
         for (event, expected) in cases {
             let wm = SessionWireMessage(

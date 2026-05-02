@@ -50,7 +50,7 @@ enum Theme {
 /// Liquid glass-style surface. Falls back to .ultraThinMaterial on older OSes.
 struct LiquidGlass: ViewModifier {
     var cornerRadius: CGFloat = 22
-    var stroke: Color = Color.white.opacity(0.08)
+    var stroke = Color.white.opacity(0.08)
 
     func body(content: Content) -> some View {
         content

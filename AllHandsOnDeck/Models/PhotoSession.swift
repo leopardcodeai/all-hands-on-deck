@@ -14,7 +14,7 @@ struct PhotoSession: Identifiable, Hashable, Codable, Sendable {
     var participants: [Participant]
 
     init(
-        id: String = PhotoSession.makeShortID(),
+        id: String = Self.makeShortID(),
         hostName: String,
         createdAt: Date = Date(),
         ttlMinutes: Int = 10,

@@ -3,7 +3,6 @@ import UIKit
 @testable import AllHandsOnDeck
 
 final class ImageCompressionTests: XCTestCase {
-
     func test_scaledJPEG_returnsSmallerData_forLargeImage() throws {
         // Procedurally-generated 4000×4000 image — guaranteed to compress big.
         let size = CGSize(width: 4000, height: 4000)
