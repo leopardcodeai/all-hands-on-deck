@@ -12,11 +12,15 @@ struct HostSessionView: View {
     let onSessionCreated: (String) -> Void
 
     init(hostName: String, allowWebJoin: Bool = false, onSessionCreated: @escaping (String) -> Void) {
-        // Resume a parked VM if the captain re-entered within the grace window;
-        // otherwise spin up a fresh session.
-        let vm = HostSessionRetention.shared.consume()
-            ?? HostSessionViewModel(hostName: hostName, allowWebJoin: allowWebJoin)
-        _vm = StateObject(wrappedValue: vm)
+        // Inline directly into StateObject(wrappedValue:) so the @autoclosure wrapper
+        // defers evaluation until SwiftUI first presents this view. Extracting to a
+        // local `let vm = ...` would evaluate eagerly on every HomeView re-render,
+        // creating a throwaway CameraService + transport and causing
+        // "Publishing during view updates" faults.
+        _vm = StateObject(wrappedValue:
+            HostSessionRetention.shared.consume()
+                ?? HostSessionViewModel(hostName: hostName, allowWebJoin: allowWebJoin)
+        )
         self.onSessionCreated = onSessionCreated
     }
 
