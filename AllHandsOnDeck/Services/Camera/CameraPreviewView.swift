@@ -19,7 +19,9 @@ struct CameraPreviewView: UIViewRepresentable {
     }
 
     final class PreviewUIView: UIView {
+        // swiftlint:disable:next static_over_final_class
         override class var layerClass: AnyClass { AVCaptureVideoPreviewLayer.self }
+        // swiftlint:disable:next force_cast
         var previewLayer: AVCaptureVideoPreviewLayer { layer as! AVCaptureVideoPreviewLayer }
     }
 }

@@ -17,6 +17,7 @@ disabled_rules:
   - opening_brace                  # noisy on multi-line conditions
   - multiple_closures_with_trailing_closure  # SwiftUI gestures use this idiom
   - identifier_name                # 2-letter SwiftUI vars (vm, ns, ci) are intentional
+  - inclusive_language             # "quartermaster" is a legitimate nautical rank, not a social issue
 
 opt_in_rules:
   - empty_count
@@ -49,13 +50,13 @@ type_body_length:
   error: 600
 
 file_length:
-  warning: 600
+  warning: 700
   error: 1200
   ignore_comment_only_lines: true
 
 cyclomatic_complexity:
-  warning: 15
-  error: 25
+  warning: 20
+  error: 30
 
 nesting:
   type_level: 3

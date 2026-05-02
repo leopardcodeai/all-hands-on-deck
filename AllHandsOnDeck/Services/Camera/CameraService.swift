@@ -142,7 +142,7 @@ final class CameraService: NSObject, ObservableObject {
     // MARK: - Configuration
 
     private nonisolated func configureSession(position: AVCaptureDevice.Position,
-                                               lens: LensType = .wide) {
+                                              lens: LensType = .wide) {
         session.beginConfiguration()
         session.sessionPreset = .photo
 
@@ -165,10 +165,8 @@ final class CameraService: NSObject, ObservableObject {
 
         // Discover which lenses exist on this device side.
         var found: [LensType] = []
-        for l in LensType.allCases {
-            if AVCaptureDevice.default(l.deviceType, for: .video, position: position) != nil {
-                found.append(l)
-            }
+        for l in LensType.allCases where AVCaptureDevice.default(l.deviceType, for: .video, position: position) != nil {
+            found.append(l)
         }
 
         if session.outputs.isEmpty {

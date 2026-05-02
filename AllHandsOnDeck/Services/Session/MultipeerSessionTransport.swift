@@ -28,7 +28,7 @@ final class MultipeerSessionTransport: NSObject, SessionTransport {
         let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
         let candidate = trimmed.isEmpty ? UIDevice.current.name : trimmed
         let bytes = Array(candidate.utf8.prefix(63))
-        return String(decoding: bytes, as: UTF8.self)
+        return String(bytes: bytes, encoding: .utf8) ?? candidate
     }
 
     // MARK: - SessionTransport
