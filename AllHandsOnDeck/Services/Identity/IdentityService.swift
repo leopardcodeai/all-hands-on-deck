@@ -50,6 +50,7 @@ final class IdentityService: ObservableObject {
         // launch critical path for users who haven't enabled Game Center.
         if UserDefaults.standard.bool(forKey: "identity.useGameCenter") {
             gcSub = GameCenterService.shared.$isAuthenticated
+                .dropFirst()
                 .receive(on: DispatchQueue.main)
                 .sink { [weak self] _ in self?.objectWillChange.send() }
         }
@@ -100,6 +101,7 @@ final class IdentityService: ObservableObject {
         useGameCenter = true
         if gcSub == nil {
             gcSub = GameCenterService.shared.$isAuthenticated
+                .dropFirst()
                 .receive(on: DispatchQueue.main)
                 .sink { [weak self] _ in self?.objectWillChange.send() }
         }
