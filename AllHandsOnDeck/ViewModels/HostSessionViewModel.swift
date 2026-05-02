@@ -55,15 +55,15 @@ final class HostSessionViewModel: ObservableObject {
             allowWebJoin: allowWebJoin
         )
 
-        participants = [
-            Participant(
-                id: transport.localParticipantID,
-                displayName: hostName,
-                role: .host,
-                isReady: true,
-                connectionType: SessionManager.isMockPreferred ? .mock : .nativeNearby
-            )
-        ]
+        let hostParticipant = Participant(
+            id: transport.localParticipantID,
+            displayName: hostName,
+            role: .host,
+            isReady: true,
+            connectionType: SessionManager.isMockPreferred ? .mock : .nativeNearby
+        )
+        participants = [hostParticipant]
+        session.participants = [hostParticipant]
     }
 
     // MARK: - Lifecycle
@@ -323,6 +323,7 @@ final class HostSessionViewModel: ObservableObject {
         case .participantJoined(let p):
             if !participants.contains(where: { $0.id == p.id }) {
                 participants.append(p)
+                session.participants = participants
                 Haptics.tap()
             }
             Task { await transport.send(.sessionMetadata(self.session)) }
@@ -332,6 +333,7 @@ final class HostSessionViewModel: ObservableObject {
             // mock transport reports them with the local participant UUID.
             // Match either to avoid ghost entries.
             participants.removeAll { $0.id == id || $0.displayName == id }
+            session.participants = participants
 
         case .participantReadyChanged(let id, let ready):
             if let idx = participants.firstIndex(where: { $0.id == id }) {
