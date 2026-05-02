@@ -115,9 +115,9 @@ enum PhotoQualityScorer {
         // Apply a high-pass via Laplacian-like convolution.
         let kernel = CGFloat(-1)
         let weights: [CGFloat] = [
-             0,  kernel,  0,
+             0, kernel, 0,
             kernel, 4, kernel,
-             0,  kernel,  0
+             0, kernel, 0
         ]
         let vec = CIVector(values: weights, count: weights.count)
         guard let conv = CIFilter(name: "CIConvolution3X3", parameters: [

@@ -44,7 +44,7 @@ final class NearbySessionBrowser: NSObject, ObservableObject {
 extension NearbySessionBrowser: MCNearbyServiceBrowserDelegate {
     nonisolated func browser(_ browser: MCNearbyServiceBrowser,
                              foundPeer peerID: MCPeerID,
-                             withDiscoveryInfo info: [String : String]?) {
+                             withDiscoveryInfo info: [String: String]?) {
         let summary = NearbySessionSummary(
             discoveryInfo: info,
             fallbackPeerName: peerID.displayName

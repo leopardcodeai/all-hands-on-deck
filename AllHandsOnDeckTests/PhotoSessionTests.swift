@@ -2,7 +2,6 @@ import XCTest
 @testable import AllHandsOnDeck
 
 final class PhotoSessionTests: XCTestCase {
-
     func test_makeShortID_isUnambiguousAlphabet() {
         let alphabet = Set("ABCDEFGHJKLMNPQRSTUVWXYZ23456789")
         for _ in 0..<200 {
@@ -39,8 +38,7 @@ final class PhotoSessionTests: XCTestCase {
         let key = "joinBaseURL"
         let original = UserDefaults.standard.string(forKey: key)
         defer {
-            if let o = original { UserDefaults.standard.set(o, forKey: key) }
-            else { UserDefaults.standard.removeObject(forKey: key) }
+            if let o = original { UserDefaults.standard.set(o, forKey: key) } else { UserDefaults.standard.removeObject(forKey: key) }
         }
 
         UserDefaults.standard.set("http://10.0.0.5:5173", forKey: key)

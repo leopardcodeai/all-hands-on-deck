@@ -5,12 +5,14 @@ struct HomeView: View {
     @EnvironmentObject private var linkHandler: UniversalLinkHandler
     @StateObject private var vm = HomeViewModel()
     @ObservedObject private var identity = IdentityService.shared
+    @ObservedObject private var retention = HostSessionRetention.shared
     @State private var showingHost = false
     @State private var showingJoin = false
     @State private var showingNearby = false
     @State private var showingIdentity = false
     @State private var deepLinkSession: PhotoSession?
     @State private var allowWebJoin: Bool = UserDefaults.standard.bool(forKey: "allowWebJoinDefault")
+    @State private var jokeIndex: Int = 0
     #if DEBUG
     @State private var useMock: Bool = SessionManager.isMockPreferred
     #endif
@@ -85,12 +87,14 @@ struct HomeView: View {
                         .background(Color.white.opacity(0.07))
                         .clipShape(Circle())
                 }
+                .accessibilityLabel("Identity settings")
+                .accessibilityHint("Change your display name or view your pirate rank")
             }
-            Text("All Hands\non Deck")
+            Text("All Hands\nOn Deck")
                 .font(.system(size: 56, weight: .black, design: .rounded))
                 .foregroundStyle(Theme.bone)
                 .frame(maxWidth: .infinity, alignment: .leading)
-            Text("The Captain's Live Group Photo Preview")
+            Text("The Captain's Live Crew Photo Preview")
                 .font(.system(size: 15, weight: .medium, design: .rounded))
                 .foregroundStyle(Theme.mist)
                 .frame(maxWidth: .infinity, alignment: .leading)
@@ -101,10 +105,16 @@ struct HomeView: View {
         VStack(spacing: 14) {
             identityChip
 
-            PrimaryButton(title: "Gruppenfoto starten", systemImage: "camera.fill", style: .primary) {
+            PrimaryButton(
+                title: retention.remainingSeconds.map {
+                    String(format: String(localized: "home.resumeIn"), $0)
+                } ?? "Start Crew Photo",
+                systemImage: "camera.fill",
+                style: .primary
+            ) {
                 showingHost = true
             }
-            PrimaryButton(title: "Session beitreten", systemImage: "qrcode.viewfinder", style: .secondary) {
+            PrimaryButton(title: "Join Session", systemImage: "qrcode.viewfinder", style: .secondary) {
                 showingJoin = true
             }
             PrimaryButton(title: "Nearby Sessions", systemImage: "antenna.radiowaves.left.and.right", style: .ghost) {
@@ -119,7 +129,7 @@ struct HomeView: View {
                 Image(systemName: webAvailable ? "globe" : "globe.badge.chevron.backward")
                     .foregroundStyle(effectivelyOn ? Theme.signal : (allowWebJoin && !webAvailable ? Theme.crimson : Theme.mist))
                 VStack(alignment: .leading, spacing: 2) {
-                    Text("Web-Viewer erlauben")
+                    Text("Allow Web Viewers")
                         .font(.system(size: 14, weight: .heavy, design: .rounded))
                         .foregroundStyle(Theme.bone)
                     Text(webStatusLine(allowed: allowWebJoin, available: webAvailable))
@@ -174,9 +184,9 @@ struct HomeView: View {
     }
 
     private func webStatusLine(allowed: Bool, available: Bool) -> String {
-        if !allowed { return "Aus für reine Nearby-Nutzung." }
-        if available { return "Backend bereit – Web-Viewer können beitreten." }
-        return "Backend-URL fehlt. Setze webSocketServerURL in den Launch-Args."
+        if !allowed { return "Off — Nearby only." }
+        if available { return "Backend ready — web viewers can join." }
+        return "Backend URL missing. Set webSocketServerURL in launch args."
     }
 
     #if DEBUG
@@ -204,13 +214,46 @@ struct HomeView: View {
     }
     #endif
 
+    private let pirateJokes: [String] = [
+        "Why is pirating so addictive? Lose one hand and ye get hooked!",
+        "What's a pirate's fav letter? Ye think it's R — but it's the C!",
+        "How much did peg leg and hook cost? An arm and a leg!",
+        "What d'ye call a pirate who skips class? Captain Hooky!",
+        "Why couldn't the pirate play cards? He was standing on the deck!",
+        "What's a pirate's fav country? ARRRgentina!",
+        "What did the ocean say to the pirate? Nothing — it just waved!",
+        "What d'ye call a pirate with two eyes and two hands? A rookie!",
+        "Why did the pirate fail his exams? He couldn't get an ARRRR!",
+        "Why do pirates make great singers? They always hit the high C's!",
+        "What did the pirate say on his 80th birthday? Aye matey!",
+        "What's a pirate's fav fast food? Arrrby's!",
+        "How do pirates prefer their steaks? ARRR-rare!",
+        "What's a pirate's fav doll? Barrrrbie!",
+        "How do pirates communicate? Aye to aye, Captain!",
+        "Why do pirates read so slowly? They spend years at C!",
+        "What's a pirate's fav element? ARRRgon!",
+        "What d'ye call a pirate with no ship? Stranded!",
+        "Why did the pirate go to acting school? He wanted more ARRRs!",
+        "What's a pirate's least fav vegetable? Leeks — he hates a leaky ship!"
+    ]
+
     private var footer: some View {
-        VStack(spacing: 4) {
-            Text("\"Alle sehen das Gruppenfoto, bevor es aufgenommen wird.\"")
+        VStack(spacing: 10) {
+            Text(pirateJokes[jokeIndex])
                 .font(.system(size: 13, weight: .medium, design: .serif))
                 .italic()
                 .foregroundStyle(Theme.mist)
                 .multilineTextAlignment(.center)
+                .task {
+                    jokeIndex = Int.random(in: 0..<pirateJokes.count)
+                }
+            HStack(spacing: 14) {
+                Link("Privacy", destination: URL(string: "https://all-hands-on-deck-ae29e.web.app/privacy")!)
+                Text("·")
+                Link("Imprint", destination: URL(string: "https://all-hands-on-deck-ae29e.web.app/imprint")!)
+            }
+            .font(.system(size: 10, weight: .medium, design: .rounded))
+            .foregroundStyle(Theme.mist.opacity(0.7))
         }
     }
 

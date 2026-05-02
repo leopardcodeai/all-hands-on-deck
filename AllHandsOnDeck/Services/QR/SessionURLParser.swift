@@ -13,7 +13,6 @@ enum SessionURLParser {
 
         if let url = URL(string: trimmed),
            let scheme = url.scheme?.lowercased() {
-
             // Custom scheme: allhands://join?session=ABCDE
             if scheme == "allhands" {
                 if let comps = URLComponents(url: url, resolvingAgainstBaseURL: false),

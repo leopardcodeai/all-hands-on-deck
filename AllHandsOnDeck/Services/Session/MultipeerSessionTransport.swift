@@ -28,7 +28,7 @@ final class MultipeerSessionTransport: NSObject, SessionTransport {
         let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
         let candidate = trimmed.isEmpty ? UIDevice.current.name : trimmed
         let bytes = Array(candidate.utf8.prefix(63))
-        return String(decoding: bytes, as: UTF8.self)
+        return String(bytes: bytes, encoding: .utf8) ?? candidate
     }
 
     // MARK: - SessionTransport
@@ -265,7 +265,7 @@ extension MultipeerSessionTransport: MCNearbyServiceAdvertiserDelegate {
 extension MultipeerSessionTransport: MCNearbyServiceBrowserDelegate {
     nonisolated func browser(_ browser: MCNearbyServiceBrowser,
                              foundPeer peerID: MCPeerID,
-                             withDiscoveryInfo info: [String : String]?) {
+                             withDiscoveryInfo info: [String: String]?) {
         Task { @MainActor in
             guard self.role == .viewer else { return }
             guard let target = self.photoSession?.id else { return }
@@ -290,4 +290,3 @@ extension MultipeerSessionTransport: MCNearbyServiceBrowserDelegate {
         AppLog.transport.error("browser failed: \(error.localizedDescription)")
     }
 }
-

@@ -2,7 +2,7 @@ import SwiftUI
 
 struct PrimaryButton: View {
     let title: String
-    var systemImage: String? = nil
+    var systemImage: String?
     var style: Style = .primary
     var isLoading: Bool = false
     let action: () -> Void

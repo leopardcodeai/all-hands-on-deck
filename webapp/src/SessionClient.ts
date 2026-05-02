@@ -101,6 +101,10 @@ export class SessionClient {
     this.send({ captureRequested: { by: this.participantId } });
   }
 
+  sendCaptureNowRequest() {
+    this.send({ captureNowRequested: { by: this.participantId } });
+  }
+
   sendReady(ready: boolean) {
     this.send({ participantReadyChanged: { participantID: this.participantId, isReady: ready } });
   }
@@ -161,9 +165,7 @@ export class SessionClient {
   }
 
   private b64ToBlob(b64: string, type: string): Blob {
-    const bin = atob(b64);
-    const arr = new Uint8Array(bin.length);
-    for (let i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i);
+    const arr = Uint8Array.from(atob(b64), c => c.charCodeAt(0));
     return new Blob([arr], { type });
   }
 }

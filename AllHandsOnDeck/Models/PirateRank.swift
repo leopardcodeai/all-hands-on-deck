@@ -58,11 +58,11 @@ enum PirateRank: Int, CaseIterable, Codable {
         }
     }
 
-    static func rank(for points: Int) -> PirateRank {
-        PirateRank.allCases.reversed().first { points >= $0.threshold } ?? .cabinBoy
+    static func rank(for points: Int) -> Self {
+        Self.allCases.reversed().first { points >= $0.threshold } ?? .cabinBoy
     }
 
-    static func random() -> PirateRank {
-        PirateRank.allCases.randomElement() ?? .deckhand
+    static func random() -> Self {
+        Self.allCases.randomElement() ?? .deckhand
     }
 }

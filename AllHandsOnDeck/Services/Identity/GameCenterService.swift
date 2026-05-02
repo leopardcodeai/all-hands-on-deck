@@ -19,15 +19,11 @@ final class GameCenterService: ObservableObject {
             return
         }
         await withCheckedContinuation { (continuation: CheckedContinuation<Void, Never>) in
-            GKLocalPlayer.local.authenticateHandler = { [weak self] _, error in
+            GKLocalPlayer.local.authenticateHandler = { [weak self] _, _ in
                 Task { @MainActor in
-                    if GKLocalPlayer.local.isAuthenticated {
-                        self?.alias = GKLocalPlayer.local.alias
-                        self?.isAuthenticated = true
-                    } else {
-                        self?.alias = nil
-                        self?.isAuthenticated = false
-                    }
+                    let authenticated = GKLocalPlayer.local.isAuthenticated
+                    self?.alias = authenticated ? GKLocalPlayer.local.alias : nil
+                    self?.isAuthenticated = authenticated
                     continuation.resume()
                 }
             }

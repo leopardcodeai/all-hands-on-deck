@@ -21,6 +21,7 @@ export type WireEvent =
   | { countdownStarted: { photoAt: string; duration: number; startedBy: string } }
   | { countdownCancelled: { by: string } }
   | { captureRequested: { by: string } }
+  | { captureNowRequested: { by: string } }
   | { captureApproved: { approvedBy: string } }
   | { captureDenied: { deniedBy: string } }
   | { photoCaptured: { at: string } }

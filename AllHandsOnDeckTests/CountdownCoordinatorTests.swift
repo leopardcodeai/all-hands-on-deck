@@ -3,7 +3,6 @@ import XCTest
 
 @MainActor
 final class CountdownCoordinatorTests: XCTestCase {
-
     func test_initialState_isIdle() {
         let c = CountdownCoordinator()
         XCTAssertEqual(c.state, .idle)

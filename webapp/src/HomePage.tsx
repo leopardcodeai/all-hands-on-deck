@@ -8,10 +8,10 @@ export function HomePage() {
   return (
     <div className="center-stack">
       <span className="pill pill-gold">⚓︎ by Captain Leopard</span>
-      <h1 className="title">All Hands<br/>on Deck</h1>
+      <h1 className="title">All Hands On Deck</h1>
       <p className="subtitle">
-        Web-Viewer für Captain&apos;s Live-Group-Photo-Session.<br/>
-        Code unten eintippen oder den QR-Code des Captains scannen.
+        Web viewer for Captain&apos;s live crew photo session.<br/>
+        Enter the code below or scan the Captain&apos;s QR code.
       </p>
       <input
         className="id-input"
@@ -29,10 +29,15 @@ export function HomePage() {
         onClick={() => navigate(`/join/${code}`)}
         style={{ opacity: code.length < 6 ? 0.5 : 1 }}
       >
-        Beitreten →
+        Join →
       </button>
       <p className="muted-note">
-        Keine Installation. Keine Anmeldung.
+        No install. No sign-in.
+      </p>
+      <p className="muted-note" style={{ marginTop: 24, fontSize: 11 }}>
+        <a href="/privacy" style={{ color: 'inherit', opacity: 0.7 }}>Privacy</a>
+        {' · '}
+        <a href="/imprint" style={{ color: 'inherit', opacity: 0.7 }}>Imprint</a>
       </p>
     </div>
   );
