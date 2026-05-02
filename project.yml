@@ -53,6 +53,7 @@ targets:
               - allhands
         UISupportedInterfaceOrientations:
           - UIInterfaceOrientationPortrait
+        UIRequiresFullScreen: true
         UILaunchScreen: {}            # Solid launch screen (no storyboard needed)
         UIApplicationSupportsIndirectInputEvents: true
         # App Store export-compliance shortcut: HTTPS-only counts as exempt

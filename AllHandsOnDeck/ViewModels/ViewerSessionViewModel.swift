@@ -49,7 +49,7 @@ final class ViewerSessionViewModel: ObservableObject {
 
         // Forward countdown changes so SwiftUI re-renders viewer view.
         countdown.objectWillChange
-            .receive(on: RunLoop.main)
+            .receive(on: DispatchQueue.main)
             .sink { [weak self] _ in self?.objectWillChange.send() }
             .store(in: &subs)
     }

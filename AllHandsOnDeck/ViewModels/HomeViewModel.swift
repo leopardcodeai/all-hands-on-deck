@@ -12,7 +12,7 @@ final class HomeViewModel: ObservableObject {
 
     init() {
         sub = identity.objectWillChange
-            .receive(on: RunLoop.main)
+            .receive(on: DispatchQueue.main)
             .sink { [weak self] _ in self?.objectWillChange.send() }
     }
 

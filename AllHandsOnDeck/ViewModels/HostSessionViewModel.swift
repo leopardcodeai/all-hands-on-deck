@@ -128,7 +128,7 @@ final class HostSessionViewModel: ObservableObject {
         // Forward countdown changes so SwiftUI re-renders host view.
         // Camera changes are handled by @ObservedObject sub-views in HostSessionView.
         countdown.objectWillChange
-            .receive(on: RunLoop.main)
+            .receive(on: DispatchQueue.main)
             .sink { [weak self] _ in self?.objectWillChange.send() }
             .store(in: &subs)
 

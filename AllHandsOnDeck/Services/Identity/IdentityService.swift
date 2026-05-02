@@ -36,7 +36,7 @@ final class IdentityService: ObservableObject {
         }
     }
 
-    private let gc = GameCenterService.shared
+    private lazy var gc = GameCenterService.shared
     private var gcSub: AnyCancellable?
 
     // MARK: - Init
@@ -46,9 +46,13 @@ final class IdentityService: ObservableObject {
         customName    = UserDefaults.standard.string(forKey: "identity.customName") ?? ""
         earnedRank    = PirateRank.rank(for: UserDefaults.standard.integer(forKey: "identity.actionPoints"))
 
-        gcSub = gc.$isAuthenticated
-            .receive(on: RunLoop.main)
-            .sink { [weak self] _ in self?.objectWillChange.send() }
+        // Defer GC access until first use — avoids touching GameKit on the
+        // launch critical path for users who haven't enabled Game Center.
+        if UserDefaults.standard.bool(forKey: "identity.useGameCenter") {
+            gcSub = GameCenterService.shared.$isAuthenticated
+                .receive(on: DispatchQueue.main)
+                .sink { [weak self] _ in self?.objectWillChange.send() }
+        }
     }
 
     // MARK: - Resolved identity
@@ -94,7 +98,11 @@ final class IdentityService: ObservableObject {
 
     func enableGameCenter() async {
         useGameCenter = true
+        if gcSub == nil {
+            gcSub = GameCenterService.shared.$isAuthenticated
+                .receive(on: DispatchQueue.main)
+                .sink { [weak self] _ in self?.objectWillChange.send() }
+        }
         await gc.authenticate()
-        objectWillChange.send()
     }
 }
