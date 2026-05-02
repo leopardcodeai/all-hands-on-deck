@@ -1,19 +1,18 @@
 /* ── HomeView ── */
-"All Hands\non Deck" = "All Hands\non Deck";
-"The Captain's Live Group Photo Preview" = "Die Live-Vorschau für dein Gruppenfoto";
-"Gruppenfoto starten" = "Gruppenfoto starten";
+"AllHands\nOnDeck" = "AllHands\nOnDeck";
+"The Captain's Live Crew Photo Preview" = "Die Live-Vorschau für dein Crew-Foto";
+"Gruppenfoto starten" = "Crew-Foto starten";
 "Session beitreten" = "Session beitreten";
 "Nearby Sessions" = "Nearby Sessions";
 "Web-Viewer erlauben" = "Web-Viewer erlauben";
-"\"Alle sehen das Gruppenfoto, bevor es aufgenommen wird.\"" = "\"Alle sehen das Gruppenfoto, bevor es aufgenommen wird.\"";
+"\"Alle sehen das Gruppenfoto, bevor es aufgenommen wird.\"" = "\"Alle sehen das Crew-Foto, bevor es aufgenommen wird.\"";
 "Aus für reine Nearby-Nutzung." = "Aus für reine Nearby-Nutzung.";
 "Backend bereit – Web-Viewer können beitreten." = "Backend bereit – Web-Viewer können beitreten.";
 
 /* ── HostSessionView ── */
 "OK" = "OK";
 "Schließen" = "Schließen";
-"Hohe Auflösung (48 MP)" = "Hohe Auflösung (48 MP)";
-"Maximale Auflösung — langsamere Verarbeitung." = "Maximale Auflösung — langsamere Verarbeitung.";
+"Auflösung" = "Auflösung";
 "Sessions enden automatisch nach Ablauf der TTL — kein Speichern, keine Accounts, keine Spuren." = "Sessions enden automatisch nach Ablauf der TTL — kein Speichern, keine Accounts, keine Spuren.";
 "Anfrage von der Crew — bestätige in den Einstellungen." = "Anfrage von der Crew — bestätige in den Einstellungen.";
 "Abbrechen" = "Abbrechen";
@@ -68,9 +67,10 @@
 "Kamera nicht verfügbar." = "Kamera nicht verfügbar.";
 
 /* ── Dynamic format strings ── */
-"nearby.hostStartingSession" = "%@ startet ein Gruppenfoto";
+"nearby.hostStartingSession" = "%@ startet ein Crew-Foto";
 "burst.shotNumber" = "Aufnahme %d";
 "host.startTimer" = "Start %ds";
+"home.resumeIn" = "Fortsetzen (%ds)";
 "result.closingIn" = "Schließt in %d…";
 
 /* ── Alert titles ── */

@@ -2,7 +2,7 @@ import SwiftUI
 
 struct StatusPill: View {
     let label: String
-    var systemImage: String? = nil
+    var systemImage: String?
     var tint: Color = Theme.signal
 
     var body: some View {

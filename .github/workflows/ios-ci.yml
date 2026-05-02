@@ -49,6 +49,10 @@ jobs:
         run: |
           brew list xcodegen >/dev/null 2>&1 || brew install xcodegen
           brew list xcbeautify >/dev/null 2>&1 || brew install xcbeautify
+          brew list swiftlint >/dev/null 2>&1 || brew install swiftlint
+
+      - name: SwiftLint
+        run: swiftlint --strict --config .swiftlint.yml
 
       - name: Generate project
         run: xcodegen generate

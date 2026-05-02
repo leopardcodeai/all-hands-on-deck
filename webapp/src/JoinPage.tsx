@@ -32,12 +32,30 @@ const FrameImage = memo(function FrameImage({ client }: { client: SessionClient 
       {!hasFrame && (
         <div className="center-stack">
           <div className="placeholder-art">📷</div>
-          <p className="subtitle">Warte auf Captain&apos;s Bildausschnitt…</p>
+          <p className="subtitle">Waiting for Captain&apos;s framing…</p>
         </div>
       )}
     </>
   );
 });
+
+// Extract a leading emoji (Extended_Pictographic) from a display name, if any.
+function leadingEmoji(name: string | undefined): string | null {
+  if (!name) return null;
+  try {
+    const m = name.match(/^(\p{Extended_Pictographic})/u);
+    return m?.[1] ?? null;
+  } catch {
+    return null;
+  }
+}
+
+function connectionIcon(p: { role: string; connectionType: string }): string {
+  if (p.role === 'host') return '👑';
+  if (p.connectionType === 'web') return '🌐';
+  if (p.connectionType === 'mock') return '🤖';
+  return '📱';
+}
 
 export function JoinPage() {
   const { sessionId } = useParams<{ sessionId: string }>();
@@ -49,6 +67,7 @@ export function JoinPage() {
   const [flash, setFlash] = useState(false);
   const [remaining, setRemaining] = useState<number | null>(null);
   const [dismissedPhoto, setDismissedPhoto] = useState(false);
+  const [crewOpen, setCrewOpen] = useState(false);
   const tickRef = useRef<number | null>(null);
 
   useEffect(() => { setDismissedPhoto(false); }, [client.finalPhotoURL]);
@@ -88,18 +107,17 @@ export function JoinPage() {
   }, [client.countdownTargetMs, force]);
 
   const meta = client.metadata;
-  const triggerLabel =
-    meta?.triggerPermission === 'everyoneCanStartTimer' ? 'Timer starten' :
-    meta?.triggerPermission === 'viewersCanRequest'     ? 'Foto anfragen' :
-    null;
+  // Show trigger buttons by default when no metadata yet; hide only when host explicitly set hostOnly.
+  const canTrigger = !meta || meta.triggerPermission === 'everyoneCanStartTimer';
+  const canRequest = meta?.triggerPermission === 'viewersCanRequest';
 
   const statusPill = (() => {
     switch (client.status) {
-      case 'connecting': return <span className="pill pill-amber">⌛ Verbinde</span>;
-      case 'connected':  return <span className="pill pill-signal">● Verbunden</span>;
-      case 'lost':       return <span className="pill pill-crimson">⚠ Verbindung verloren</span>;
-      case 'ended':      return <span className="pill pill-gold">⚑ Beendet</span>;
-      case 'notFound':   return <span className="pill pill-crimson">? Nicht gefunden</span>;
+      case 'connecting': return <span className="pill pill-amber">⌛ Connecting</span>;
+      case 'connected':  return <span className="pill pill-signal">● Connected</span>;
+      case 'lost':       return <span className="pill pill-crimson">⚠ Connection lost</span>;
+      case 'ended':      return <span className="pill pill-gold">⚑ Ended</span>;
+      case 'notFound':   return <span className="pill pill-crimson">? Not found</span>;
       default:           return null;
     }
   })();
@@ -134,27 +152,38 @@ export function JoinPage() {
         <span className="pill pill-amber" style={{ fontSize: 11, flexShrink: 0 }}>
           {rank.split(' ')[0]}
         </span>
+        <button
+          aria-label="Crew"
+          onClick={() => setCrewOpen(true)}
+          className="icon-button"
+        >
+          ⚙
+        </button>
       </div>
 
       <div className="bottom-bar">
         {client.status === 'connected' && remaining === null && (
           <ReactionStrip onReact={(id) => client.sendReaction(id)} />
         )}
-        {client.status === 'connected' && triggerLabel && remaining === null && (
+        {client.status === 'connected' && canTrigger && remaining === null && (
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <button
-              className="btn-primary"
-              onClick={() => client.sendCaptureRequest()}
-            >
-              ⏱ {triggerLabel}
+            <button className="btn-primary" onClick={() => client.sendCaptureRequest()}>
+              ⏱ Timer {meta?.timerDuration != null ? `${meta.timerDuration}s` : ''}
             </button>
-            {meta?.timerDuration != null && (
-              <span className="pill pill-gold">{meta.timerDuration}s</span>
-            )}
+            <button className="btn-secondary" onClick={() => client.sendCaptureNowRequest()}>
+              ⚡ Now
+            </button>
+          </div>
+        )}
+        {client.status === 'connected' && canRequest && remaining === null && (
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <button className="btn-primary" onClick={() => client.sendCaptureRequest()}>
+              📸 Request Photo
+            </button>
           </div>
         )}
         {client.status === 'connected' && remaining !== null && (
-          <span className="pill pill-signal">Stillhalten — gleich klickt&apos;s.</span>
+          <span className="pill pill-signal">Hold still — smile!</span>
         )}
       </div>
 
@@ -165,7 +194,7 @@ export function JoinPage() {
 
       {client.finalPhotoURL && !dismissedPhoto && (
         <div className="final-photo" style={{ overflowY: 'auto', padding: '24px 16px' }}>
-          <img src={client.finalPhotoURL} alt="Final group photo" />
+          <img src={client.finalPhotoURL} alt="Final crew photo" />
           {'share' in navigator ? (
             <button
               className="btn-primary"
@@ -173,32 +202,62 @@ export function JoinPage() {
                 try {
                   const resp = await fetch(client.finalPhotoURL!);
                   const blob = await resp.blob();
-                  const file = new File([blob], `groupphoto-${sessionId}.jpg`, { type: 'image/jpeg' });
-                  await navigator.share({ files: [file], title: 'Gruppenfoto' });
+                  const file = new File([blob], `crewphoto-${sessionId}.jpg`, { type: 'image/jpeg' });
+                  await navigator.share({ files: [file], title: 'Crew Photo' });
                 } catch {
                   // share cancelled or failed — ignore
                 }
               }}
             >
-              ↑ Teilen / Speichern
+              ↑ Share / Save
             </button>
           ) : (
             <a
               className="btn-primary"
               href={client.finalPhotoURL}
-              download={`groupphoto-${sessionId}.jpg`}
+              download={`crewphoto-${sessionId}.jpg`}
             >
-              ↓ Speichern
+              ↓ Save
             </a>
           )}
           <button
             className="btn-secondary"
             onClick={() => setDismissedPhoto(true)}
           >
-            Fertig
+            Done
           </button>
         </div>
       )}
+
+      <div
+        className={`crew-backdrop ${crewOpen ? 'open' : ''}`}
+        onClick={() => setCrewOpen(false)}
+      />
+      <div className={`crew-panel ${crewOpen ? 'open' : ''}`} role="dialog" aria-label="Crew">
+        <div className="grabber" />
+        <h3>Crew</h3>
+        <div className="crew-list">
+          {(meta?.participants ?? []).length === 0 && (
+            <div className="muted-note" style={{ textAlign: 'center', padding: '14px 0' }}>
+              No crew yet — waiting for the captain&apos;s manifest…
+            </div>
+          )}
+          {(meta?.participants ?? []).map((p) => {
+            const emoji = leadingEmoji(p.displayName) ?? '🏴‍☠️';
+            const isMe = p.id === client.participantId;
+            return (
+              <div key={p.id} className={`crew-row ${isMe ? 'me' : ''}`}>
+                <span className="crew-rank" aria-hidden>{emoji}</span>
+                <span className="crew-name">{p.displayName}</span>
+                <span className="crew-conn" aria-hidden>{connectionIcon(p)}</span>
+              </div>
+            );
+          })}
+        </div>
+        <button className="btn-secondary" onClick={() => setCrewOpen(false)}>
+          Close
+        </button>
+      </div>
 
       {(client.status === 'lost' || client.status === 'ended' || client.status === 'notFound') &&
        !client.finalPhotoURL && (
@@ -207,12 +266,12 @@ export function JoinPage() {
             {client.status === 'ended' ? '⚑' : client.status === 'lost' ? '⚠' : '?'}
           </div>
           <h2 style={{ margin: 0, textAlign: 'center' }}>
-            {client.status === 'ended'    ? 'Session beendet' :
-             client.status === 'lost'     ? 'Verbindung verloren' :
-                                            'Session nicht gefunden'}
+            {client.status === 'ended'    ? 'Session ended' :
+             client.status === 'lost'     ? 'Connection lost' :
+                                            'Session not found'}
           </h2>
           <button className="btn-secondary" onClick={() => navigate('/')}>
-            Zurück
+            Back
           </button>
         </div>
       )}

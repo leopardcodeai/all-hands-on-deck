@@ -2,6 +2,7 @@ import SwiftUI
 
 struct ViewerSessionView: View {
     @StateObject private var vm: ViewerSessionViewModel
+    @State private var crewOpen = false
 
     init(session: PhotoSession, displayName: String) {
         _vm = StateObject(wrappedValue: ViewerSessionViewModel(
@@ -44,15 +45,22 @@ struct ViewerSessionView: View {
             switch vm.status {
             case .connecting: connectingOverlay
             case .ended:      endedOverlay
-            case .lost:       statusOverlay(symbol: "wifi.exclamationmark", title: "Verbindung verloren", subtitle: "Captain ist außer Reichweite. Versuch es noch einmal von der Nearby-Liste aus.")
-            case .notFound:   statusOverlay(symbol: "questionmark.circle", title: "Session nicht gefunden", subtitle: "Stelle sicher, dass beide im selben WLAN sind und die App offen ist.")
+            case .lost:       statusOverlay(symbol: "wifi.exclamationmark",
+                                             title: "Connection lost",
+                                             subtitle: "Captain is out of range. Try again from the Nearby list.")
+            case .notFound:   statusOverlay(symbol: "questionmark.circle",
+                                             title: "Session not found",
+                                             subtitle: "Make sure both devices are connected and the app is open.")
             case .connected:  EmptyView()
             }
+
+            crewPanel
         }
         .navigationBarBackButtonHidden(true)
         .toolbar(.hidden, for: .navigationBar)
         .task { await vm.onAppear() }
         .onDisappear { vm.onDisappear() }
+        .animation(.spring(response: 0.35, dampingFraction: 0.85), value: crewOpen)
     }
 
     @ViewBuilder
@@ -69,7 +77,7 @@ struct ViewerSessionView: View {
                     Image(systemName: "camera.metering.matrix")
                         .font(.system(size: 64, weight: .bold))
                         .foregroundStyle(Theme.gold)
-                    Text("Warte auf Captain's Bildausschnitt…")
+                    Text("Waiting for Captain's framing…")
                         .font(.system(size: 14, weight: .heavy, design: .rounded))
                         .foregroundStyle(Theme.mist)
                 }
@@ -92,7 +100,9 @@ struct ViewerSessionView: View {
             }
             .buttonStyle(.plain)
 
-            StatusPill(label: vm.status == .connected ? "VERBUNDEN" : "VERBINDE", systemImage: "antenna.radiowaves.left.and.right", tint: vm.status == .connected ? Theme.signal : Theme.amber)
+            StatusPill(label: vm.status == .connected ? "CONNECTED" : "CONNECTING",
+                       systemImage: "antenna.radiowaves.left.and.right",
+                       tint: vm.status == .connected ? Theme.signal : Theme.amber)
 
             Spacer()
 
@@ -101,7 +111,89 @@ struct ViewerSessionView: View {
                 .foregroundStyle(Theme.bone)
                 .padding(.horizontal, 10).padding(.vertical, 8)
                 .background(.ultraThinMaterial, in: Capsule())
+
+            Button {
+                crewOpen = true
+            } label: {
+                Image(systemName: "gearshape")
+                    .font(.system(size: 16, weight: .semibold))
+                    .foregroundStyle(Theme.bone)
+                    .frame(width: 40, height: 40)
+                    .background(.ultraThinMaterial, in: Circle())
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel("Crew")
         }
+    }
+
+    @ViewBuilder
+    private var crewPanel: some View {
+        if crewOpen {
+            Color.black.opacity(0.4)
+                .ignoresSafeArea()
+                .onTapGesture { crewOpen = false }
+                .transition(.opacity)
+        }
+
+        VStack(spacing: 0) {
+            Spacer()
+            VStack(spacing: 0) {
+                Capsule()
+                    .fill(Theme.mist.opacity(0.4))
+                    .frame(width: 36, height: 4)
+                    .padding(.top, 10)
+                    .padding(.bottom, 14)
+
+                Text("Crew")
+                    .font(Theme.display(20))
+                    .foregroundStyle(Theme.bone)
+                    .padding(.bottom, 12)
+
+                ScrollView {
+                    VStack(spacing: 0) {
+                        let participants = vm.session.participants
+                        if participants.isEmpty {
+                            Text("No crew yet — waiting for the captain's manifest…")
+                                .font(.system(size: 13, weight: .medium))
+                                .foregroundStyle(Theme.mist)
+                                .multilineTextAlignment(.center)
+                                .padding(.vertical, 20)
+                                .padding(.horizontal, 16)
+                        } else {
+                            ForEach(participants) { p in
+                                HStack(spacing: 12) {
+                                    Text(leadingEmoji(p.displayName) ?? "🏴‍☠️")
+                                        .font(.system(size: 22))
+                                    Text(p.displayName)
+                                        .font(.system(size: 14, weight: .semibold, design: .rounded))
+                                        .foregroundStyle(Theme.bone)
+                                        .lineLimit(1)
+                                    Spacer()
+                                    Text(crewConnectionIcon(p))
+                                        .font(.system(size: 16))
+                                }
+                                .padding(.horizontal, 16)
+                                .padding(.vertical, 10)
+                                Divider().opacity(0.15)
+                            }
+                        }
+                    }
+                }
+                .frame(maxHeight: UIScreen.main.bounds.height * 0.4)
+
+                PrimaryButton(title: "Close", style: .secondary) { crewOpen = false }
+                    .padding(.horizontal, 16)
+                    .padding(.top, 12)
+                    .padding(.bottom, 32)
+            }
+            .background(
+                RoundedRectangle(cornerRadius: 20, style: .continuous)
+                    .fill(Color(white: 0.12))
+            )
+        }
+        .ignoresSafeArea(edges: .bottom)
+        .offset(y: crewOpen ? 0 : UIScreen.main.bounds.height)
+        .transition(.move(edge: .bottom))
     }
 
     @ViewBuilder
@@ -113,11 +205,24 @@ struct ViewerSessionView: View {
                 }
             }
             if vm.canTrigger && !vm.countdown.state.isActive {
-                PrimaryButton(title: vm.triggerLabel, systemImage: "timer", style: .primary) {
-                    Task { await vm.tapTrigger() }
+                // Mirror the webapp: when everyone can fire, show Timer + Now
+                // side-by-side. Otherwise (viewersCanRequest) show one Request button.
+                if vm.canTriggerNow {
+                    HStack(spacing: 10) {
+                        PrimaryButton(title: vm.triggerLabel, systemImage: "timer", style: .primary) {
+                            Task { await vm.tapTrigger() }
+                        }
+                        PrimaryButton(title: "Now", systemImage: "bolt.fill", style: .secondary) {
+                            Task { await vm.tapTriggerNow() }
+                        }
+                    }
+                } else {
+                    PrimaryButton(title: vm.triggerLabel, systemImage: "camera.fill", style: .primary) {
+                        Task { await vm.tapTrigger() }
+                    }
                 }
             } else if vm.countdown.state.isActive {
-                Text("Stillhalten — gleich klickt's.")
+                Text("Hold still — smile!")
                     .font(.system(size: 13, weight: .heavy, design: .rounded))
                     .foregroundStyle(Theme.bone)
                     .padding(.horizontal, 14).padding(.vertical, 10)
@@ -131,7 +236,7 @@ struct ViewerSessionView: View {
             Color.black.opacity(0.4).ignoresSafeArea()
             VStack(spacing: 12) {
                 ProgressView().tint(Theme.gold)
-                Text("Verbinde mit Session…")
+                Text("Connecting to session…")
                     .font(.system(size: 14, weight: .heavy, design: .rounded))
                     .foregroundStyle(Theme.bone)
             }
@@ -153,7 +258,7 @@ struct ViewerSessionView: View {
                     .foregroundStyle(Theme.mist)
                     .multilineTextAlignment(.center)
                     .padding(.horizontal, 36)
-                PrimaryButton(title: "Schließen", style: .secondary) { dismiss() }
+                PrimaryButton(title: "Close", style: .secondary) { dismiss() }
                     .padding(.horizontal, 32)
             }
         }
@@ -166,10 +271,10 @@ struct ViewerSessionView: View {
                 Image(systemName: "flag.checkered")
                     .font(.system(size: 48))
                     .foregroundStyle(Theme.gold)
-                Text("Session beendet")
+                Text("Session ended")
                     .font(Theme.display(24))
                     .foregroundStyle(Theme.bone)
-                PrimaryButton(title: "Schließen", style: .secondary) { dismiss() }
+                PrimaryButton(title: "Close", style: .secondary) { dismiss() }
                     .padding(.horizontal, 32)
             }
         }
@@ -188,16 +293,31 @@ struct ViewerSessionView: View {
                         .padding(.horizontal, 16)
                 }
                 if vm.session.allowFinalPhotoDownload, let img = photo.uiImage {
-                    PrimaryButton(title: "Speichern", systemImage: "square.and.arrow.down", style: .primary) {
+                    PrimaryButton(title: "Save", systemImage: "square.and.arrow.down", style: .primary) {
                         UIImageWriteToSavedPhotosAlbum(img, nil, nil, nil)
                         Haptics.success()
                     }
                     .padding(.horizontal, 16)
                 }
-                PrimaryButton(title: "Zurück", style: .ghost) { dismiss() }
+                PrimaryButton(title: "Back", style: .ghost) { dismiss() }
                     .padding(.horizontal, 16)
                     .padding(.bottom, 24)
             }
+        }
+    }
+
+    private func leadingEmoji(_ name: String) -> String? {
+        guard let m = name.unicodeScalars.first,
+              m.properties.isEmoji && m.value > 0x2000 else { return nil }
+        return String(name.unicodeScalars.prefix(1).map(Character.init))
+    }
+
+    private func crewConnectionIcon(_ p: Participant) -> String {
+        if p.role == .host { return "👑" }
+        switch p.connectionType {
+        case .web: return "🌐"
+        case .mock: return "🤖"
+        default: return "📱"
         }
     }
 }

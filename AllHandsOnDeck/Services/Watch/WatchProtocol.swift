@@ -34,7 +34,7 @@ struct WatchSnapshot: Codable, Sendable {
     var lastReactionFrom: String?
     var generatedAt: Date
 
-    static let empty = WatchSnapshot(
+    static let empty = Self(
         sessionID: nil,
         hostName: "Captain",
         participantCount: 0,

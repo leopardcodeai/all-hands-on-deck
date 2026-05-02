@@ -7,7 +7,6 @@ import Combine
 /// all other events to `messages/` (push, append-only). SSE streams inbound events.
 @MainActor
 final class FirebaseRTDBTransport: NSObject, SessionTransport {
-
     // MARK: - Config
 
     static let databaseURL = "https://all-hands-on-deck-ae29e-default-rtdb.firebaseio.com"
@@ -108,15 +107,13 @@ final class FirebaseRTDBTransport: NSObject, SessionTransport {
         guard let data = try? SessionWireMessage(
             sessionId: sessionId, senderId: localParticipantID,
             createdAt: Date(), event: event
-        ).encoded(),
-        let dict = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else { return }
-        await put(path: "sessions/\(sessionId)/currentFrame", body: dict)
+        ).encoded() else { return }
+        await putData(path: "sessions/\(sessionId)/currentFrame", data: data)
     }
 
     private func pushMessage(_ envelope: SessionWireMessage, sessionId: String) async {
-        guard let data = try? envelope.encoded(),
-              let dict = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else { return }
-        await post(path: "sessions/\(sessionId)/messages", body: dict)
+        guard let data = try? envelope.encoded() else { return }
+        await postData(path: "sessions/\(sessionId)/messages", data: data)
     }
 
     private func deleteSession(sessionId: String) async {
@@ -227,8 +224,12 @@ final class FirebaseRTDBTransport: NSObject, SessionTransport {
     // MARK: - HTTP helpers
 
     private func put(path: String, body: [String: Any]) async {
-        guard let url = URL(string: "\(Self.databaseURL)/\(path).json"),
-              let data = try? JSONSerialization.data(withJSONObject: body) else { return }
+        guard let data = try? JSONSerialization.data(withJSONObject: body) else { return }
+        await putData(path: path, data: data)
+    }
+
+    private func putData(path: String, data: Data) async {
+        guard let url = URL(string: "\(Self.databaseURL)/\(path).json") else { return }
         var req = URLRequest(url: url)
         req.httpMethod = "PUT"
         req.httpBody = data
@@ -237,8 +238,12 @@ final class FirebaseRTDBTransport: NSObject, SessionTransport {
     }
 
     private func post(path: String, body: [String: Any]) async {
-        guard let url = URL(string: "\(Self.databaseURL)/\(path).json"),
-              let data = try? JSONSerialization.data(withJSONObject: body) else { return }
+        guard let data = try? JSONSerialization.data(withJSONObject: body) else { return }
+        await postData(path: path, data: data)
+    }
+
+    private func postData(path: String, data: Data) async {
+        guard let url = URL(string: "\(Self.databaseURL)/\(path).json") else { return }
         var req = URLRequest(url: url)
         req.httpMethod = "POST"
         req.httpBody = data

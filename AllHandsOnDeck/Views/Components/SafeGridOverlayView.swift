@@ -2,7 +2,7 @@ import SwiftUI
 
 /// Rule-of-thirds grid + safe area outline. Pure SwiftUI, no input handling.
 struct SafeGridOverlayView: View {
-    var color: Color = Color.white.opacity(0.35)
+    var color = Color.white.opacity(0.35)
     var safeInset: CGFloat = 24
 
     var body: some View {

@@ -1,1 +1,1 @@
-{"root":["./src/homepage.tsx","./src/joinpage.tsx","./src/reactionstrip.tsx","./src/sessionclient.ts","./src/firebase.ts","./src/main.tsx","./src/wire.ts"],"version":"5.9.3"}
+{"root":["./src/homepage.tsx","./src/joinpage.tsx","./src/reactionstrip.tsx","./src/sessionclient.ts","./src/firebase.ts","./src/main.tsx","./src/piraterank.ts","./src/sessionstate.ts","./src/wire.ts","./src/__tests__/piraterank.test.ts","./src/__tests__/sessionstate.test.ts","./src/__tests__/setup.ts","./src/__tests__/wireformat.test.ts"],"version":"5.9.3"}

@@ -5,7 +5,7 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>
-	<string>All Hands</string>
+	<string>Crew Photo</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
@@ -13,7 +13,7 @@
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
 	<key>CFBundleName</key>
-	<string>All Hands on Deck</string>
+	<string>Crew Photo</string>
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>
@@ -31,21 +31,28 @@
 	</array>
 	<key>CFBundleVersion</key>
 	<string>1</string>
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
 	<key>NSBonjourServices</key>
 	<array>
 		<string>_allhands._tcp</string>
 		<string>_allhands._udp</string>
 	</array>
 	<key>NSCameraUsageDescription</key>
-	<string>All Hands on Deck nutzt die Kamera, um den Bildausschnitt live an deine Crew zu streamen — und um QR-Codes zum Beitreten zu scannen.</string>
+	<string>All Hands On Deck uses the camera to stream a live viewfinder to your crew and to scan QR codes for joining sessions.</string>
 	<key>NSLocalNetworkUsageDescription</key>
-	<string>Findet andere iPhones in der Nähe für die Live-Vorschau eurer Gruppenfoto-Session.</string>
+	<string>Finds nearby iPhones for the live crew photo preview session.</string>
 	<key>NSPhotoLibraryAddUsageDescription</key>
-	<string>Damit das fertige Gruppenfoto in deiner Mediathek landet.</string>
+	<string>Saves the final crew photo to your photo library.</string>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
 	<key>UILaunchScreen</key>
-	<dict/>
+	<dict>
+		<key>UIColorName</key>
+		<string>LaunchBackground</string>
+	</dict>
+	<key>UIRequiresFullScreen</key>
+	<true/>
 	<key>UISupportedInterfaceOrientations</key>
 	<array>
 		<string>UIInterfaceOrientationPortrait</string>

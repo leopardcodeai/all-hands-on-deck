@@ -1,0 +1,128 @@
+/* ── HomeView ── */
+"AllHands\nOnDeck" = "AllHands\nOnDeck";
+"The Captain's Live Crew Photo Preview" = "L'anteprima dal vivo della foto dell'equipaggio del Capitano";
+"Gruppenfoto starten" = "Avvia foto dell'equipaggio";
+"Session beitreten" = "Unisciti alla sessione";
+"Nearby Sessions" = "Sessioni nelle vicinanze";
+"Web-Viewer erlauben" = "Consenti spettatori web";
+"\"Alle sehen das Gruppenfoto, bevor es aufgenommen wird.\"" = "«Tutti vedono la foto dell'equipaggio prima che venga scattata.»";
+"Aus für reine Nearby-Nutzung." = "Disattivato per uso solo nelle vicinanze.";
+"Backend bereit – Web-Viewer können beitreten." = "Backend pronto — gli spettatori web possono unirsi.";
+
+/* ── HostSessionView ── */
+"OK" = "OK";
+"Schließen" = "Chiudi";
+"Auflösung" = "Risoluzione";
+"Sessions enden automatisch nach Ablauf der TTL — kein Speichern, keine Accounts, keine Spuren." = "Le sessioni terminano automaticamente alla scadenza del TTL — nessun salvataggio, nessun account, nessuna traccia.";
+"Anfrage von der Crew — bestätige in den Einstellungen." = "Richiesta dalla ciurma — conferma nelle impostazioni.";
+"Abbrechen" = "Annulla";
+"Jetzt" = "Ora";
+"Timer" = "Timer";
+"Wer darf auslösen?" = "Chi può scattare?";
+"Best-Shot Burst" = "Raffica miglior scatto";
+"5 Aufnahmen, KI wählt die beste." = "5 scatti, l'IA sceglie il migliore.";
+"Noch einmal" = "Ancora";
+"Speichern" = "Salva";
+
+/* ── BurstPickerView ── */
+"Best Shot Burst" = "Raffica miglior scatto";
+"KI-Ranking nach Gesichtern, offenen Augen und Schärfe." = "Classifica IA per volti, occhi aperti e nitidezza.";
+"⭐︎ Beste" = "⭐︎ Migliore";
+"Bewerte…" = "Valutazione…";
+"Verwerfen" = "Scarta";
+
+/* ── NearbySessionsView ── */
+"Sessions in deinem WLAN / Bluetooth-Bereich." = "Sessioni nella portata della tua Wi-Fi / Bluetooth.";
+"Suche Sessions in der Nähe…" = "Ricerca di sessioni nelle vicinanze…";
+"Beim ersten Mal fragt iOS nach einer\nLocal-Network-Berechtigung." = "La prima volta iOS chiederà\nun'autorizzazione per la rete locale.";
+"Beide Geräte müssen App geöffnet, im selben WLAN sein und Local-Network-Zugriff erlaubt haben." = "Entrambi i dispositivi devono avere l'app aperta, essere sulla stessa Wi-Fi e aver consentito l'accesso alla rete locale.";
+
+/* ── PermissionView ── */
+"Kamera-Zugriff benötigt" = "Accesso alla fotocamera richiesto";
+"Damit deine Crew sehen kann, was die Kamera sieht, brauchen wir Zugriff auf die iPhone-Kamera." = "Affinché la tua ciurma possa vedere ciò che vede la fotocamera, ci serve l'accesso alla fotocamera dell'iPhone.";
+"Zugriff erlauben" = "Consenti accesso";
+
+/* ── ViewerSessionView ── */
+"Verbindung verloren" = "Connessione persa";
+"Captain ist außer Reichweite. Versuch es noch einmal von der Nearby-Liste aus." = "Il Capitano è fuori portata. Riprova dall'elenco Nelle vicinanze.";
+"Session nicht gefunden" = "Sessione non trovata";
+"Stelle sicher, dass beide im selben WLAN sind und die App offen ist." = "Assicurati che entrambi siano sulla stessa Wi-Fi e che l'app sia aperta.";
+"Warte auf Captain's Bildausschnitt…" = "In attesa dell'inquadratura del Capitano…";
+"Stillhalten — gleich klickt's." = "Stai fermo — sta per scattare.";
+"Verbinde mit Session…" = "Connessione alla sessione…";
+"Session beendet" = "Sessione terminata";
+"Zurück" = "Indietro";
+
+/* ── JoinSessionView ── */
+"Beitreten" = "Unisciti";
+"Session-Code von Captain eingeben oder QR-Code scannen." = "Inserisci il codice di sessione del Capitano o scansiona il QR code.";
+"Verbinden" = "Connetti";
+"QR-Code scannen" = "Scansiona QR code";
+"QR-Code enthält keine Session-ID." = "Il QR code non contiene un ID di sessione.";
+
+/* ── Misc ── */
+"Code" = "Codice";
+"Crew" = "Ciurma";
+"Bereit" = "Pronto";
+"Kamera nicht verfügbar." = "Fotocamera non disponibile.";
+
+/* ── Dynamic format strings ── */
+"nearby.hostStartingSession" = "%@ sta avviando una foto dell'equipaggio";
+"burst.shotNumber" = "Scatto %d";
+"host.startTimer" = "Avvio %ds";
+"home.resumeIn" = "Riprendi (%ds)";
+"result.closingIn" = "Chiusura tra %d…";
+
+/* ── Alert titles ── */
+"Hinweis" = "Nota";
+"Session abgelaufen" = "Sessione scaduta";
+
+/* ── Reactions (Reaction.label) ── */
+"reaction.ready" = "Pronto";
+"reaction.waitMoment" = "Aspetta un momento";
+"reaction.again" = "Ancora";
+"reaction.cantSeeMe" = "Non mi vedi";
+"reaction.raiseCamera" = "Fotocamera più in alto";
+"reaction.moveLeft" = "Più a sinistra";
+"reaction.moveRight" = "Più a destra";
+
+/* ── In-frame hints (InFrameStatus.headline) ── */
+"inframe.noFaces" = "Nessuno nell'inquadratura";
+"inframe.allInside" = "Ci sono tutti";
+"inframe.someClipped" = "Qualcuno è tagliato fuori";
+"inframe.skewedLeft" = "Il gruppo è troppo a sinistra";
+"inframe.skewedRight" = "Il gruppo è troppo a destra";
+"inframe.tooHigh" = "Posizione fotocamera troppo bassa";
+"inframe.tooLow" = "Posizione fotocamera troppo alta";
+
+/* ── TriggerPermission ── */
+"trigger.hostOnly.title" = "Solo Capitano";
+"trigger.hostOnly.subtitle" = "Solo tu dai il comando.";
+"trigger.everyoneCanStartTimer.title" = "La ciurma può scattare";
+"trigger.everyoneCanStartTimer.subtitle" = "Chiunque a bordo può avviare il timer.";
+"trigger.viewersCanRequest.title" = "La ciurma chiede — il Capitano decide";
+"trigger.viewersCanRequest.subtitle" = "Richiesta a te, tu confermi.";
+
+/* ── Pirate Ranks ── */
+"rank.cabinBoy"      = "Mozzo";
+"rank.deckhand"      = "Marinaio";
+"rank.boatswain"     = "Nostromo";
+"rank.gunner"        = "Cannoniere";
+"rank.navigator"     = "Navigatore";
+"rank.quartermaster" = "Quartiermastro";
+"rank.firstMate"     = "Primo ufficiale";
+"rank.captain"       = "Capitano";
+
+/* ── Identity Settings ── */
+"identity.settings.title"           = "Identità";
+"identity.customName.label"         = "Nome personalizzato";
+"identity.customName.placeholder"   = "ad es. Alex";
+"identity.customName.hint"          = "Sostituisce tutto — nessun grado aggiunto.";
+"identity.gamecenter.label"         = "Game Center";
+"identity.gamecenter.connected"     = "Connesso";
+"identity.gamecenter.disconnected"  = "Non hai effettuato l'accesso";
+"identity.gamecenter.notSignedIn"   = "Accedi a Game Center in Impostazioni → Game Center.";
+"identity.progress.label"           = "Avanzamento di grado";
+"identity.progress.points"          = "punti";
+"identity.progress.hint"            = "Ospita sessioni, fai foto, invia reazioni — tutto conta.";
+"identity.progress.maxRank"         = "Grado massimo raggiunto. Leggenda dei sette mari! 🏴‍☠️";

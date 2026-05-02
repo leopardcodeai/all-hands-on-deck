@@ -68,6 +68,18 @@ enum SessionManager {
         if isMockPreferred {
             return MockSessionTransport(role: .viewer, displayName: displayName)
         }
-        return MultipeerSessionTransport(role: .viewer, displayName: displayName)
+        // Mirror the host's composite setup: try Multipeer (same Wi-Fi) AND
+        // Firebase (works across networks / cellular). Whichever path the host
+        // uses delivers the events, which fixes "preview frames never arrive"
+        // when the host has allowWebJoin on but the two phones aren't on the
+        // same local network.
+        let sharedID = UUID().uuidString
+        let multi = MultipeerSessionTransport(
+            role: .viewer, displayName: displayName, localParticipantID: sharedID
+        )
+        let fb = FirebaseRTDBTransport(
+            role: .viewer, displayName: displayName, localParticipantID: sharedID
+        )
+        return CompositeSessionTransport(role: .viewer, children: [multi, fb])
     }
 }

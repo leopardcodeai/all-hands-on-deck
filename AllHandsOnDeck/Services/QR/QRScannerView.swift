@@ -156,4 +156,3 @@ extension ScannerVC: AVCaptureMetadataOutputObjectsDelegate {
         onResult?(raw)
     }
 }
-

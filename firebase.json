@@ -3,6 +3,8 @@
     "public": "webapp/dist",
     "ignore": ["firebase.json", "**/.*", "**/node_modules/**"],
     "rewrites": [
+      { "source": "/privacy", "destination": "/privacy.html" },
+      { "source": "/imprint", "destination": "/imprint.html" },
       { "source": "/join/**", "destination": "/index.html" },
       { "source": "**",       "destination": "/index.html" }
     ],

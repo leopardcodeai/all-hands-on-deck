@@ -2,7 +2,6 @@ import XCTest
 @testable import AllHandsOnDeck
 
 final class SessionURLParserTests: XCTestCase {
-
     func test_customScheme() {
         let id = SessionURLParser.sessionID(from: "allhands://join?session=ABCDEF1234")
         XCTAssertEqual(id, "ABCDEF1234")
