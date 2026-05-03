@@ -13,12 +13,15 @@ final class ViewerSessionViewModel: ObservableObject {
     @Published private(set) var session: PhotoSession
     @Published private(set) var latestPreviewImage: UIImage?
     @Published private(set) var finalPhoto: CapturedPhoto?
+    @Published private(set) var countdownState: CountdownState = .idle
+    @Published private(set) var countdownRemaining: Int = 0
     @Published var errorMessage: String?
 
     let countdown = CountdownCoordinator()
 
     private let transport: SessionTransport
     private var subs: Set<AnyCancellable> = []
+    private var wasEverConnected = false
 
     init(session: PhotoSession, displayName: String) {
         self.session = session
@@ -47,10 +50,15 @@ final class ViewerSessionViewModel: ObservableObject {
             .sink { [weak self] s in self?.applyTransportStatus(s) }
             .store(in: &subs)
 
-        // Forward countdown changes so SwiftUI re-renders viewer view.
-        countdown.objectWillChange
-            .receive(on: DispatchQueue.main)
-            .sink { [weak self] _ in self?.objectWillChange.send() }
+        // Mirror countdown state so SwiftUI observes it directly (nested
+        // ObservableObject changes aren't always picked up through forwarding).
+        countdown.$state
+            .receive(on: RunLoop.main)
+            .sink { [weak self] in self?.countdownState = $0 }
+            .store(in: &subs)
+        countdown.$remainingSeconds
+            .receive(on: RunLoop.main)
+            .sink { [weak self] in self?.countdownRemaining = $0 }
             .store(in: &subs)
     }
 
@@ -75,8 +83,8 @@ final class ViewerSessionViewModel: ObservableObject {
 
     var triggerLabel: String {
         switch session.triggerPermission {
-        case .everyoneCanStartTimer: return "Timer"
-        case .viewersCanRequest:     return "Request photo"
+        case .everyoneCanStartTimer: return DesignLabels.timer(session.timerDuration)
+        case .viewersCanRequest:     return DesignLabels.requestPhoto
         case .hostOnly:              return ""
         }
     }
@@ -100,6 +108,9 @@ final class ViewerSessionViewModel: ObservableObject {
         ))
     }
 
+    func clearFinalPhoto() {
+        finalPhoto = nil
+    }
     func sendReaction(_ reaction: Reaction) async {
         IdentityService.shared.record(.sendReaction)
         await transport.send(.reactionSent(
@@ -113,16 +124,15 @@ final class ViewerSessionViewModel: ObservableObject {
     private func applyTransportStatus(_ s: TransportConnectionStatus) {
         switch s {
         case .browsing, .connecting, .advertising, .idle:
-            // While we're searching/connecting and have no final photo yet,
-            // keep the connecting overlay up.
-            if finalPhoto == nil { status = .connecting }
+            if !wasEverConnected, finalPhoto == nil { status = .connecting }
         case .connected:
+            wasEverConnected = true
             status = .connected
         case .notFound:
             status = .notFound
         case .disconnected:
-            // Treat as lost only if we had been connected.
-            if status == .connected { status = .lost } else { status = .notFound }
+            if status == .connected, finalPhoto == nil { status = .lost }
+            else if status != .connected { status = .notFound }
         case .failed:
             status = .notFound
         }
@@ -142,9 +152,11 @@ final class ViewerSessionViewModel: ObservableObject {
 
         case .countdownStarted(let photoAt, let duration, _):
             countdown.armRunning(photoAt: photoAt, duration: duration)
+            finalPhoto = nil
 
         case .countdownCancelled:
             countdown.cancel()
+            finalPhoto = nil
 
         case .photoCaptured:
             countdown.markCompleted()

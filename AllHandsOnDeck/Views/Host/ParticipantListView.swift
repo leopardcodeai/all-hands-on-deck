@@ -9,7 +9,7 @@ struct ParticipantListView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
             HStack {
-                Text("Crew")
+                Text(DesignLabels.crew)
                     .font(.system(size: 13, weight: .heavy, design: .rounded))
                     .tracking(1.0)
                     .foregroundStyle(Theme.mist)

@@ -3,6 +3,9 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { SessionClient } from './SessionClient';
 import { ReactionStrip } from './ReactionStrip';
 import { getOrAssignRank } from './pirateRank';
+import { getDebugState } from './debugState';
+import { ConnectionLostPage } from './ConnectionLostPage';
+import { DesignLabels } from './DesignLabels';
 
 // Isolated frame viewer — updates img.src via DOM ref so the parent never
 // re-renders at 3fps. Only re-renders once when the first frame arrives.
@@ -26,13 +29,13 @@ const FrameImage = memo(function FrameImage({ client }: { client: SessionClient 
       <img
         ref={imgRef}
         src={hasFrame ? (client.latestFrameURL ?? '') : ''}
-        alt="Live preview"
+        alt={DesignLabels.crew}
         style={{ display: hasFrame ? undefined : 'none' }}
       />
       {!hasFrame && (
         <div className="center-stack">
           <div className="placeholder-art">📷</div>
-          <p className="subtitle">Waiting for Captain&apos;s framing…</p>
+          <p className="subtitle">{DesignLabels.waitingForFraming}</p>
         </div>
       )}
     </>
@@ -68,9 +71,11 @@ export function JoinPage() {
   const [remaining, setRemaining] = useState<number | null>(null);
   const [dismissedPhoto, setDismissedPhoto] = useState(false);
   const [crewOpen, setCrewOpen] = useState(false);
+  const [debugOpen, setDebugOpen] = useState(false);
+  const [, debugTick] = useState(0);
   const tickRef = useRef<number | null>(null);
 
-  useEffect(() => { setDismissedPhoto(false); }, [client.finalPhotoURL]);
+  useEffect(() => { setDismissedPhoto(false); }, [client.finalPhotoURL, client.countdownTargetMs]);
 
   useEffect(() => {
     // General events only — frame updates are handled by FrameImage via subscribeFrame.
@@ -106,6 +111,11 @@ export function JoinPage() {
     return () => { if (tickRef.current) cancelAnimationFrame(tickRef.current); };
   }, [client.countdownTargetMs, force]);
 
+  useEffect(() => {
+    const t = setInterval(() => debugTick(n => n + 1), 500);
+    return () => clearInterval(t);
+  }, []);
+
   const meta = client.metadata;
   // Show trigger buttons by default when no metadata yet; hide only when host explicitly set hostOnly.
   const canTrigger = !meta || meta.triggerPermission === 'everyoneCanStartTimer';
@@ -113,11 +123,11 @@ export function JoinPage() {
 
   const statusPill = (() => {
     switch (client.status) {
-      case 'connecting': return <span className="pill pill-amber">⌛ Connecting</span>;
-      case 'connected':  return <span className="pill pill-signal">● Connected</span>;
-      case 'lost':       return <span className="pill pill-crimson">⚠ Connection lost</span>;
-      case 'ended':      return <span className="pill pill-gold">⚑ Ended</span>;
-      case 'notFound':   return <span className="pill pill-crimson">? Not found</span>;
+      case 'connecting': return <span className="pill pill-amber">⌛ {DesignLabels.statusConnecting}</span>;
+      case 'connected':  return <span className="pill pill-signal">● {DesignLabels.statusConnected}</span>;
+      case 'lost':       return <span className="pill pill-crimson">⚠ {DesignLabels.statusOffline}</span>;
+      case 'ended':      return <span className="pill pill-gold">⚑ {DesignLabels.statusEnded}</span>;
+      case 'notFound':   return <span className="pill pill-crimson">? {DesignLabels.statusNotFound}</span>;
       default:           return null;
     }
   })();
@@ -153,7 +163,7 @@ export function JoinPage() {
           {rank.split(' ')[0]}
         </span>
         <button
-          aria-label="Crew"
+          aria-label={DesignLabels.crew}
           onClick={() => setCrewOpen(true)}
           className="icon-button"
         >
@@ -168,22 +178,22 @@ export function JoinPage() {
         {client.status === 'connected' && canTrigger && remaining === null && (
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <button className="btn-primary" onClick={() => client.sendCaptureRequest()}>
-              ⏱ Timer {meta?.timerDuration != null ? `${meta.timerDuration}s` : ''}
+              {DesignLabels.timer(meta?.timerDuration ?? 0)}
             </button>
             <button className="btn-secondary" onClick={() => client.sendCaptureNowRequest()}>
-              ⚡ Now
+              {DesignLabels.now}
             </button>
           </div>
         )}
         {client.status === 'connected' && canRequest && remaining === null && (
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <button className="btn-primary" onClick={() => client.sendCaptureRequest()}>
-              📸 Request Photo
+              {DesignLabels.requestPhoto}
             </button>
           </div>
         )}
         {client.status === 'connected' && remaining !== null && (
-          <span className="pill pill-signal">Hold still — smile!</span>
+          <span className="pill pill-signal">{DesignLabels.holdStill}</span>
         )}
       </div>
 
@@ -194,7 +204,7 @@ export function JoinPage() {
 
       {client.finalPhotoURL && !dismissedPhoto && (
         <div className="final-photo" style={{ overflowY: 'auto', padding: '24px 16px' }}>
-          <img src={client.finalPhotoURL} alt="Final crew photo" />
+          <img src={client.finalPhotoURL} alt={DesignLabels.crew} />
           {'share' in navigator ? (
             <button
               className="btn-primary"
@@ -209,7 +219,7 @@ export function JoinPage() {
                 }
               }}
             >
-              ↑ Share / Save
+              ↑ {DesignLabels.share}
             </button>
           ) : (
             <a
@@ -217,14 +227,14 @@ export function JoinPage() {
               href={client.finalPhotoURL}
               download={`crewphoto-${sessionId}.jpg`}
             >
-              ↓ Save
+              ↓ {DesignLabels.save}
             </a>
           )}
           <button
             className="btn-secondary"
             onClick={() => setDismissedPhoto(true)}
           >
-            Done
+            {DesignLabels.backToPreview}
           </button>
         </div>
       )}
@@ -233,13 +243,13 @@ export function JoinPage() {
         className={`crew-backdrop ${crewOpen ? 'open' : ''}`}
         onClick={() => setCrewOpen(false)}
       />
-      <div className={`crew-panel ${crewOpen ? 'open' : ''}`} role="dialog" aria-label="Crew">
+      <div className={`crew-panel ${crewOpen ? 'open' : ''}`} role="dialog" aria-label={DesignLabels.crew}>
         <div className="grabber" />
-        <h3>Crew</h3>
+        <h3>{DesignLabels.crew}</h3>
         <div className="crew-list">
           {(meta?.participants ?? []).length === 0 && (
             <div className="muted-note" style={{ textAlign: 'center', padding: '14px 0' }}>
-              No crew yet — waiting for the captain&apos;s manifest…
+              {DesignLabels.noCrewYet}
             </div>
           )}
           {(meta?.participants ?? []).map((p) => {
@@ -255,7 +265,7 @@ export function JoinPage() {
           })}
         </div>
         <button className="btn-secondary" onClick={() => setCrewOpen(false)}>
-          Close
+          {DesignLabels.close}
         </button>
       </div>
 
@@ -266,13 +276,39 @@ export function JoinPage() {
             {client.status === 'ended' ? '⚑' : client.status === 'lost' ? '⚠' : '?'}
           </div>
           <h2 style={{ margin: 0, textAlign: 'center' }}>
-            {client.status === 'ended'    ? 'Session ended' :
-             client.status === 'lost'     ? 'Connection lost' :
-                                            'Session not found'}
+            {client.status === 'ended'    ? DesignLabels.sessionEnded :
+             client.status === 'lost'     ? DesignLabels.connectionLost :
+                                             DesignLabels.sessionNotFound}
           </h2>
           <button className="btn-secondary" onClick={() => navigate('/')}>
-            Back
+            {DesignLabels.back}
           </button>
+        </div>
+      )}
+
+      <DebugPanel open={debugOpen} onToggle={() => setDebugOpen(o => !o)} />
+    </div>
+  );
+}
+
+function DebugPanel({ open, onToggle }: { open: boolean; onToggle: () => void }) {
+  const ds = getDebugState();
+  return (
+    <div className="debug-overlay">
+      <button onClick={onToggle} className="debug-bar">
+        <span className="debug-dot" />
+        <span>{ds.framesPerSecond}fps FB:{ds.framesReceived}/{ds.firebaseEvents} {ds.lastEvent}</span>
+        <span className="debug-version">v2.3.9</span>
+        <span style={{ marginLeft: 'auto' }}>{open ? '▼' : '▲'}</span>
+      </button>
+      {open && (
+        <div className="debug-detail">
+          <div>Session: {ds.sessionId || '—'}</div>
+          <div>Frames: {ds.framesReceived} ({ds.framesPerSecond}fps)</div>
+          <div>Events: {ds.firebaseEvents}</div>
+          <div>Status: {ds.status}</div>
+          <div className="debug-events-label">Last events:</div>
+          {ds.lastEvents.map((e, i) => <div key={i} className="debug-event">  {e}</div>)}
         </div>
       )}
     </div>
