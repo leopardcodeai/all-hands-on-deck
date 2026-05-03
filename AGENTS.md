@@ -111,7 +111,7 @@ Flash bleibt für: Fragen beantworten, Status abfragen, Pläne erstellen, einfac
 | Datum | Issue | Beschreibung | Status |
 |-------|-------|-------------|--------|
 | 2026-05-03 | APP-69 | Host View: crew icon round + popup above QR | ✅ Gemerged PR #31 |
-| 2026-05-03 | APP-70 | Popup restructure: crew top, QR bottom, liquid glass, landscape+portrait | PR #33 In Review |
+| 2026-05-03 | APP-70 | Popup restructure: crew top, QR bottom, liquid glass, landscape+portrait | ✅ Gemerged PR #33 (ZStack order fix, 6 tests added) |
 | 2026-05-03 | APP-46–56 | 11 Issues: DesignLabels, Viewer/Host Crew Popups, QR, Countdown, Webapp | ✅ Gemerged PR #18 |
 | 2026-05-03 | — | Linear + GitHub Workflow-Initialisierung (23 Issues) | ✅ Done |
 
