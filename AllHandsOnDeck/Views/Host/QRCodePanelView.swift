@@ -6,47 +6,77 @@ struct QRCodePanelView: View {
     @State private var didCopy = false
 
     var body: some View {
-        VStack(spacing: 14) {
-            QRCodeService.image(string: payload, size: 600)
-                .resizable()
-                .interpolation(.none)
-                .scaledToFit()
-                .padding(14)
-                .background(Theme.bone)
-                .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
-                .frame(maxWidth: 240)
+        VStack(spacing: 10) {
+            ZStack {
+                QRCodeService.image(string: payload, size: 600)
+                    .resizable()
+                    .interpolation(.none)
+                    .scaledToFit()
+                    .padding(8)
+                    .background(Theme.bone)
+                    .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+                    .frame(width: 168, height: 168)
+                Text("🏴‍☠️")
+                    .font(.system(size: 28))
+                    .shadow(color: .black.opacity(0.3), radius: 2)
+            }
+            .frame(width: 168, height: 168)
 
-            VStack(spacing: 4) {
-                Text("Code")
-                    .font(.system(size: 11, weight: .heavy, design: .rounded))
-                    .tracking(1.2)
-                    .foregroundStyle(Theme.mist)
+            VStack(spacing: 8) {
                 Text(sessionID)
-                    .font(.system(size: 22, weight: .black, design: .monospaced))
+                    .font(Theme.mono(24))
                     .foregroundStyle(Theme.bone)
-                    .textSelection(.enabled)
-            }
+                    .tracking(2)
 
-            Button {
-                UIPasteboard.general.string = payload
-                Haptics.success()
-                didCopy = true
-                DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) { didCopy = false }
-            } label: {
-                HStack(spacing: 6) {
-                    Image(systemName: didCopy ? "checkmark" : "link")
-                    Text(didCopy ? "Kopiert" : "Link kopieren")
+                HStack(spacing: 10) {
+                    Button {
+                        UIPasteboard.general.string = payload
+                        Haptics.success()
+                        didCopy = true
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) { didCopy = false }
+                    } label: {
+                        HStack(spacing: 6) {
+                            Image(systemName: didCopy ? DesignLabels.iconCopied : DesignLabels.iconCopy)
+                            Text(didCopy ? DesignLabels.copied : DesignLabels.copyLink)
+                        }
+                        .font(.system(size: 12, weight: .heavy, design: .rounded))
+                        .foregroundStyle(Theme.bone)
+                        .frame(maxWidth: .infinity)
+                        .frame(height: 36)
+                        .background(Color.white.opacity(0.08))
+                        .clipShape(Capsule())
+                    }
+                    .buttonStyle(.plain)
+
+                    if let url = URL(string: payload) {
+                        ShareLink(item: url) {
+                            HStack(spacing: 6) {
+                                Image(systemName: DesignLabels.iconShare)
+                                Text(DesignLabels.share)
+                            }
+                            .font(.system(size: 12, weight: .heavy, design: .rounded))
+                            .foregroundStyle(Theme.bone)
+                            .frame(maxWidth: .infinity)
+                            .frame(height: 36)
+                            .background(Color.white.opacity(0.08))
+                            .clipShape(Capsule())
+                        }
+                        .buttonStyle(.plain)
+                    }
                 }
-                .font(.system(size: 13, weight: .heavy, design: .rounded))
-                .foregroundStyle(Theme.bone)
-                .padding(.horizontal, 14)
-                .padding(.vertical, 8)
-                .background(Color.white.opacity(0.08))
-                .clipShape(Capsule())
             }
-            .buttonStyle(.plain)
         }
-        .padding(20)
+        .padding(12)
         .liquidGlass()
+    }
+}
+
+#Preview {
+    ZStack {
+        Theme.oceanFog.ignoresSafeArea()
+        QRCodePanelView(
+            payload: "https://all-hands-on-deck.web.app/join?code=M3F-2P",
+            sessionID: "AHOD · M3F-2P"
+        )
     }
 }

@@ -13,7 +13,7 @@ struct JoinSessionView: View {
             ScrollView {
                 VStack(spacing: 24) {
                     VStack(alignment: .leading, spacing: 8) {
-                        Text("Join")
+                        Text(DesignLabels.join)
                             .font(Theme.display(36))
                             .foregroundStyle(Theme.bone)
                         Text("Enter the Captain's session code or scan a QR code.")
@@ -42,7 +42,7 @@ struct JoinSessionView: View {
                         .padding(.horizontal, 24)
 
                     VStack(spacing: 10) {
-                        PrimaryButton(title: "Connect", systemImage: "arrow.right", style: .primary) {
+                        PrimaryButton(title: DesignLabels.connect, systemImage: "arrow.right", style: .primary) {
                             if !sessionID.isEmpty { connect = true }
                         }
                         .disabled(sessionID.isEmpty)
@@ -66,7 +66,7 @@ struct JoinSessionView: View {
             }
             .scrollDismissesKeyboard(.interactively)
         }
-        .navigationTitle("Join")
+        .navigationTitle(DesignLabels.join)
         .navigationBarTitleDisplayMode(.inline)
         .toolbarBackground(Theme.abyss, for: .navigationBar)
         .toolbarColorScheme(.dark, for: .navigationBar)

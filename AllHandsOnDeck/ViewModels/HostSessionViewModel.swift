@@ -192,12 +192,14 @@ final class HostSessionViewModel: ObservableObject {
 
     func startCountdown() async {
         guard !countdown.state.isActive else { return }
-        let photoAt = countdown.start(duration: session.timerDuration)
+        let photoAt = Date().addingTimeInterval(TimeInterval(session.timerDuration))
+        // Send BEFORE arming local countdown so viewers see it as early as possible.
         await transport.send(.countdownStarted(
             photoAt: photoAt,
             duration: session.timerDuration,
             startedBy: transport.localParticipantID
         ))
+        countdown.armRunning(photoAt: photoAt, duration: session.timerDuration)
         Haptics.thump()
 
         let delay = max(0, photoAt.timeIntervalSinceNow)
@@ -268,6 +270,8 @@ final class HostSessionViewModel: ObservableObject {
 
     /// Captain confirms a burst pick — promote it to the canonical capture.
     func acceptBurstPick(_ photo: CapturedPhoto) async {
+        // Clear any existing final photo so webapp doesn't show stale overlay
+        await transport.send(.countdownCancelled(by: transport.localParticipantID))
         capturedPhoto = photo
         burstCandidates = []
         burstScores = []
@@ -429,13 +433,13 @@ final class HostSessionViewModel: ObservableObject {
     /// Human-friendly status string for the LIVE pill in the UI.
     var statusLabel: String {
         switch transportStatus {
-        case .idle:         return "BEREIT"
-        case .advertising:  return "LIVE"
-        case .browsing, .connecting: return "VERBINDE"
-        case .connected:    return "LIVE"
-        case .disconnected: return "OFFLINE"
-        case .notFound:     return "OFFLINE"
-        case .failed:       return "FEHLER"
+        case .idle:         return DesignLabels.statusReady
+        case .advertising:  return DesignLabels.statusLive
+        case .browsing, .connecting: return DesignLabels.statusConnecting
+        case .connected:    return DesignLabels.statusLive
+        case .disconnected: return DesignLabels.statusOffline
+        case .notFound:     return DesignLabels.statusOffline
+        case .failed:       return DesignLabels.statusError
         }
     }
 }

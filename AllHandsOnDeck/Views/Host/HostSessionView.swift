@@ -9,6 +9,8 @@ struct HostSessionView: View {
     @State private var zoomHideTask: Task<Void, Never>?
     @AppStorage("camera.showGrid")  private var showGrid: Bool = true
     @AppStorage("camera.showLevel") private var showLevel: Bool = true
+    @AppStorage("debug.showOverlays") private var showDebugOverlays = true
+    @State private var crewOpen = false
     let onSessionCreated: (String) -> Void
 
     init(hostName: String, allowWebJoin: Bool = false, onSessionCreated: @escaping (String) -> Void) {
@@ -102,6 +104,24 @@ struct HostSessionView: View {
                 resultOverlay(photo: captured)
                     .transition(.opacity)
             }
+
+            // Crew popup backdrop (behind popup so taps on popup don't close it)
+            if crewOpen {
+                Color.black.opacity(0.25)
+                    .ignoresSafeArea()
+                    .onTapGesture { withAnimation { crewOpen = false } }
+                    .transition(.opacity)
+            }
+
+            // Crew popup
+            if crewOpen {
+                crewPopup
+                    .transition(.scale.combined(with: .opacity))
+            }
+
+            if showDebugOverlays {
+                DebugOverlayView()
+            }
         }
         .navigationBarBackButtonHidden(true)
         .toolbar(.hidden, for: .navigationBar)
@@ -131,7 +151,7 @@ struct HostSessionView: View {
             get: { vm.didExpire },
             set: { _ in }
         )) {
-            Button("Close") { dismiss() }
+            Button(DesignLabels.close) { dismiss() }
         } message: {
             Text("Sessions end automatically after TTL — no saving, no accounts, no traces.")
         }
@@ -142,6 +162,48 @@ struct HostSessionView: View {
     // MARK: - Chrome
 
     @Environment(\.dismiss) private var dismiss
+
+    private var crewPopup: some View {
+        VStack(spacing: 0) {
+            Text(DesignLabels.crew)
+                .font(.system(size: 13, weight: .heavy, design: .rounded))
+                .tracking(1)
+                .foregroundStyle(Theme.gold)
+                .padding(.bottom, 8)
+
+            ScrollView {
+                VStack(spacing: 0) {
+                    if vm.participants.isEmpty {
+                        Text(DesignLabels.noCrewYet)
+                            .font(.system(size: 12, weight: .medium))
+                            .foregroundStyle(Theme.mist)
+                            .multilineTextAlignment(.center)
+                            .padding(.vertical, 12)
+                    } else {
+                        ForEach(vm.participants) { p in
+                            HStack(spacing: 10) {
+                                Text(leadingEmoji(p.displayName) ?? "🏴‍☠️")
+                                    .font(.system(size: 18))
+                                Text(p.displayName)
+                                    .font(.system(size: 13, weight: .semibold, design: .rounded))
+                                    .foregroundStyle(Theme.bone)
+                                    .lineLimit(1)
+                                Spacer()
+                                Text(crewConnectionIcon(p))
+                                    .font(.system(size: 14))
+                            }
+                            .padding(.vertical, 8)
+                            Divider().opacity(0.15)
+                        }
+                    }
+                }
+            }
+            .frame(maxHeight: 200)
+        }
+        .padding(14)
+        .frame(width: 260)
+        .liquidGlass()
+    }
 
     private func flashZoomLabel() {
         withAnimation(.spring(response: 0.25)) { showZoomLabel = true }
@@ -170,7 +232,7 @@ struct HostSessionView: View {
                         .background(.ultraThinMaterial, in: Circle())
                 }
                 .buttonStyle(.plain)
-                .accessibilityLabel("Back")
+                .accessibilityLabel(DesignLabels.back)
                 .accessibilityHint("Returns to the home screen")
 
                 StatusPill(
@@ -184,15 +246,22 @@ struct HostSessionView: View {
                 Spacer(minLength: 8)
 
                 HStack(spacing: 4) {
-                    Image(systemName: "person.2.fill")
-                        .font(.system(size: 12, weight: .heavy))
-                    Text("\(vm.participants.count)")
-                        .font(.system(size: 13, weight: .heavy, design: .rounded))
+                    Button {
+                        withAnimation(.spring(response: 0.35, dampingFraction: 0.85)) { crewOpen.toggle() }
+                    } label: {
+                        HStack(spacing: 4) {
+                            Image(systemName: "person.2.fill")
+                                .font(.system(size: 12, weight: .heavy))
+                            Text("\(vm.participants.count)")
+                                .font(.system(size: 13, weight: .heavy, design: .rounded))
+                        }
+                    }
+                    .buttonStyle(.plain)
                 }
-                .foregroundStyle(Theme.bone)
+                .foregroundStyle(crewOpen ? .black : Theme.bone)
                 .padding(.horizontal, 10)
                 .padding(.vertical, 8)
-                .background(.ultraThinMaterial, in: Capsule())
+                .background(crewOpen ? AnyShapeStyle(Theme.goldShine) : AnyShapeStyle(.ultraThinMaterial), in: Capsule())
 
                 Button {
                     withAnimation { showSettings.toggle() }
@@ -318,7 +387,7 @@ struct HostSessionView: View {
                 .padding(.top, 8)
 
             VStack(alignment: .leading, spacing: 10) {
-                Text("Timer")
+                Text(DesignLabels.timer(10))
                     .font(.system(size: 13, weight: .heavy, design: .rounded))
                     .tracking(1.0)
                     .foregroundStyle(Theme.mist)
@@ -390,7 +459,7 @@ struct HostSessionView: View {
                 onDeny: { id in Task { await vm.deny(participantID: id) } }
             )
 
-            PrimaryButton(title: "Close", style: .ghost) {
+            PrimaryButton(title: DesignLabels.close, style: .ghost) {
                 withAnimation { showSettings = false }
             }
         }
@@ -441,6 +510,21 @@ struct HostSessionView: View {
         UIImageWriteToSavedPhotosAlbum(img, nil, nil, nil)
         Haptics.success()
         vm.discardCapture()
+    }
+
+    private func leadingEmoji(_ name: String) -> String? {
+        guard let m = name.unicodeScalars.first,
+              m.properties.isEmoji && m.value > 0x2000 else { return nil }
+        return String(name.unicodeScalars.prefix(1).map(Character.init))
+    }
+
+    private func crewConnectionIcon(_ p: Participant) -> String {
+        if p.role == .host { return "👑" }
+        switch p.connectionType {
+        case .web: return "🌐"
+        case .mock: return "🤖"
+        default: return "📱"
+        }
     }
 }
 
@@ -666,7 +750,7 @@ private struct HighResRow: View {
                 Image(systemName: "camera.aperture")
                     .foregroundStyle(camera.highResMode != .off ? Theme.gold : Theme.mist)
                 VStack(alignment: .leading, spacing: 2) {
-                    Text("Resolution")
+                    Text(DesignLabels.resolution)
                         .font(.system(size: 14, weight: .heavy, design: .rounded))
                         .foregroundStyle(Theme.bone)
                     Text(subtitle)
@@ -675,7 +759,7 @@ private struct HighResRow: View {
                 }
                 Spacer()
             }
-            Picker("Resolution", selection: Binding(
+            Picker(DesignLabels.resolution, selection: Binding(
                 get: { camera.highResMode },
                 set: { camera.setHighResMode($0) }
             )) {

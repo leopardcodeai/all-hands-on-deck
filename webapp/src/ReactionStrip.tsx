@@ -1,18 +1,18 @@
 import { useState } from 'react';
+import { DesignLabels } from './DesignLabels';
 
 /**
  * Mirrors `Reaction.swift` on iOS — keep the rawValue strings in sync.
- * Sending a string the iOS host doesn't recognize is harmless (the iOS
- * `Reaction(rawValue:)` returns nil and the toast is skipped).
+ * Labels come from DesignLabels (same source as iOS).
  */
 const REACTIONS: { id: string; label: string; symbol: string }[] = [
-  { id: 'ready',        label: 'Ready',        symbol: '✓' },
-  { id: 'waitMoment',   label: 'Wait a sec',   symbol: '⌛' },
-  { id: 'again',        label: 'Again',        symbol: '↻' },
-  { id: 'cantSeeMe',    label: "Can't see me", symbol: '⊘' },
-  { id: 'raiseCamera',  label: 'Camera up',    symbol: '↑' },
-  { id: 'moveLeft',     label: 'Move left',    symbol: '←' },
-  { id: 'moveRight',    label: 'Move right',   symbol: '→' }
+  { id: 'ready',        label: DesignLabels.reactionReady,        symbol: '✓' },
+  { id: 'waitMoment',   label: DesignLabels.reactionWait,         symbol: '⌛' },
+  { id: 'again',        label: DesignLabels.reactionAgain,        symbol: '↻' },
+  { id: 'cantSeeMe',    label: DesignLabels.reactionCantSeeMe,    symbol: '⊘' },
+  { id: 'raiseCamera',  label: DesignLabels.reactionRaiseCamera,  symbol: '↑' },
+  { id: 'moveLeft',     label: DesignLabels.reactionMoveLeft,     symbol: '←' },
+  { id: 'moveRight',    label: DesignLabels.reactionMoveRight,    symbol: '→' }
 ];
 
 export function ReactionStrip({ onReact }: { onReact: (id: string) => void }) {

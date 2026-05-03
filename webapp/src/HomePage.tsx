@@ -1,5 +1,8 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { DesignLabels } from './DesignLabels';
+
+const APP_VERSION = '2.3.9';
 
 export function HomePage() {
   const navigate = useNavigate();
@@ -7,12 +10,9 @@ export function HomePage() {
 
   return (
     <div className="center-stack">
-      <span className="pill pill-gold">⚓︎ by Captain Leopard</span>
-      <h1 className="title">All Hands On Deck</h1>
-      <p className="subtitle">
-        Web viewer for Captain&apos;s live crew photo session.<br/>
-        Enter the code below or scan the Captain&apos;s QR code.
-      </p>
+      <span className="pill pill-gold">⚓︎ {DesignLabels.byCaptainLeopard}</span>
+      <h1 className="title">{DesignLabels.appName}</h1>
+      <p className="subtitle">{DesignLabels.homeSubtitle}</p>
       <input
         className="id-input"
         placeholder="ABCDEF1234"
@@ -29,15 +29,13 @@ export function HomePage() {
         onClick={() => navigate(`/join/${code}`)}
         style={{ opacity: code.length < 6 ? 0.5 : 1 }}
       >
-        Join →
+        {DesignLabels.joinArrow}
       </button>
-      <p className="muted-note">
-        No install. No sign-in.
-      </p>
+      <p className="muted-note">{DesignLabels.noInstall}</p>
       <p className="muted-note" style={{ marginTop: 24, fontSize: 11 }}>
-        <a href="/privacy" style={{ color: 'inherit', opacity: 0.7 }}>Privacy</a>
+        <a href="/privacy" style={{ color: 'inherit', opacity: 0.7 }}>{DesignLabels.privacy}</a>
         {' · '}
-        <a href="/imprint" style={{ color: 'inherit', opacity: 0.7 }}>Imprint</a>
+        <a href="/imprint" style={{ color: 'inherit', opacity: 0.7 }}>{DesignLabels.imprint}</a>
       </p>
     </div>
   );

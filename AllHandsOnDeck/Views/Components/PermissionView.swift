@@ -19,7 +19,7 @@ struct PermissionView: View {
                     .foregroundStyle(Theme.mist)
                     .multilineTextAlignment(.center)
                     .padding(.horizontal, 32)
-                PrimaryButton(title: "Zugriff erlauben", systemImage: "checkmark.shield.fill") {
+                PrimaryButton(title: DesignLabels.allowAccess, systemImage: "checkmark.shield.fill") {
                     onRequest()
                 }
                 .padding(.horizontal, 24)

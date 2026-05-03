@@ -3,6 +3,7 @@ import SwiftUI
 struct ViewerSessionView: View {
     @StateObject private var vm: ViewerSessionViewModel
     @State private var crewOpen = false
+    @AppStorage("debug.showOverlays") private var showDebugOverlays = true
 
     init(session: PhotoSession, displayName: String) {
         _vm = StateObject(wrappedValue: ViewerSessionViewModel(
@@ -14,8 +15,6 @@ struct ViewerSessionView: View {
         ZStack {
             Theme.oceanFog.ignoresSafeArea()
 
-            // Live preview slot. Shows mock placeholder until step 2 streams real
-            // frames from the host.
             previewLayer
                 .ignoresSafeArea()
 
@@ -29,12 +28,12 @@ struct ViewerSessionView: View {
             VStack(spacing: 0) {
                 topBar.padding(.horizontal, 16).padding(.top, 8)
                 Spacer()
-                bottomBar.padding(.horizontal, 16).padding(.bottom, 24)
+                bottomBar.padding(.horizontal, 12).padding(.bottom, 24)
             }
 
             CountdownOverlayView(
-                state: vm.countdown.state,
-                remainingSeconds: vm.countdown.remainingSeconds
+                state: vm.countdownState,
+                remainingSeconds: vm.countdownRemaining
             )
 
             if let photo = vm.finalPhoto {
@@ -46,15 +45,31 @@ struct ViewerSessionView: View {
             case .connecting: connectingOverlay
             case .ended:      endedOverlay
             case .lost:       statusOverlay(symbol: "wifi.exclamationmark",
-                                             title: "Connection lost",
-                                             subtitle: "Captain is out of range. Try again from the Nearby list.")
+                                             title: DesignLabels.connectionLost,
+                                             subtitle: DesignLabels.connectionLostHint)
             case .notFound:   statusOverlay(symbol: "questionmark.circle",
-                                             title: "Session not found",
-                                             subtitle: "Make sure both devices are connected and the app is open.")
+                                             title: DesignLabels.sessionNotFound,
+                                             subtitle: DesignLabels.sessionNotFoundHint)
             case .connected:  EmptyView()
             }
 
-            crewPanel
+            // Crew popup backdrop
+            if crewOpen {
+                Color.black.opacity(0.25)
+                    .ignoresSafeArea()
+                    .onTapGesture { withAnimation { crewOpen = false } }
+                    .transition(.opacity)
+            }
+
+            // Crew popup
+            if crewOpen {
+                crewPopup
+                    .transition(.scale.combined(with: .opacity))
+            }
+
+            if showDebugOverlays {
+                DebugOverlayView()
+            }
         }
         .navigationBarBackButtonHidden(true)
         .toolbar(.hidden, for: .navigationBar)
@@ -70,14 +85,13 @@ struct ViewerSessionView: View {
                 .resizable()
                 .scaledToFill()
         } else {
-            // Mock placeholder until streaming is wired (Step 2).
             ZStack {
                 Theme.abyss
                 VStack(spacing: 16) {
                     Image(systemName: "camera.metering.matrix")
                         .font(.system(size: 64, weight: .bold))
                         .foregroundStyle(Theme.gold)
-                    Text("Waiting for Captain's framing…")
+                    Text(DesignLabels.waitingForFraming)
                         .font(.system(size: 14, weight: .heavy, design: .rounded))
                         .foregroundStyle(Theme.mist)
                 }
@@ -88,11 +102,11 @@ struct ViewerSessionView: View {
     @Environment(\.dismiss) private var dismiss
 
     private var topBar: some View {
-        HStack(spacing: 10) {
+        HStack(spacing: 8) {
             Button {
                 dismiss()
             } label: {
-                Image(systemName: "chevron.backward")
+                Image(systemName: DesignLabels.iconBack)
                     .font(.system(size: 16, weight: .heavy))
                     .foregroundStyle(Theme.bone)
                     .frame(width: 40, height: 40)
@@ -100,129 +114,108 @@ struct ViewerSessionView: View {
             }
             .buttonStyle(.plain)
 
-            StatusPill(label: vm.status == .connected ? "CONNECTED" : "CONNECTING",
-                       systemImage: "antenna.radiowaves.left.and.right",
-                       tint: vm.status == .connected ? Theme.signal : Theme.amber)
+            StatusPill(
+                label: vm.status == .connected ? DesignLabels.statusConnected : DesignLabels.statusConnecting,
+                systemImage: DesignLabels.iconStatus,
+                tint: vm.status == .connected ? Theme.signal : Theme.amber
+            )
 
             Spacer()
 
             Text(vm.session.id)
                 .font(.system(size: 12, weight: .heavy, design: .monospaced))
                 .foregroundStyle(Theme.bone)
-                .padding(.horizontal, 10).padding(.vertical, 8)
+                .padding(.horizontal, 8)
+                .padding(.vertical, 6)
                 .background(.ultraThinMaterial, in: Capsule())
 
             Button {
-                crewOpen = true
+                withAnimation(.spring(response: 0.35, dampingFraction: 0.85)) { crewOpen.toggle() }
             } label: {
-                Image(systemName: "gearshape")
-                    .font(.system(size: 16, weight: .semibold))
-                    .foregroundStyle(Theme.bone)
+                Image(systemName: DesignLabels.iconCrew)
+                    .font(.system(size: 16, weight: .heavy))
+                    .foregroundStyle(crewOpen ? .black : Theme.bone)
                     .frame(width: 40, height: 40)
-                    .background(.ultraThinMaterial, in: Circle())
+                    .background(crewOpen ? AnyShapeStyle(Theme.goldShine) : AnyShapeStyle(.ultraThinMaterial), in: Circle())
             }
             .buttonStyle(.plain)
-            .accessibilityLabel("Crew")
+            .accessibilityLabel(DesignLabels.crew)
         }
     }
 
-    @ViewBuilder
-    private var crewPanel: some View {
-        if crewOpen {
-            Color.black.opacity(0.4)
-                .ignoresSafeArea()
-                .onTapGesture { crewOpen = false }
-                .transition(.opacity)
-        }
-
+    private var crewPopup: some View {
         VStack(spacing: 0) {
-            Spacer()
-            VStack(spacing: 0) {
-                Capsule()
-                    .fill(Theme.mist.opacity(0.4))
-                    .frame(width: 36, height: 4)
-                    .padding(.top, 10)
-                    .padding(.bottom, 14)
+            Text(DesignLabels.crew)
+                .font(.system(size: 13, weight: .heavy, design: .rounded))
+                .tracking(1)
+                .foregroundStyle(Theme.gold)
+                .padding(.bottom, 8)
 
-                Text("Crew")
-                    .font(Theme.display(20))
-                    .foregroundStyle(Theme.bone)
-                    .padding(.bottom, 12)
-
-                ScrollView {
-                    VStack(spacing: 0) {
-                        let participants = vm.session.participants
-                        if participants.isEmpty {
-                            Text("No crew yet — waiting for the captain's manifest…")
-                                .font(.system(size: 13, weight: .medium))
-                                .foregroundStyle(Theme.mist)
-                                .multilineTextAlignment(.center)
-                                .padding(.vertical, 20)
-                                .padding(.horizontal, 16)
-                        } else {
-                            ForEach(participants) { p in
-                                HStack(spacing: 12) {
-                                    Text(leadingEmoji(p.displayName) ?? "🏴‍☠️")
-                                        .font(.system(size: 22))
-                                    Text(p.displayName)
-                                        .font(.system(size: 14, weight: .semibold, design: .rounded))
-                                        .foregroundStyle(Theme.bone)
-                                        .lineLimit(1)
-                                    Spacer()
-                                    Text(crewConnectionIcon(p))
-                                        .font(.system(size: 16))
-                                }
-                                .padding(.horizontal, 16)
-                                .padding(.vertical, 10)
-                                Divider().opacity(0.15)
+            ScrollView {
+                VStack(spacing: 0) {
+                    let participants = vm.session.participants
+                    if participants.isEmpty {
+                        Text(DesignLabels.noCrewYet)
+                            .font(.system(size: 12, weight: .medium))
+                            .foregroundStyle(Theme.mist)
+                            .multilineTextAlignment(.center)
+                            .padding(.vertical, 12)
+                    } else {
+                        ForEach(participants) { p in
+                            HStack(spacing: 10) {
+                                Text(leadingEmoji(p.displayName) ?? "🏴‍☠️")
+                                    .font(.system(size: 18))
+                                Text(p.displayName)
+                                    .font(.system(size: 13, weight: .semibold, design: .rounded))
+                                    .foregroundStyle(Theme.bone)
+                                    .lineLimit(1)
+                                Spacer()
+                                Text(crewConnectionIcon(p))
+                                    .font(.system(size: 14))
                             }
+                            .padding(.vertical, 8)
+                            Divider().opacity(0.15)
                         }
                     }
                 }
-                .frame(maxHeight: UIScreen.main.bounds.height * 0.4)
-
-                PrimaryButton(title: "Close", style: .secondary) { crewOpen = false }
-                    .padding(.horizontal, 16)
-                    .padding(.top, 12)
-                    .padding(.bottom, 32)
             }
-            .background(
-                RoundedRectangle(cornerRadius: 20, style: .continuous)
-                    .fill(Color(white: 0.12))
-            )
+            .frame(maxHeight: 200)
+
+            PrimaryButton(title: DesignLabels.close, style: .secondary) {
+                withAnimation { crewOpen = false }
+            }
+            .padding(.top, 8)
         }
-        .ignoresSafeArea(edges: .bottom)
-        .offset(y: crewOpen ? 0 : UIScreen.main.bounds.height)
-        .transition(.move(edge: .bottom))
+        .padding(14)
+        .frame(width: 260)
+        .liquidGlass()
     }
 
     @ViewBuilder
     private var bottomBar: some View {
         VStack(spacing: 10) {
-            if vm.status == .connected && !vm.countdown.state.isActive {
+            if vm.status == .connected && !vm.countdownState.isActive {
                 ReactionPickerView { r in
                     Task { await vm.sendReaction(r) }
                 }
             }
-            if vm.canTrigger && !vm.countdown.state.isActive {
-                // Mirror the webapp: when everyone can fire, show Timer + Now
-                // side-by-side. Otherwise (viewersCanRequest) show one Request button.
+            if vm.canTrigger && !vm.countdownState.isActive {
                 if vm.canTriggerNow {
                     HStack(spacing: 10) {
-                        PrimaryButton(title: vm.triggerLabel, systemImage: "timer", style: .primary) {
+                        PrimaryButton(title: vm.triggerLabel, systemImage: DesignLabels.iconTimer, style: .primary) {
                             Task { await vm.tapTrigger() }
                         }
-                        PrimaryButton(title: "Now", systemImage: "bolt.fill", style: .secondary) {
+                        PrimaryButton(title: DesignLabels.now, systemImage: DesignLabels.iconNow, style: .secondary) {
                             Task { await vm.tapTriggerNow() }
                         }
                     }
                 } else {
-                    PrimaryButton(title: vm.triggerLabel, systemImage: "camera.fill", style: .primary) {
+                    PrimaryButton(title: vm.triggerLabel, systemImage: DesignLabels.iconCamera, style: .primary) {
                         Task { await vm.tapTrigger() }
                     }
                 }
-            } else if vm.countdown.state.isActive {
-                Text("Hold still — smile!")
+            } else if vm.countdownState.isActive {
+                Text(DesignLabels.holdStill)
                     .font(.system(size: 13, weight: .heavy, design: .rounded))
                     .foregroundStyle(Theme.bone)
                     .padding(.horizontal, 14).padding(.vertical, 10)
@@ -236,7 +229,7 @@ struct ViewerSessionView: View {
             Color.black.opacity(0.4).ignoresSafeArea()
             VStack(spacing: 12) {
                 ProgressView().tint(Theme.gold)
-                Text("Connecting to session…")
+                Text(DesignLabels.connectingToSession)
                     .font(.system(size: 14, weight: .heavy, design: .rounded))
                     .foregroundStyle(Theme.bone)
             }
@@ -258,7 +251,7 @@ struct ViewerSessionView: View {
                     .foregroundStyle(Theme.mist)
                     .multilineTextAlignment(.center)
                     .padding(.horizontal, 36)
-                PrimaryButton(title: "Close", style: .secondary) { dismiss() }
+                PrimaryButton(title: DesignLabels.close, style: .secondary) { dismiss() }
                     .padding(.horizontal, 32)
             }
         }
@@ -271,10 +264,10 @@ struct ViewerSessionView: View {
                 Image(systemName: "flag.checkered")
                     .font(.system(size: 48))
                     .foregroundStyle(Theme.gold)
-                Text("Session ended")
+                Text(DesignLabels.sessionEnded)
                     .font(Theme.display(24))
                     .foregroundStyle(Theme.bone)
-                PrimaryButton(title: "Close", style: .secondary) { dismiss() }
+                PrimaryButton(title: DesignLabels.close, style: .secondary) { dismiss() }
                     .padding(.horizontal, 32)
             }
         }
@@ -283,7 +276,7 @@ struct ViewerSessionView: View {
     @ViewBuilder
     private func finalOverlay(_ photo: CapturedPhoto) -> some View {
         ZStack {
-            Color.black.ignoresSafeArea()
+            Color.black.opacity(0.92).ignoresSafeArea()
             VStack(spacing: 14) {
                 if let img = photo.uiImage {
                     Image(uiImage: img)
@@ -293,13 +286,13 @@ struct ViewerSessionView: View {
                         .padding(.horizontal, 16)
                 }
                 if vm.session.allowFinalPhotoDownload, let img = photo.uiImage {
-                    PrimaryButton(title: "Save", systemImage: "square.and.arrow.down", style: .primary) {
+                    PrimaryButton(title: DesignLabels.save, systemImage: DesignLabels.iconSave, style: .primary) {
                         UIImageWriteToSavedPhotosAlbum(img, nil, nil, nil)
                         Haptics.success()
                     }
                     .padding(.horizontal, 16)
                 }
-                PrimaryButton(title: "Back", style: .ghost) { dismiss() }
+                PrimaryButton(title: DesignLabels.backToPreview, style: .ghost) { vm.clearFinalPhoto() }
                     .padding(.horizontal, 16)
                     .padding(.bottom, 24)
             }

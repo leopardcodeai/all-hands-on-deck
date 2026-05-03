@@ -129,7 +129,7 @@ struct HomeView: View {
                 Image(systemName: webAvailable ? "globe" : "globe.badge.chevron.backward")
                     .foregroundStyle(effectivelyOn ? Theme.signal : (allowWebJoin && !webAvailable ? Theme.crimson : Theme.mist))
                 VStack(alignment: .leading, spacing: 2) {
-                    Text("Allow Web Viewers")
+                    Text(DesignLabels.allowWebViewers)
                         .font(.system(size: 14, weight: .heavy, design: .rounded))
                         .foregroundStyle(Theme.bone)
                     Text(webStatusLine(allowed: allowWebJoin, available: webAvailable))

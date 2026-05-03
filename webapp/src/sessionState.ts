@@ -36,10 +36,11 @@ export function applyEvent(state: SessionState, event: WireEvent): SessionState 
       ...state,
       countdownTargetMs: Number.isFinite(targetMs) ? targetMs : undefined,
       countdownDuration: event.countdownStarted.duration,
+      finalPhotoBase64: undefined, // new shot — dismiss keeper overlay
     };
   }
   if ('countdownCancelled' in event) {
-    return { ...state, countdownTargetMs: undefined, countdownDuration: undefined };
+    return { ...state, countdownTargetMs: undefined, countdownDuration: undefined, finalPhotoBase64: undefined };
   }
   if ('photoCaptured' in event) {
     return { ...state, countdownTargetMs: undefined, countdownDuration: undefined };
