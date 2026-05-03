@@ -126,3 +126,27 @@ Flash bleibt für: Fragen beantworten, Status abfragen, Pläne erstellen, einfac
 | 2026-05-03 | Cleanup .DS_Store + .gitignore | Flash |
 | 2026-05-03 | PR #18 mergen (11 Issues finalisiert) | Pro |
 | 2026-05-03 | 23 Linear-Issues → Done gesetzt | Pro |
+| 2026-05-03 | Visuelle-Check-Strategie implementiert (Playwright, Screenshots) | Pro |
+
+---
+## Visuelle Checks — Strategie
+
+Jedes neue Feature/Bugfix durchläuft vor Abschluss folgende visuelle Prüfungen:
+
+### 1. Screenshot (Playwright / Puppeteer)
+```bash
+cd webapp && npx playwright screenshot http://localhost:5173 /tmp/screenshot.png --viewport-width=390
+```
+Screenshot wird mit Referenzbild verglichen (Pixelmatch) oder zur manuellen Prüfung gespeichert.
+
+### 2. DOM-Struktur (HTML/CSS)
+- CSS-Klassen vorhanden? (DesignLabels-konform?)
+- HTML-Struktur korrekt? (keine überlappenden Overlays)
+
+### 3. Log-basierte Prüfung (Konsole / DevTools)
+- Fehlerhafte CSS-Pfade? (Style-Regel ungültig?)
+- Layout-Shifts? (LCP / CLS-Ereignisse)
+
+### Ergebnisse festhalten
+| Feature | Screenshot | DOM | Logs | Status |
+|---------|------------|-----|------|--------|
