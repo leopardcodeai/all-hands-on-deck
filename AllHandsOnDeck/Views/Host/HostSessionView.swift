@@ -56,12 +56,6 @@ struct HostSessionView: View {
                     .padding(.horizontal, 16)
                     .padding(.top, 8)
                 Spacer()
-                if showQR {
-                    QRCodePanelView(payload: vm.qrPayload, sessionID: vm.session.id)
-                        .frame(maxWidth: 320)
-                        .transition(.scale.combined(with: .opacity))
-                        .padding(.bottom, 12)
-                }
                 bottomBar
                     .padding(.horizontal, 16)
                     .padding(.bottom, 8)
@@ -105,19 +99,25 @@ struct HostSessionView: View {
                     .transition(.opacity)
             }
 
-            // Crew popup backdrop (behind popup so taps on popup don't close it)
-            if crewOpen {
+            // Backdrop behind popups — tap empty space to dismiss both
+            if crewOpen || showQR {
                 Color.black.opacity(0.25)
                     .ignoresSafeArea()
-                    .onTapGesture { withAnimation { crewOpen = false } }
+                    .onTapGesture { withAnimation { crewOpen = false; showQR = false } }
                     .transition(.opacity)
             }
 
-            // Crew popup
-            if crewOpen {
-                crewPopup
-                    .transition(.scale.combined(with: .opacity))
+            // Popups stacked: crew ABOVE QR, both at top
+            VStack(spacing: 12) {
+                if crewOpen { crewPopup }
+                if showQR {
+                    QRCodePanelView(payload: vm.qrPayload, sessionID: vm.session.id)
+                        .frame(maxWidth: 260)
+                        .transition(.scale.combined(with: .opacity))
+                }
             }
+            .padding(.top, 60)
+            .frame(maxWidth: .infinity, alignment: .top)
 
             if showDebugOverlays {
                 DebugOverlayView()
@@ -245,23 +245,28 @@ struct HostSessionView: View {
 
                 Spacer(minLength: 8)
 
-                HStack(spacing: 4) {
-                    Button {
-                        withAnimation(.spring(response: 0.35, dampingFraction: 0.85)) { crewOpen.toggle() }
-                    } label: {
-                        HStack(spacing: 4) {
-                            Image(systemName: "person.2.fill")
-                                .font(.system(size: 12, weight: .heavy))
+                Button {
+                    withAnimation(.spring(response: 0.35, dampingFraction: 0.85)) { crewOpen.toggle() }
+                } label: {
+                    ZStack {
+                        Image(systemName: DesignLabels.iconCrew)
+                            .font(.system(size: 14, weight: .heavy))
+                            .foregroundStyle(crewOpen ? .black : Theme.bone)
+                    }
+                    .frame(width: 36, height: 36)
+                    .background(crewOpen ? AnyShapeStyle(Theme.goldShine) : AnyShapeStyle(.ultraThinMaterial), in: Circle())
+                    .overlay(alignment: .topTrailing) {
+                        if vm.participants.count > 0 {
                             Text("\(vm.participants.count)")
-                                .font(.system(size: 13, weight: .heavy, design: .rounded))
+                                .font(.system(size: 9, weight: .heavy, design: .rounded))
+                                .foregroundStyle(.black)
+                                .frame(width: 16, height: 16)
+                                .background(Theme.goldShine, in: Circle())
+                                .offset(x: 4, y: -4)
                         }
                     }
-                    .buttonStyle(.plain)
                 }
-                .foregroundStyle(crewOpen ? .black : Theme.bone)
-                .padding(.horizontal, 10)
-                .padding(.vertical, 8)
-                .background(crewOpen ? AnyShapeStyle(Theme.goldShine) : AnyShapeStyle(.ultraThinMaterial), in: Capsule())
+                .buttonStyle(.plain)
 
                 Button {
                     withAnimation { showSettings.toggle() }
