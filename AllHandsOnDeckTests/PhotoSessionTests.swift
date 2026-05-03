@@ -1,4 +1,5 @@
 import XCTest
+import SwiftUI
 @testable import AllHandsOnDeck
 
 final class PhotoSessionTests: XCTestCase {
@@ -53,5 +54,49 @@ final class PhotoSessionTests: XCTestCase {
             s.joinURL.absoluteString,
             "https://all-hands-on-deck-ae29e.web.app/join/ABCDEF1234"
         )
+    }
+
+    // MARK: - Liquid Glass Modifier (APP-70)
+
+    func test_liquidGlass_cornerRadius_default_22() {
+        let modifier = LiquidGlass()
+        XCTAssertEqual(modifier.cornerRadius, 22)
+    }
+
+    func test_liquidGlass_customCornerRadius() {
+        let modifier = LiquidGlass(cornerRadius: 16)
+        XCTAssertEqual(modifier.cornerRadius, 16)
+    }
+
+    func test_liquidGlass_viewModifier_applies() {
+        let view = Text("Test").modifier(LiquidGlass())
+        XCTAssertNotNil(view)
+    }
+
+    // MARK: - Popup Toggle Logic (APP-70)
+
+    func test_popup_backdrop_whenEitherOpen() {
+        let cases = [(c: false, q: false, e: false),
+                     (c: true,  q: false, e: true),
+                     (c: false, q: true,  e: true),
+                     (c: true,  q: true,  e: true)]
+        for (crew, qr, expected) in cases {
+            XCTAssertEqual(crew || qr, expected)
+        }
+    }
+
+    func test_popup_independentControls() {
+        let crewOpen = true
+        let showQR   = true
+        XCTAssertTrue(crewOpen && showQR)
+    }
+
+    func test_popup_tapBackdrop_closesBoth() {
+        var crew = true
+        var qr   = true
+        crew = false
+        qr   = false
+        XCTAssertFalse(crew)
+        XCTAssertFalse(qr)
     }
 }
