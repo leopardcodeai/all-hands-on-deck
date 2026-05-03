@@ -51,6 +51,36 @@ struct HostSessionView: View {
             .ignoresSafeArea()
             .allowsHitTesting(false)
 
+            // Backdrop behind popups — tap empty space to dismiss both
+            if crewOpen || showQR {
+                Color.black.opacity(0.25)
+                    .ignoresSafeArea(edges: .all)
+                    .onTapGesture { withAnimation { crewOpen = false; showQR = false } }
+                    .transition(.opacity)
+            }
+
+            // Crew popup in UPPER area — liquid glass, camera visible through blur
+            if crewOpen {
+                VStack(spacing: 0) {
+                    Spacer().frame(height: 60)
+                    crewPopup
+                    Spacer()
+                }
+                .transition(.opacity)
+            }
+
+            // QR popup in LOWER area — liquid glass, camera visible through blur
+            if showQR {
+                VStack(spacing: 0) {
+                    Spacer()
+                    QRCodePanelView(payload: vm.qrPayload, sessionID: vm.session.id)
+                        .frame(maxWidth: 260)
+                    Spacer().frame(height: 80)
+                }
+                .transition(.opacity)
+            }
+
+            // Chrome (topBar + bottomBar) ON TOP of backdrop — buttons always reachable
             VStack(spacing: 0) {
                 topBar
                     .padding(.horizontal, 16)
@@ -61,8 +91,7 @@ struct HostSessionView: View {
                     .padding(.bottom, 8)
             }
 
-            // Centered floating zoom HUD — observes camera directly so the
-            // parent doesn't re-render at gesture rate.
+            // Centered floating zoom HUD
             ZoomLabelView(camera: vm.camera, visible: showZoomLabel)
 
             if showSettings {
@@ -97,35 +126,6 @@ struct HostSessionView: View {
             } else if let captured = vm.capturedPhoto {
                 resultOverlay(photo: captured)
                     .transition(.opacity)
-            }
-
-            // Backdrop behind popups — tap empty space to dismiss both
-            if crewOpen || showQR {
-                Color.black.opacity(0.25)
-                    .ignoresSafeArea()
-                    .onTapGesture { withAnimation { crewOpen = false; showQR = false } }
-                    .transition(.opacity)
-            }
-
-            // Crew popup in UPPER area — liquid glass, camera visible through blur
-            if crewOpen {
-                VStack(spacing: 0) {
-                    Spacer().frame(height: 60)
-                    crewPopup
-                    Spacer()
-                }
-                .transition(.opacity)
-            }
-
-            // QR popup in LOWER area — liquid glass, camera visible through blur
-            if showQR {
-                VStack(spacing: 0) {
-                    Spacer()
-                    QRCodePanelView(payload: vm.qrPayload, sessionID: vm.session.id)
-                        .frame(maxWidth: 260)
-                    Spacer().frame(height: 80)
-                }
-                .transition(.opacity)
             }
 
             if showDebugOverlays {
