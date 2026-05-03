@@ -1,5 +1,24 @@
 # All Hands On Deck — Development Workflow
 
+## 🚨 Verbindliche Projektregel — IMMER ausführen
+
+Bei **jeder** Anfrage zu Bugfixes, Features, Refactorings, Tests oder technischen Änderungen muss automatisch der vollständige Software-Development-Workflow gestartet werden. Kein Bugfix, Feature oder technisches Ticket darf ohne Linear-Issue, GitHub Issue, Branch, PR und Tests bearbeitet oder abgeschlossen werden.
+
+### Automatischer Ablauf (unverhandelbar):
+
+1. **Linear-Issue** im Projekt "All Hands On Deck" erstellen
+2. **GitHub Issue** erstellen
+3. Linear-Issue ↔ GitHub Issue **gegenseitig verlinken**
+4. **Branch** von `main` erstellen: `feature/AHOD-{id}-description` oder `fix/AHOD-{id}-description`
+5. Linear-Issue auf **In Progress** setzen
+6. **Testgetrieben** umsetzen (Tests vor Code)
+7. Tests hinzufügen oder aktualisieren
+8. **Pull Request** vom Branch öffnen
+9. PR mit Linear-Issue + GitHub Issue verlinken
+10. Linear-Issue auf **In Review** setzen
+11. Nur mergen bei **grünen Tests** + abgeschlossenem Review
+12. Nach Merge: GitHub Issue **schließen** + Linear-Issue auf **Done**
+
 ## Projektstruktur
 
 | System | Zweck |
