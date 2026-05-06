@@ -17,7 +17,27 @@ final class SupabaseSessionTransport: SessionTransport {
     }
 
     static var isConfigured: Bool {
-        !supabaseURLString.isEmpty && !anonKey.isEmpty
+        hasUsableConfig(url: supabaseURLString, anonKey: anonKey)
+    }
+
+    nonisolated static func hasUsableConfig(url: String, anonKey: String) -> Bool {
+        let trimmedURL = url.trimmingCharacters(in: .whitespacesAndNewlines)
+        let trimmedKey = anonKey.trimmingCharacters(in: .whitespacesAndNewlines)
+
+        guard !trimmedURL.isEmpty,
+              !trimmedKey.isEmpty,
+              !trimmedURL.contains("YOUR-PROJECT-REF"),
+              trimmedKey != "TODO",
+              let parsedURL = URL(string: trimmedURL),
+              let scheme = parsedURL.scheme?.lowercased(),
+              ["http", "https"].contains(scheme),
+              let host = parsedURL.host?.lowercased(),
+              host.hasSuffix(".supabase.co")
+        else {
+            return false
+        }
+
+        return trimmedKey.split(separator: ".").count == 3
     }
 
     // MARK: - SessionTransport

@@ -47,6 +47,39 @@ final class PhotoSessionTests: XCTestCase {
         XCTAssertEqual(s.joinURL.absoluteString, "http://10.0.0.5:5173/join/ABCDEF1234")
     }
 
+    func test_joinURL_trimsTrailingSlashAndIncludesShortLivedToken() throws {
+        let key = "joinBaseURL"
+        let original = UserDefaults.standard.string(forKey: key)
+        defer {
+            if let original {
+                UserDefaults.standard.set(original, forKey: key)
+            } else {
+                UserDefaults.standard.removeObject(forKey: key)
+            }
+        }
+
+        UserDefaults.standard.set("https://allhandsondeck.app/", forKey: key)
+        let issuedAt = Date(timeIntervalSince1970: 1_778_017_608)
+        let s = PhotoSession(
+            id: "7NMDA6TAE9",
+            hostName: "Captain",
+            joinToken: JoinToken(
+                sessionID: "7NMDA6TAE9",
+                value: "token-123",
+                issuedAt: issuedAt,
+                ttlMinutes: 10
+            )
+        )
+
+        let url = try XCTUnwrap(URLComponents(url: s.joinURL, resolvingAgainstBaseURL: false))
+        XCTAssertEqual(url.scheme, "https")
+        XCTAssertEqual(url.host, "allhandsondeck.app")
+        XCTAssertEqual(url.path, "/join/7NMDA6TAE9")
+        XCTAssertEqual(url.queryItems?.first(where: { $0.name == "session_id" })?.value, "7NMDA6TAE9")
+        XCTAssertEqual(url.queryItems?.first(where: { $0.name == "token" })?.value, "token-123")
+        XCTAssertNotNil(url.queryItems?.first(where: { $0.name == "expires_at" })?.value)
+    }
+
     func test_joinURL_fallsBackToCustomSchemeWhenNoWebBaseConfigured() {
         let key = "joinBaseURL"
         let original = UserDefaults.standard.string(forKey: key)
