@@ -124,12 +124,14 @@ struct HostSessionView: View {
                     .transition(.opacity)
             }
 
-            if showDebugOverlays {
+            if showDebugOverlays && !isPhotoReviewActive {
                 DebugOverlayView()
             }
 
-            GeometryReader { proxy in
-                hostChrome(in: proxy)
+            if !isPhotoReviewActive {
+                GeometryReader { proxy in
+                    hostChrome(in: proxy)
+                }
             }
 
         }
@@ -225,7 +227,7 @@ struct HostSessionView: View {
         VStack(spacing: 0) {
             topBar
                 .padding(.horizontal, Spacing.lg)
-                .padding(.top, max(proxy.safeAreaInsets.top, Spacing.xl) + Spacing.sm)
+                .padding(.top, Spacing.lg)
                 .padding(.bottom, Spacing.sm)
 
             Spacer(minLength: 0)
@@ -236,6 +238,10 @@ struct HostSessionView: View {
         }
         .frame(width: proxy.size.width, height: proxy.size.height, alignment: .top)
         .clipped(antialiased: false)
+    }
+
+    private var isPhotoReviewActive: Bool {
+        vm.capturedPhoto != nil || !vm.burstCandidates.isEmpty
     }
 
     private func flashZoomLabel() {
@@ -546,12 +552,14 @@ struct HostSessionView: View {
                         .padding(.horizontal, 16)
                 }
                 HStack(spacing: 10) {
-                    PrimaryButton(title: "Noch einmal", systemImage: "arrow.counterclockwise", style: .secondary) {
+                    PrimaryButton(title: DesignLabels.retake, systemImage: "arrow.counterclockwise", style: .secondary) {
                         vm.discardCapture()
                     }
-                    PrimaryButton(title: "Speichern", systemImage: "square.and.arrow.down", style: .primary) {
+                    .accessibilityIdentifier("host_retake_photo")
+                    PrimaryButton(title: DesignLabels.save, systemImage: "square.and.arrow.down", style: .primary) {
                         savePhoto(photo)
                     }
+                    .accessibilityIdentifier("host_save_photo")
                 }
                 .padding(.horizontal, 16)
                 .padding(.bottom, 24)

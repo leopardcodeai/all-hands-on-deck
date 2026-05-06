@@ -398,6 +398,9 @@ final class CameraService: NSObject, ObservableObject {
     // MARK: - Capture
 
     func capturePhoto() async throws -> Data {
+        if bypassCameraForUITests {
+            return Self.makeUITestPhotoData()
+        }
         if photoContinuation != nil {
             throw NSError(domain: "Camera", code: -2,
                           userInfo: [NSLocalizedDescriptionKey: "Capture already in progress."])
@@ -416,6 +419,22 @@ final class CameraService: NSObject, ObservableObject {
                 self.photoOutput.capturePhoto(with: settings, delegate: self)
             }
         }
+    }
+
+    private static func makeUITestPhotoData() -> Data {
+        let size = CGSize(width: 960, height: 1280)
+        let renderer = UIGraphicsImageRenderer(size: size)
+        let image = renderer.image { context in
+            UIColor(red: 0.08, green: 0.09, blue: 0.11, alpha: 1).setFill()
+            context.fill(CGRect(origin: .zero, size: size))
+
+            UIColor(red: 0.96, green: 0.72, blue: 0.18, alpha: 1).setFill()
+            context.cgContext.fillEllipse(in: CGRect(x: 120, y: 140, width: 220, height: 220))
+
+            UIColor(red: 0.2, green: 0.7, blue: 0.85, alpha: 1).setFill()
+            context.cgContext.fill(CGRect(x: 260, y: 780, width: 460, height: 120))
+        }
+        return image.jpegData(compressionQuality: 0.82) ?? Data()
     }
 
     private func currentVideoRotationAngle() -> CGFloat {

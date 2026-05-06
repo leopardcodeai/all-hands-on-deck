@@ -98,7 +98,7 @@ final class HappyPathUITests: XCTestCase {
         }
 
         let screen = app.frame
-        let topBand = screen.minY + 24...screen.minY + 180
+        let topBand = screen.minY + 24...screen.minY + 132
         let bottomBand = screen.maxY - 150...screen.maxY - 20
 
         let topButtons = [
@@ -120,6 +120,21 @@ final class HappyPathUITests: XCTestCase {
             XCTAssertTrue(button.waitForExistence(timeout: 5), "Missing bottom chrome button: \(button)")
             assertButton(button, staysInside: bottomBand, axis: .vertical)
         }
+    }
+
+    func test_photoReview_hidesLiveCaptureControlsAndKeepsReviewActionsVisible() throws {
+        tapStartCrewPhoto()
+        guard anyHostSessionElementExists() else {
+            XCTFail("Host session not reached"); return
+        }
+
+        app.buttons["host_capture_now"].tap()
+
+        XCTAssertTrue(app.buttons["host_retake_photo"].waitForExistence(timeout: 8), "Retake action missing after capture")
+        XCTAssertTrue(app.buttons["host_save_photo"].waitForExistence(timeout: 2), "Save action missing after capture")
+        XCTAssertFalse(app.buttons["host_start_timer"].exists, "Start timer should be hidden while reviewing a captured photo")
+        XCTAssertFalse(app.buttons["host_capture_now"].exists, "Capture-now should be hidden while reviewing a captured photo")
+        XCTAssertFalse(app.staticTexts["Nobody in frame"].exists, "In-frame warning should be hidden while reviewing a captured photo")
     }
 
     // MARK: - Viewer: Crew Interaction ──────────────────────────────────────────

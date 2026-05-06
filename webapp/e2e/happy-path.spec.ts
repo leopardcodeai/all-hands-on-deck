@@ -60,6 +60,15 @@ test.describe("Happy Path — Join Page (no backend)", () => {
     await expect(page.locator("body")).toBeVisible();
   });
 
+  test("opens iOS QR join URL with short-lived token query", async ({ page }) => {
+    await page.goto("/join/7NMDA6TAE9?session_id=7NMDA6TAE9&token=test-token&expires_at=2026-05-06T18%3A00%3A00Z");
+    await page.waitForLoadState("networkidle");
+
+    await expect(page).toHaveURL(/\/join\/7NMDA6TAE9\?/);
+    await expect(page.getByText("7NMDA6TAE9")).toBeVisible();
+    await expect(page.locator("body")).toBeVisible();
+  });
+
   test("shows content without crashing", async ({ page }) => {
     await page.goto("/join/HAPPYTEST");
     await page.waitForLoadState("networkidle");

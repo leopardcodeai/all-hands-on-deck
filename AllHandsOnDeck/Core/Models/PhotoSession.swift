@@ -53,10 +53,16 @@ struct PhotoSession: Identifiable, Hashable, Codable, Sendable {
             ?? Bundle.main.object(forInfoDictionaryKey: "WEB_JOIN_BASE_URL") as? String
             ?? ""
         let pathURL: URL
-        if !base.isEmpty {
-            pathURL = URL(string: "\(base)/join/\(id)")!
+        let normalizedBase = base
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+            .replacingOccurrences(of: #"/+$"#, with: "", options: .regularExpression)
+        if !normalizedBase.isEmpty,
+           let webURL = URL(string: "\(normalizedBase)/join/\(id)") {
+            pathURL = webURL
+        } else if let appURL = URL(string: "allhands://join/\(id)") {
+            pathURL = appURL
         } else {
-            pathURL = URL(string: "allhands://join/\(id)")!
+            preconditionFailure("Invalid join URL")
         }
         guard let joinToken else { return pathURL }
 
