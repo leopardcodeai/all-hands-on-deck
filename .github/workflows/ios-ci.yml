@@ -99,6 +99,7 @@ jobs:
             -project AllHandsOnDeck.xcodeproj \
             -scheme "$SCHEME" \
             -destination "${{ steps.sim.outputs.destination }}" \
+            -only-testing:AllHandsOnDeckTests \
             -enableCodeCoverage YES \
             -resultBundlePath TestResults.xcresult \
             CODE_SIGNING_ALLOWED=NO \
