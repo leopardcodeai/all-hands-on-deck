@@ -86,7 +86,13 @@ export function normalizeSessionCode(code: string): string {
   return code.toUpperCase().replace(/[^A-Z0-9]/g, '');
 }
 
-export function createSessionCode(random: () => number = Math.random): string {
+function secureRandomFraction(): number {
+  const values = new Uint32Array(1);
+  crypto.getRandomValues(values);
+  return values[0] / (0xffffffff + 1);
+}
+
+export function createSessionCode(random: () => number = secureRandomFraction): string {
   let code = '';
   for (let i = 0; i < SESSION_CODE_LENGTH; i += 1) {
     const idx = Math.min(SESSION_ALPHABET.length - 1, Math.floor(random() * SESSION_ALPHABET.length));

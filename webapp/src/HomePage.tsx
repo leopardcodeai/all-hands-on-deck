@@ -2,8 +2,6 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { DesignLabels } from './DesignLabels';
 
-const APP_VERSION = '2.4.0';
-
 export function HomePage() {
   const navigate = useNavigate();
   const [code, setCode] = useState('');
