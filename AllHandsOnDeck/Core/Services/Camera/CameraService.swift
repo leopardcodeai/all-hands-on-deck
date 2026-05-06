@@ -81,6 +81,7 @@ final class CameraService: NSObject, ObservableObject {
     nonisolated(unsafe) private let photoOutput = AVCapturePhotoOutput()
     nonisolated(unsafe) private let videoOutput = AVCaptureVideoDataOutput()
     private var photoContinuation: CheckedContinuation<Data, Error>?
+    private let bypassCameraForUITests: Bool
 
     private final class FramePipeline {
         let lock = NSLock()
@@ -106,7 +107,13 @@ final class CameraService: NSObject, ObservableObject {
     // MARK: - Init
 
     override init() {
+        bypassCameraForUITests = ProcessInfo.processInfo.arguments.contains("-bypassCameraPermission")
         super.init()
+        if bypassCameraForUITests {
+            authorization = .authorized
+            isRunning = true
+            return
+        }
         // Resolve already-granted authorization synchronously so the first SwiftUI
         // render sees .authorized and can skip the priming screen entirely.
         switch AVCaptureDevice.authorizationStatus(for: .video) {
@@ -119,6 +126,10 @@ final class CameraService: NSObject, ObservableObject {
     // MARK: - Permissions
 
     func requestPermissionIfNeeded() async {
+        if bypassCameraForUITests {
+            authorization = .authorized
+            return
+        }
         switch AVCaptureDevice.authorizationStatus(for: .video) {
         case .authorized:
             authorization = .authorized
@@ -133,6 +144,10 @@ final class CameraService: NSObject, ObservableObject {
     // MARK: - Lifecycle
 
     func start() {
+        if bypassCameraForUITests {
+            isRunning = true
+            return
+        }
         guard authorization == .authorized else { return }
         sessionQueue.async { [weak self] in
             guard let self else { return }
