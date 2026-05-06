@@ -11,6 +11,7 @@ export const DesignLabels = {
   back: 'Back',
   save: 'Save',
   share: 'Share',
+  shareTitle: 'Crew Photo',
   done: 'Done',
   now: 'Now',
   retake: 'Retake',
@@ -20,6 +21,10 @@ export const DesignLabels = {
   allowAccess: 'Allow Access',
   join: 'Join',
   connect: 'Connect',
+  liveBetaJoin: 'Join Live Beta',
+  liveBetaStart: 'Start Live Beta',
+  liveBetaLeave: 'Leave Live Beta',
+  liveBetaUnavailable: 'Live Beta is unavailable right now.',
 
   timer: (s: number) => `Start ${s}s`,
 
@@ -52,6 +57,7 @@ export const DesignLabels = {
   startCrewPhoto: 'Start Crew Photo',
   joinSession: 'Join Session',
   nearbySessions: 'Nearby Sessions',
+  betaBadge: 'BETA',
   allowWebViewers: 'Allow Web Viewers',
 
   // Reactions
@@ -78,10 +84,12 @@ export const DesignLabels = {
   byCaptainLeopard: 'by Captain Leopard',
   appName: 'All Hands On Deck',
   homeSubtitle: "Web viewer for Captain's live crew photo session.\nEnter the code below or scan the Captain's QR code.",
+  sessionCodePlaceholder: 'ABCDEF1234',
   noInstall: 'No install. No sign-in.',
   privacy: 'Privacy',
   imprint: 'Imprint',
   joinArrow: 'Join →',
+  iconCrew: '👥',
 
   // Connection lost
   overboard: 'OVERBOARD.',

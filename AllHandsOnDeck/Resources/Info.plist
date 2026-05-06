@@ -44,6 +44,12 @@
 	<string>Finds nearby iPhones for the live crew photo preview session.</string>
 	<key>NSPhotoLibraryAddUsageDescription</key>
 	<string>Saves the final crew photo to your photo library.</string>
+	<key>SUPABASE_ANON_KEY</key>
+	<string>$(SUPABASE_ANON_KEY)</string>
+	<key>SUPABASE_URL</key>
+	<string>$(SUPABASE_URL)</string>
+	<key>WEB_JOIN_BASE_URL</key>
+	<string>$(WEB_JOIN_BASE_URL)</string>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
 	<key>UILaunchScreen</key>

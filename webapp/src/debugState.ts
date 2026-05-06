@@ -1,7 +1,7 @@
 interface DebugState {
   framesReceived: number;
   framesPerSecond: number;
-  firebaseEvents: number;
+  supabaseEvents: number;
   lastEvent: string;
   lastEvents: string[];
   status: string;
@@ -14,7 +14,7 @@ let frameTickCount = 0;
 const state: DebugState = {
   framesReceived: 0,
   framesPerSecond: 0,
-  firebaseEvents: 0,
+  supabaseEvents: 0,
   lastEvent: '',
   lastEvents: [],
   status: 'idle',
@@ -38,7 +38,7 @@ export function recordFrame() {
 }
 
 export function recordEvent(label: string) {
-  state.firebaseEvents++;
+  state.supabaseEvents++;
   state.lastEvent = label;
   state.lastEvents.push(label);
   if (state.lastEvents.length > 5) state.lastEvents.shift();

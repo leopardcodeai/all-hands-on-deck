@@ -23,24 +23,29 @@
 
 ## Test plan
 
-<!-- Tick what was actually run -->
-
-- [ ] `xcodebuild test` — iOS unit tests pass (62/62)
-- [ ] `cd webapp && npm test && npm run build` — webapp green (18/18)
+- [ ] `xcodebuild test` — iOS unit + UI tests pass
+- [ ] `cd webapp && npm test && npx playwright test` — webapp green
 - [ ] `cd server && npm test && npm run build` — server green
+- [ ] Simulator QA: fresh install, first launch, offline, dark mode
 - [ ] Manual smoke (host iPhone + viewer iPhone, host iPhone + web viewer)
+
+## Screenshots / Simulator Evidence
+
+<!-- Add screenshots if UI changed -->
 
 ## Review checklist
 
 - [ ] Acceptance criteria met (see Linear issue)
 - [ ] All tests green
-- [ ] No lint warnings
+- [ ] No SwiftLint warnings
 - [ ] DesignLabels used for all user-facing strings
+- [ ] Preview states: loading, empty, error present (if applicable)
+- [ ] Accessibility identifiers added for new UI elements
 - [ ] Version bumped if user-visible change
 
 ## Risk / rollback
 
-<!-- What could break, how to revert -->
+<!-- Low / Medium / High — what could break, how to revert -->
 
 ## Post-merge
 

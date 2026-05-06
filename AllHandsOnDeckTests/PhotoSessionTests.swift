@@ -47,12 +47,22 @@ final class PhotoSessionTests: XCTestCase {
         XCTAssertEqual(s.joinURL.absoluteString, "http://10.0.0.5:5173/join/ABCDEF1234")
     }
 
-    func test_joinURL_fallsBackToProductionDomain() {
-        UserDefaults.standard.removeObject(forKey: "joinBaseURL")
+    func test_joinURL_fallsBackToCustomSchemeWhenNoWebBaseConfigured() {
+        let key = "joinBaseURL"
+        let original = UserDefaults.standard.string(forKey: key)
+        defer {
+            if let original {
+                UserDefaults.standard.set(original, forKey: key)
+            } else {
+                UserDefaults.standard.removeObject(forKey: key)
+            }
+        }
+
+        UserDefaults.standard.set("", forKey: key)
         let s = PhotoSession(id: "ABCDEF1234", hostName: "Captain")
         XCTAssertEqual(
             s.joinURL.absoluteString,
-            "https://all-hands-on-deck-ae29e.web.app/join/ABCDEF1234"
+            "allhands://join/ABCDEF1234"
         )
     }
 

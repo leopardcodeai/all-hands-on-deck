@@ -12,6 +12,12 @@ iOS-first MVP für ein Live-Viewfinder-Gruppenfoto. Eine Person stellt ihr iPhon
 Kamera auf, alle anderen sehen den Bildausschnitt live auf ihren Geräten — nativ
 oder im Browser, ohne Installation.
 
+Runtime backend: Supabase replaces the old relay backend for database,
+Storage, and Realtime fallback. Setup details live in [`SETUP.md`](SETUP.md).
+Web Viewers are currently marked and treated as a **Beta** feature: Supabase is
+the session backend, while live video remains WebRTC/P2P-first and is never
+stored in Supabase.
+
 ---
 
 ## Status
@@ -30,7 +36,10 @@ oder im Browser, ohne Installation.
 - ✅ **Step 12**: Lokalisierung (de + en) — `Localizable.strings` für iOS und Watch; alle UI-Strings und Modell-Properties lokalisiert.
 - ✅ **Step 13**: Fly.io Deployment — `Dockerfile` (multi-stage) + `fly.toml`; Webapp-Build-Bug (`vite/client` types) gefixt.
 - ✅ **Step 14**: App Store Draft (`STORE.md`) — Beschreibung, Keywords, Privacy Nutrition Label.
-- ⏭ **Deferred (post-MVP)**: WebRTC, persistente Galerie / Event-Modus, Smile-Detection.
+- ✅ **Step 15**: Automatisierte Happy-Path-Tests (121 Tests: XCTest 76 + XCUITest 15 + Webapp 18 + Playwright 11 + Python E2E)
+- ✅ **Step 16**: UI Fixes — Notch-Abstand Host View, Bottom-Buttons kompakter (Viewer-Style), DesignLabels-Zentralisierung
+- ✅ **Step 17**: Supabase session backend + Web Viewers **Beta** policy controls (10 min sessions, 3 P2P viewers, short-lived QR token, TURN hard limit, no Supabase video storage).
+- ⏭ **Deferred (post-MVP)**: persistente Galerie / Event-Modus, Smile-Detection, SFU for larger viewer groups.
 
 **Alles fertig — App-Store-ready.**
 
@@ -117,9 +126,12 @@ Variables ist nicht kompatibel mit `UserDefaults`. Einfacher:
 
 (Xcode mappt diese als `UserDefaults` Standard-Werte für die Session.)
 
-### 4. Host-Session mit Web-Viewer
+### 4. Host-Session mit Web-Viewer (Beta)
 
-1. iPhone A → "Web-Viewer erlauben" einschalten → "Gruppenfoto starten".
+Web Viewers are a **Beta** feature in the app UI and policy. Use them for MVP
+testing; native nearby viewers remain the default path.
+
+1. iPhone A → "Web-Viewer erlauben" mit **BETA** Badge einschalten → "Gruppenfoto starten".
 2. QR-Panel zeigt einen Code, der auf `http://<mac>:5173/join/<sessionId>` zeigt.
 3. iPhone B Safari oder Mac-Browser → QR scannen / URL öffnen.
 4. Web-App verbindet sich zur Backend-WebSocket → bekommt `sessionMetadata`,
@@ -168,12 +180,12 @@ broadcasten ("Du bist links abgeschnitten").
 | Local-Network-Prompt erscheint nicht | `NSLocalNetworkUsageDescription` + `NSBonjourServices` fehlen → Info.plist + **App vom Gerät löschen und neu installieren** |
 | Nearby findet nichts | Service-Type-Mismatch zwischen `MultipeerSessionTransport.serviceType` und Bonjour-Eintrag |
 | Web-Viewer zeigt "connecting" und passiert nichts | Backend nicht erreichbar / falsche `webSocketServerURL` → `curl http://<mac>:8787/health` aus iOS-Browser checken |
-| Web-Viewer connected aber kein Frame | Host hat Web-Join nicht aktiviert → Toggle auf Home → neu in Host-Session gehen |
+| Web-Viewer connected aber kein Frame | Host hat Web-Join Beta nicht aktiviert → Toggle auf Home → neu in Host-Session gehen |
 | QR-Code öffnet `https://allhands.captainleopard.app/...` und 404 | `joinBaseURL` UserDefaults nicht überschrieben |
 | Vision-Hints flackern bei dunklen Räumen | Throttle erhöhen in `InFrameDetector.minInterval` (default 0.5s) |
 | Burst-Picker leer trotz Auslösung | `captureBurst` schlug ab Photo 1 fehl → AVCapturePhotoOutput erlaubt keine Captures während `isAvailable == false`. Schau in Xcode-Console auf Camera-Errors |
 | Multipeer findet Peer langsam | Geräte nicht im selben WLAN (Gast-WLAN, Captive-Portal) |
-| WebRTC fehlt | Aktuell nicht implementiert; WebSocket-Relay deckt den Web-Viewer-Use-Case ab. WebRTC via GoogleWebRTC SPM kommt in einem zukünftigen Step |
+| Mehr als 3 Web-Viewer wollen beitreten | MVP-Policy limitiert WebRTC/P2P auf 3 Viewer pro Host; größere Gruppen brauchen später SFU |
 
 ---
 

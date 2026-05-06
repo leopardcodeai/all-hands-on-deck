@@ -1,68 +1,48 @@
-# Contributing
+# AI Coding Rules — All Hands on Deck
 
-## One-time setup
+## Architecture
 
-Requirements:
-- Node 20+
-- Xcode 16+ with iOS 17 simulator
-- `brew install xcodegen` (re-generates `AllHandsOnDeck.xcodeproj` from `project.yml`)
+- Views render state and send user intents. No business logic.
+- ViewModels coordinate logic. No networking.
+- Services speak to external systems (Supabase, Camera, Multipeer).
+- Dependency Injection over protocols.
+- Use `@Observable` for modern state management where possible.
 
-```bash
-( cd webapp && npm ci )
-( cd server && npm ci )
-xcodegen generate
-```
+## SwiftUI Conventions
 
-## Local development
+- Keep SwiftUI Views under 200 lines.
+- Extract reusable subviews into computed properties or separate files.
+- Use `DesignLabels` for all user-facing strings.
+- Use `Theme` for colors, fonts, spacing.
+- Every view needs loading ✅, empty ✅, error ✅ states with `#Preview`.
 
-| Component | Command | Notes |
-| --- | --- | --- |
-| Relay server | `cd server && npm run dev` | Listens on `:8787`, hot-reloads via `tsx watch` |
-| Web viewer  | `cd webapp && npm run dev` | Vite on `:5173`, bound to `0.0.0.0` so iPhones on the same LAN can reach it |
-| iOS app     | `open AllHandsOnDeck.xcodeproj` | Set `webSocketServerURL` + `joinBaseURL` via the scheme's launch arguments |
+## Testing
 
-The iOS host can run with the Mock or Multipeer transport without the relay
-server; the relay is only needed for browser-based viewers.
+- Always add or update tests for behavior changes.
+- XCUITest: add `.accessibilityIdentifier` to tappable elements.
+- Unit tests: pure logic, no networking.
+- E2E: screen_mapper + navigator for simulator automation.
 
-## Test before opening a PR
+## Code Style
 
-```bash
-# Webapp
-( cd webapp && npm run typecheck && npm test && npm run build )
+- No force-unwraps (except in tests where explicit).
+- No hardcoded strings in views — use DesignLabels.
+- No unused imports.
+- No print() — use Logger.
+- Networking through Core/Networking.
+- Persistence through Core/Persistence.
+- No secrets in source code.
 
-# Server
-( cd server && npm run typecheck && npm test && npm run build )
+## PR Rules
 
-# iOS
-xcodegen generate
-xcodebuild test \
-  -project AllHandsOnDeck.xcodeproj \
-  -scheme AllHandsOnDeck \
-  -destination 'platform=iOS Simulator,name=iPhone 15,OS=latest'
-```
+- Small PRs preferred (under 200 lines where possible).
+- Every PR needs a test plan.
+- Tests must be green before merge.
+- Linear issue must be linked.
+- UI changes need screenshot evidence.
 
-CI runs all three on PR. Path filters mean only relevant suites trigger —
-a webapp-only change won't queue an iOS build.
+## Project Structure
 
-## Coding rules
-
-- **Wire format is shared across iOS, web, and the relay.** When adding or
-  renaming a `SessionEvent` case, update `webapp/src/wire.ts` *and*
-  `webapp/src/sessionState.ts` in the same PR. The Vitest golden tests in
-  `webapp/src/__tests__/wireFormat.test.ts` will fail loudly otherwise.
-- **No new files at the root** unless they're build/deploy artifacts. New
-  iOS code goes under the right `AllHandsOnDeck/{Models,Services,Views,…}/`
-  subdir; XcodeGen picks them up on the next `xcodegen generate`.
-- **No commits without tests for new pure logic.** Reducers, parsers, and
-  routing primitives are easy to unit-test — please do.
-- **Don't introduce secrets to the repo.** Firebase web config is
-  client-side and intentionally public; everything else (Apple Team ID,
-  Cloud Run service accounts) lives in deploy-time env vars or `.firebaserc`.
-
-## Releasing
-
-| Surface | How |
-| --- | --- |
-| Webapp + AASA | `firebase deploy --only hosting` (or full `./deploy.sh <gcp> <firebase>`) |
-| Relay server | `gcloud run deploy` via `./deploy.sh` |
-| iOS app | Xcode → Product → Archive → App Store Connect |
+- Feature-first: `App/Features/Onboarding/`, `App/Features/Settings/`
+- Core: `App/Core/Networking/`, `App/Core/Persistence/`, `App/Core/DesignSystem/`
+- Shared: `App/Shared/Components/`, `App/Shared/Extensions/`, `App/Shared/Utilities/`

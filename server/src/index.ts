@@ -20,6 +20,7 @@ import { readFile } from 'fs/promises';
 import { join, extname, dirname } from 'path';
 import { fileURLToPath } from 'url';
 import { RoomRegistry, parseJoinParams, type Member, type JoinParams } from './rooms.js';
+import { createLiveKitToken } from './livekitToken.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -65,6 +66,14 @@ async function serveStatic(path: string, res: ServerResponse): Promise<boolean> 
 const httpServer = createServer(async (req: IncomingMessage, res: ServerResponse) => {
   const url = new URL(req.url ?? '/', `http://${req.headers.host}`);
 
+  if (url.pathname === '/api/livekit/token' && req.method === 'POST') {
+    const body = await readJsonBody(req);
+    const result = await createLiveKitToken(body);
+    res.writeHead(result.status, { 'Content-Type': 'application/json; charset=utf-8' });
+    res.end(JSON.stringify(result.body));
+    return;
+  }
+
   if (url.pathname === '/health') {
     res.writeHead(200, { 'Content-Type': 'application/json' });
     res.end(JSON.stringify({
@@ -92,6 +101,19 @@ const httpServer = createServer(async (req: IncomingMessage, res: ServerResponse
   res.writeHead(404);
   res.end();
 });
+
+async function readJsonBody(req: IncomingMessage): Promise<Record<string, unknown>> {
+  const chunks: Buffer[] = [];
+  for await (const chunk of req) {
+    chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk));
+  }
+  if (chunks.length === 0) return {};
+  try {
+    return JSON.parse(Buffer.concat(chunks).toString('utf8')) as Record<string, unknown>;
+  } catch {
+    return {};
+  }
+}
 
 const wss = new WebSocketServer({ noServer: true });
 

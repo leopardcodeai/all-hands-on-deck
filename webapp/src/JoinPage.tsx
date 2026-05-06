@@ -6,6 +6,7 @@ import { getOrAssignRank } from './pirateRank';
 import { getDebugState } from './debugState';
 import { ConnectionLostPage } from './ConnectionLostPage';
 import { DesignLabels } from './DesignLabels';
+import { LiveKitBetaControls } from './LiveKitBetaControls';
 
 // Isolated frame viewer — updates img.src via DOM ref so the parent never
 // re-renders at 3fps. Only re-renders once when the first frame arrives.
@@ -26,12 +27,14 @@ const FrameImage = memo(function FrameImage({ client }: { client: SessionClient 
 
   return (
     <>
-      <img
-        ref={imgRef}
-        src={hasFrame ? (client.latestFrameURL ?? '') : ''}
-        alt={DesignLabels.crew}
-        style={{ display: hasFrame ? undefined : 'none' }}
-      />
+      {hasFrame && client.latestFrameURL && (
+        <img
+          ref={imgRef}
+          className="preview-frame"
+          src={client.latestFrameURL}
+          alt={DesignLabels.crew}
+        />
+      )}
       {!hasFrame && (
         <div className="center-stack">
           <div className="placeholder-art">📷</div>
@@ -75,7 +78,9 @@ export function JoinPage() {
   const [, debugTick] = useState(0);
   const tickRef = useRef<number | null>(null);
 
-  useEffect(() => { setDismissedPhoto(false); }, [client.finalPhotoURL, client.countdownTargetMs]);
+  useEffect(() => {
+    if (client.finalPhotoURL) setDismissedPhoto(false);
+  }, [client.finalPhotoURL]);
 
   useEffect(() => {
     // General events only — frame updates are handled by FrameImage via subscribeFrame.
@@ -150,6 +155,7 @@ export function JoinPage() {
             width: 40, height: 40, borderRadius: '50%',
             fontSize: 16, fontWeight: 800
           }}
+          aria-label={DesignLabels.back}
         >‹</button>
         {statusPill}
         <div style={{ flex: 1, minWidth: 0 }} />
@@ -167,13 +173,16 @@ export function JoinPage() {
           onClick={() => setCrewOpen(true)}
           className="icon-button"
         >
-          ⚙
+          <span aria-hidden>{DesignLabels.iconCrew}</span>
         </button>
       </div>
 
       <div className="bottom-bar">
         {client.status === 'connected' && remaining === null && (
           <ReactionStrip onReact={(id) => client.sendReaction(id)} />
+        )}
+        {client.status === 'connected' && remaining === null && (
+          <LiveKitBetaControls sessionId={sessionId ?? ''} participantId={client.participantId} />
         )}
         {client.status === 'connected' && canTrigger && remaining === null && (
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -213,7 +222,7 @@ export function JoinPage() {
                   const resp = await fetch(client.finalPhotoURL!);
                   const blob = await resp.blob();
                   const file = new File([blob], `crewphoto-${sessionId}.jpg`, { type: 'image/jpeg' });
-                  await navigator.share({ files: [file], title: 'Crew Photo' });
+                  await navigator.share({ files: [file], title: DesignLabels.shareTitle });
                 } catch {
                   // share cancelled or failed — ignore
                 }
@@ -234,7 +243,7 @@ export function JoinPage() {
             className="btn-secondary"
             onClick={() => setDismissedPhoto(true)}
           >
-            {DesignLabels.backToPreview}
+            {DesignLabels.retake}
           </button>
         </div>
       )}
@@ -297,15 +306,15 @@ function DebugPanel({ open, onToggle }: { open: boolean; onToggle: () => void })
     <div className="debug-overlay">
       <button onClick={onToggle} className="debug-bar">
         <span className="debug-dot" />
-        <span>{ds.framesPerSecond}fps FB:{ds.framesReceived}/{ds.firebaseEvents} {ds.lastEvent}</span>
-        <span className="debug-version">v2.3.9</span>
+        <span>{ds.framesPerSecond}fps SB:{ds.framesReceived}/{ds.supabaseEvents} {ds.lastEvent}</span>
+        <span className="debug-version">v2.4.0</span>
         <span style={{ marginLeft: 'auto' }}>{open ? '▼' : '▲'}</span>
       </button>
       {open && (
         <div className="debug-detail">
           <div>Session: {ds.sessionId || '—'}</div>
           <div>Frames: {ds.framesReceived} ({ds.framesPerSecond}fps)</div>
-          <div>Events: {ds.firebaseEvents}</div>
+          <div>Events: {ds.supabaseEvents}</div>
           <div>Status: {ds.status}</div>
           <div className="debug-events-label">Last events:</div>
           {ds.lastEvents.map((e, i) => <div key={i} className="debug-event">  {e}</div>)}

@@ -3,7 +3,7 @@
 <!--
   Privacy Manifest. Required by App Store since iOS 17 / May 2024 for any app
   using "required reason" APIs. Apple validates this against bundled SDKs.
-  Keep entries in sync with what the code + Firebase SDK actually touch.
+  Keep entries in sync with what the app code and linked SDKs touch.
 -->
 <plist version="1.0">
 <dict>
@@ -15,7 +15,7 @@
 
     <!--
         Data crossing to a server. Sessions are ephemeral (TTL'd, no accounts),
-        but camera frames flow through Firebase RTDB so we declare them.
+        but camera frames can flow through Supabase session events so we declare them.
     -->
     <key>NSPrivacyCollectedDataTypes</key>
     <array>
@@ -46,7 +46,7 @@
     </array>
 
     <!--
-        Required-reason APIs touched by app code or by Firebase SDK.
+        Required-reason APIs touched by app code or linked SDKs.
         Reason codes: https://developer.apple.com/documentation/bundleresources/privacy_manifest_files
     -->
     <key>NSPrivacyAccessedAPITypes</key>
@@ -61,7 +61,7 @@
             </array>
         </dict>
         <dict>
-            <!-- Firebase SDK reads bundled-resource mtimes for cache validation. -->
+            <!-- App and image resources can read bundled-resource mtimes for cache validation. -->
             <key>NSPrivacyAccessedAPIType</key>
             <string>NSPrivacyAccessedAPICategoryFileTimestamp</string>
             <key>NSPrivacyAccessedAPITypeReasons</key>
@@ -70,7 +70,7 @@
             </array>
         </dict>
         <dict>
-            <!-- Firebase SDK derives elapsed time from system uptime. -->
+            <!-- Runtime libraries can derive elapsed time from system uptime. -->
             <key>NSPrivacyAccessedAPIType</key>
             <string>NSPrivacyAccessedAPICategorySystemBootTime</string>
             <key>NSPrivacyAccessedAPITypeReasons</key>
@@ -79,7 +79,7 @@
             </array>
         </dict>
         <dict>
-            <!-- Firebase / ImageIO check disk space before writing. -->
+            <!-- ImageIO can check disk space before writing. -->
             <key>NSPrivacyAccessedAPIType</key>
             <string>NSPrivacyAccessedAPICategoryDiskSpace</string>
             <key>NSPrivacyAccessedAPITypeReasons</key>

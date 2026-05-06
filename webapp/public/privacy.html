@@ -40,7 +40,8 @@
     <li>
       <strong>Camera frames &amp; final photos.</strong> While a session is
       live, low-resolution preview frames (~640px JPEG) and the captured group
-      photo are relayed through Google Firebase Realtime Database to other
+      photo are relayed through Supabase Realtime/Storage or peer-to-peer
+      WebRTC DataChannels to other
       participants of the same session. They are never written to long-term
       storage on our side and are removed when the session expires (TTL,
       typically under 1 hour).
@@ -58,7 +59,7 @@
       device.
     </li>
     <li>
-      <strong>Network metadata.</strong> Firebase logs IP addresses and
+      <strong>Network metadata.</strong> Supabase and the hosting provider log IP addresses and
       timestamps for the duration the connection lasts, as is standard for
       any internet service. We do not link IP addresses to identities.
     </li>
@@ -87,12 +88,10 @@
 
   <h2>5. Sub-processors</h2>
   <p>
-    We use <strong>Google Firebase</strong> (Hosting, Realtime Database) as a
-    sub-processor for relaying session data. Firebase processes data in line
-    with Google's
-    <a href="https://firebase.google.com/support/privacy">Firebase privacy &amp; security</a>
-    documentation and provides an EU Standard Contractual Clauses-based
-    Data Processing Addendum.
+    We use <strong>Supabase</strong> (Postgres, Realtime, Storage, Auth) as a
+    sub-processor for session data and photo storage. Supabase processes data
+    in line with its
+    <a href="https://supabase.com/privacy">privacy documentation</a>.
   </p>
 
   <h2>6. Your rights</h2>

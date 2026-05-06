@@ -1,7 +1,10 @@
-import { db } from './firebase';
-import { ref, onChildAdded, onValue, push, off, DatabaseReference, Unsubscribe } from 'firebase/database';
 import type { WireEnvelope, WireEvent, PhotoSessionDTO } from './wire';
 import { applyEvent, initialState, type SessionState, type SessionStatus } from './sessionState';
+import { joinSession, type ParticipantRow, type SessionBootstrap } from './services/sessionService';
+import { subscribeToSessionRealtime, type RealtimeSubscription, type SessionEventRow } from './services/realtimeService';
+import { getSupabaseClient } from './lib/supabase';
+import { SessionPeer, type SessionPeerMessage } from './lib/p2p/sessionPeer';
+import { SupabaseSessionSignaling } from './lib/p2p/supabaseSignaling';
 
 type Status = SessionStatus;
 type Listener = (state: SessionClient) => void;
@@ -28,11 +31,9 @@ export class SessionClient {
   private listeners = new Set<Listener>();
   private frameListeners = new Set<(url: string) => void>();
 
-  // Firebase refs & unsubscribe handles
-  private messagesRef?: DatabaseReference;
-  private frameRef?: DatabaseReference;
-  private msgUnsub?: Unsubscribe;
-  private frameUnsub?: Unsubscribe;
+  private bootstrap?: SessionBootstrap;
+  private realtimeSub?: RealtimeSubscription;
+  private peer?: SessionPeer;
 
   readonly displayName: string;
 
@@ -54,43 +55,50 @@ export class SessionClient {
   }
   private notifyFrame(url: string) { for (const l of this.frameListeners) l(url); }
 
-  connect() {
+  async connect() {
     if (this.status !== 'idle') return;
     this.state = { ...this.state, status: 'connecting' };
     this.notify();
 
-    this.messagesRef = ref(db, `sessions/${this.sessionId}/messages`);
-    this.frameRef    = ref(db, `sessions/${this.sessionId}/currentFrame`);
+    try {
+      this.bootstrap = await joinSession({
+        code: this.sessionId,
+        anonymousId: this.participantId,
+        displayName: this.displayName,
+        peerId: this.participantId,
+      });
+      this.applyBootstrap(this.bootstrap);
 
-    // Stream incoming messages BEFORE announcing join so we don't miss the host's
-    // sessionMetadata reply that arrives immediately after participantJoined.
-    this.msgUnsub = onChildAdded(this.messagesRef, (snapshot) => {
-      const env = snapshot.val() as WireEnvelope | null;
-      if (!env?.event || env.senderId === this.participantId) return;
-      this.handleEvent(env.event);
-    });
+      this.realtimeSub = subscribeToSessionRealtime({
+        sessionId: this.bootstrap.session.id,
+        onEvent: (row) => this.handleEventRow(row),
+        onParticipantsChanged: () => void this.refreshParticipants(),
+        onPhotosChanged: () => void this.refreshPhotos(),
+        onError: () => {
+          this.state = { ...this.state, status: 'lost' };
+          this.notify();
+        },
+      });
 
-    // Announce after listeners are attached so the host's reply is never missed.
-    this.announceJoin();
-    this.state = { ...this.state, status: 'connected' };
-    this.notify();
-
-    // Stream latest preview frame (host overwrites this node at ~3 fps).
-    this.frameUnsub = onValue(this.frameRef, (snapshot) => {
-      const env = snapshot.val() as WireEnvelope | null;
-      if (!env?.event) return;
-      const event = env.event;
-      if ('previewFrame' in event) {
-        this.applyFrame(event.previewFrame.jpeg);
-        // Frame updates go to subscribeFrame listeners only — not general listeners —
-        // so JoinPage doesn't re-render at 3fps from frames.
-      }
-    });
+      this.startPeerSync(this.bootstrap);
+      await this.announceJoin();
+      this.state = { ...this.state, status: 'connected' };
+      this.notify();
+    } catch {
+      this.state = { ...this.state, status: 'notFound' };
+      this.notify();
+    }
   }
 
   disconnect() {
-    if (this.messagesRef && this.msgUnsub) { off(this.messagesRef); this.msgUnsub = undefined; }
-    if (this.frameRef   && this.frameUnsub) { off(this.frameRef);   this.frameUnsub = undefined; }
+    if (this.realtimeSub) {
+      void this.realtimeSub.unsubscribe();
+      this.realtimeSub = undefined;
+    }
+    this.peer?.cleanup();
+    this.peer = undefined;
+    this.clearFinalPhoto();
+    this.bootstrap = undefined;
     this.state = { ...this.state, status: 'idle' };
     this.notify();
   }
@@ -113,8 +121,8 @@ export class SessionClient {
     this.send({ reactionSent: { by: this.participantId, reaction: reactionId } });
   }
 
-  private announceJoin() {
-    this.send({
+  private async announceJoin() {
+    await this.send({
       participantJoined: {
         id: this.participantId,
         displayName: this.displayName,
@@ -126,15 +134,25 @@ export class SessionClient {
     });
   }
 
-  private send(event: WireEvent) {
-    if (!this.messagesRef) return;
+  private async send(event: WireEvent) {
+    if (!this.bootstrap) return;
     const env: WireEnvelope = {
       sessionId: this.sessionId,
       senderId: this.participantId,
       createdAt: new Date().toISOString(),
       event,
     };
-    push(this.messagesRef, env);
+    this.peer?.sendWireEvent(event, this.sessionId);
+    const clientGeneratedId = uuid();
+    await getSupabaseClient()
+      .from('session_events')
+      .insert({
+        session_id: this.bootstrap.session.id,
+        sender_participant_id: this.bootstrap.participant.id,
+        type: eventType(event),
+        payload: env,
+        client_generated_id: clientGeneratedId,
+      });
   }
 
   // ── Inbound ────────────────────────────────────────────────────────────────
@@ -142,10 +160,102 @@ export class SessionClient {
   private handleEvent(event: WireEvent) {
     const previousFinal = this.state.finalPhotoBase64;
     this.state = applyEvent(this.state, event);
+    if (previousFinal && !this.state.finalPhotoBase64) {
+      this.clearFinalPhoto();
+    }
     if (this.state.finalPhotoBase64 && this.state.finalPhotoBase64 !== previousFinal) {
       this.applyFinalPhoto(this.state.finalPhotoBase64);
     }
     this.notify();
+  }
+
+  private handleEventRow(row: SessionEventRow) {
+    const env = row.payload as WireEnvelope | null;
+    if (!env?.event || env.senderId === this.participantId) return;
+    if ('previewFrame' in env.event) {
+      this.applyFrame(env.event.previewFrame.jpeg);
+      return;
+    }
+    this.handleEvent(env.event);
+  }
+
+  private applyBootstrap(bootstrap: SessionBootstrap) {
+    const metadata = bootstrap.session.metadata as Partial<PhotoSessionDTO>;
+    const participants = participantRowsToDTOs(bootstrap.participants);
+    this.state = {
+      ...this.state,
+      metadata: {
+        id: bootstrap.session.code,
+        hostName: typeof metadata.hostName === 'string' ? metadata.hostName : 'Host',
+        createdAt: bootstrap.session.created_at,
+        expiresAt: bootstrap.session.expires_at ?? new Date(Date.now() + 10 * 60 * 1000).toISOString(),
+        timerDuration: typeof metadata.timerDuration === 'number' ? metadata.timerDuration : 10,
+        triggerPermission: metadata.triggerPermission ?? 'everyoneCanStartTimer',
+        isDiscoverableNearby: metadata.isDiscoverableNearby ?? true,
+        allowWebJoin: metadata.allowWebJoin ?? true,
+        allowFinalPhotoDownload: metadata.allowFinalPhotoDownload ?? true,
+        participants,
+      },
+    };
+  }
+
+  private async refreshParticipants() {
+    if (!this.bootstrap?.session.id) return;
+    const { data, error } = await getSupabaseClient()
+      .from('session_participants')
+      .select()
+      .eq('session_id', this.bootstrap.session.id)
+      .order('joined_at', { ascending: true });
+    if (error || !this.state.metadata) return;
+    this.state = {
+      ...this.state,
+      metadata: {
+        ...this.state.metadata,
+        participants: participantRowsToDTOs((data ?? []) as ParticipantRow[]),
+      },
+    };
+    this.notify();
+  }
+
+  private async refreshPhotos() {
+    // Photo metadata is persisted for gallery views; current JoinPage still
+    // renders final photos from wire events so this hook stays intentionally quiet.
+  }
+
+  private startPeerSync(bootstrap: SessionBootstrap) {
+    if (typeof RTCPeerConnection === 'undefined') return;
+
+    this.peer = new SessionPeer({
+      sessionId: bootstrap.session.id,
+      peerId: this.participantId,
+      signaling: new SupabaseSessionSignaling(bootstrap.session.id),
+      onMessage: (message) => this.handlePeerMessage(message),
+      onConnectionState: (_peerId, state) => {
+        if (state === 'failed' || state === 'disconnected') {
+          this.state = { ...this.state, status: 'connected' };
+          this.notify();
+        }
+      },
+    });
+    this.peer.start();
+
+    for (const participant of bootstrap.participants) {
+      const remotePeerId = participant.peer_id;
+      if (remotePeerId && remotePeerId !== this.participantId) {
+        void this.peer.connectToPeer(remotePeerId);
+      }
+    }
+  }
+
+  private handlePeerMessage(message: SessionPeerMessage) {
+    if (message.type !== 'wire_event') return;
+    const env = message.payload as WireEnvelope | null;
+    if (!env?.event || env.senderId === this.participantId) return;
+    if ('previewFrame' in env.event) {
+      this.applyFrame(env.event.previewFrame.jpeg);
+      return;
+    }
+    this.handleEvent(env.event);
   }
 
   private applyFrame(base64: string) {
@@ -160,12 +270,41 @@ export class SessionClient {
   private applyFinalPhoto(base64: string) {
     const blob = this.b64ToBlob(base64, 'image/jpeg');
     const url  = URL.createObjectURL(blob);
-    if (this.finalPhotoURL) URL.revokeObjectURL(this.finalPhotoURL);
+    this.clearFinalPhoto();
     this.finalPhotoURL = url;
+  }
+
+  private clearFinalPhoto() {
+    if (!this.finalPhotoURL) return;
+    URL.revokeObjectURL(this.finalPhotoURL);
+    this.finalPhotoURL = undefined;
   }
 
   private b64ToBlob(b64: string, type: string): Blob {
     const arr = Uint8Array.from(atob(b64), c => c.charCodeAt(0));
     return new Blob([arr], { type });
   }
+}
+
+function eventType(event: WireEvent): string {
+  return Object.keys(event)[0] ?? 'unknown';
+}
+
+function participantRowToDTO(row: ParticipantRow) {
+  return {
+    id: row.anonymous_id ?? row.id,
+    displayName: row.display_name ?? 'Crewmate',
+    role: row.role === 'host' ? 'host' as const : 'viewer' as const,
+    joinedAt: row.joined_at,
+    isReady: false,
+    connectionType: 'web' as const,
+  };
+}
+
+function participantRowsToDTOs(rows: ParticipantRow[]) {
+  const participantsByIdentity = new Map<string, ReturnType<typeof participantRowToDTO>>();
+  for (const row of rows) {
+    participantsByIdentity.set(row.anonymous_id ?? row.id, participantRowToDTO(row));
+  }
+  return [...participantsByIdentity.values()];
 }

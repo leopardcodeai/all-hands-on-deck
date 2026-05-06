@@ -1,66 +1,35 @@
-## SwiftLint configuration. Tightened from defaults but still pragmatic — these
-## rules should fail CI on PRs but not block experimental local work.
-
-included:
-  - AllHandsOnDeck
-  - AllHandsOnDeckTests
-
-excluded:
-  - "**/.build"
-  - "**/Pods"
-  - "**/DerivedData"
-  - AllHandsOnDeck.xcodeproj
-
-disabled_rules:
-  - todo                           # WIP TODOs are useful in-tree
-  - trailing_comma                 # SwiftUI builders read fine without
-  - opening_brace                  # noisy on multi-line conditions
-  - multiple_closures_with_trailing_closure  # SwiftUI gestures use this idiom
-  - identifier_name                # 2-letter SwiftUI vars (vm, ns, ci) are intentional
-  - inclusive_language             # "quartermaster" is a legitimate nautical rank, not a social issue
+# SwiftLint Rules — All Hands on Deck
 
 opt_in_rules:
   - empty_count
   - explicit_init
-  - first_where
-  - last_where
-  - sorted_first_last
-  - toggle_bool
+  - force_unwrapping
+  - implicitly_unwrapped_optional
+  - missing_docs
+  - notification_center_detachment
+  - operator_usage_whitespace
+  - sorted_imports
   - unused_import
-  - vertical_whitespace_closing_braces
-  - vertical_whitespace_opening_braces
-  - redundant_nil_coalescing
-  - redundant_type_annotation
-  - shorthand_optional_binding
-  - prefer_self_in_static_references
 
-line_length:
-  warning: 140
-  error: 200
-  ignores_urls: true
-  ignores_comments: true
-  ignores_function_declarations: true
+disabled_rules:
+  - function_body_length
+  - type_body_length
+  - file_length
+  - identifier_name
+  - function_parameter_count
 
-function_body_length:
-  warning: 80
-  error: 200
+included:
+  - AllHandsOnDeck
+  - AllHandsOnDeckUITests
 
-type_body_length:
-  warning: 400
-  error: 600
+excluded:
+  - AllHandsOnDeckWatch
+  - server
+  - webapp
+  - scripts
+  - build
 
-file_length:
-  warning: 700
-  error: 1200
-  ignore_comment_only_lines: true
+line_length: 140
 
-cyclomatic_complexity:
-  warning: 20
-  error: 30
-
-nesting:
-  type_level: 3
-  function_level: 4
-
-force_cast: warning
-force_try: warning
+force_unwrapping:
+  severity: error

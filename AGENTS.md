@@ -13,6 +13,18 @@
 Backlog → Todo → In Progress → In Review → Testing / QA → Done
 ```
 
+## AI Coding Rules (siehe CONTRIBUTING.md)
+
+- Views nur Zustand + User-Intents. Keine Business-Logik.
+- ViewModels koordinieren. Services sprechen mit externen Systemen.
+- Dependency Injection via Protocols.
+- DesignLabels für alle User-facing Strings.
+- Keine Hardcoded Strings, keine Magic Numbers (Spacing tokens nutzen).
+- Accessibility Identifier für UI-Test-Elemente.
+- Preview States (loading, empty, error) für alle Views.
+- PR-Template mit Test Plan + Screenshot Evidence.
+- Definition of Done in CHECKLIST.md.
+
 ## Regeln
 
 ### 1. Linear als führendes System
@@ -65,11 +77,26 @@ fix/AHOD-{id}-kurzbeschreibung
 xcodebuild -project AllHandsOnDeck.xcodeproj -scheme AllHandsOnDeck -destination 'platform=iOS Simulator,name=iPhone 17 Pro Max' build
 xcodebuild -project AllHandsOnDeck.xcodeproj -scheme AllHandsOnDeck -destination 'platform=iOS Simulator,name=iPhone 17 Pro Max' test
 
+# iOS Unit only
+xcodebuild -project AllHandsOnDeck.xcodeproj -scheme AllHandsOnDeck -destination 'platform=iOS Simulator,name=iPhone 17 Pro Max' -only-testing:AllHandsOnDeckTests test
+
+# iOS UI only
+xcodebuild -project AllHandsOnDeck.xcodeproj -scheme AllHandsOnDeck -destination 'platform=iOS Simulator,name=iPhone 17 Pro Max' -only-testing:AllHandsOnDeckUITests test
+
 # Webapp
 cd webapp && npm run build && npm test
 
+# Webapp E2E
+cd webapp && npx playwright test
+
+# Webapp all
+cd webapp && npm run build && npm test && npx playwright test
+
+# Multi-Device E2E (braucht idb + 3 gebootete Simulatoren)
+python3 scripts/happy_path_e2e.py
+
 # Deploy webapp
-cd webapp && npx firebase deploy --only hosting
+cd webapp && npm run build
 ```
 
 ---
@@ -88,7 +115,7 @@ Dieses Projekt verwendet einen **Advisor-Strategy-Ansatz** mit zwei Modellen:
 |---------|-------------|
 | Code-Änderungen >100 Zeilen oder mehrere Dateien | → Pro |
 | Refactoring mit Abhängigkeitsanalyse | → Pro |
-| Produktions-Tools (Git-Push, Firebase-Deploy, PR-Merge) | → Pro |
+| Produktions-Tools (Git-Push, Hosting-Deploy, PR-Merge) | → Pro |
 | Fehlerbehebung >3 Iterationen | → Pro |
 | Flash erkennt selbst: mehr logische Tiefe nötig | → Pro |
 
@@ -110,6 +137,9 @@ Flash bleibt für: Fragen beantworten, Status abfragen, Pläne erstellen, einfac
 
 | Datum | Issue | Beschreibung | Status |
 |-------|-------|-------------|--------|
+| 2026-05-04 | APP-78 | Happy Path E2E Test: 3-Geräte (iOS Host + iOS Viewer + Safari Webapp) | ✅ Gemerged |
+| 2026-05-04 | APP-79 | Better Software Developer — Projektstruktur, CI, Coding Rules | ✅ Done |
+| 2026-05-04 | APP-80 | Host View UI Fix: Notch-Abstand + Bottom-Buttons kompakter + DesignLabels | ✅ Done |
 | 2026-05-03 | APP-69 | Host View: crew icon round + popup above QR | ✅ Gemerged PR #31 |
 | 2026-05-03 | APP-70 | Popup restructure: crew top, QR bottom, liquid glass, landscape+portrait | PR #33 In Review |
 | 2026-05-03 | APP-46–56 | 11 Issues: DesignLabels, Viewer/Host Crew Popups, QR, Countdown, Webapp | ✅ Gemerged PR #18 |

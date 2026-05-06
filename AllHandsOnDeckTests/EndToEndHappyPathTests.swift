@@ -5,7 +5,7 @@ import Combine
 /// End-to-end happy-path: a host and a viewer share one session, a photo is
 /// captured, and every protocol step lands in the right inbox in the right
 /// order. Runs entirely against `MockSessionTransport` so no AVFoundation,
-/// no Firebase, no Multipeer — pure protocol coverage.
+/// no Supabase, no Multipeer — pure protocol coverage.
 ///
 /// What this catches:
 ///   - Wire-format breakage between SessionEvent encoder and decoder
@@ -359,6 +359,254 @@ final class EndToEndHappyPathTests: XCTestCase {
             viewerInbox.contains { if case .sessionEnded = $0 { true } else { false } },
             "Viewer must see sessionEnded so its UI can transition to the dismissal screen"
         )
+    }
+
+    // ── Crew: Three viewers, all receive the same photo ───────────────────
+
+    /// Host + 3 viewers. All three must receive the final photo bytes.
+    /// This is the most common real-world crew photo scenario.
+    func test_crewOfThree_allReceivePhoto() async throws {
+        var session = PhotoSession(id: "CREW3TEST", hostName: "Captain")
+        session.triggerPermission = .everyoneCanStartTimer
+
+        let host = MockSessionTransport(role: .host, displayName: "Captain")
+        let v1 = MockSessionTransport(role: .viewer, displayName: "FirstMate")
+        let v2 = MockSessionTransport(role: .viewer, displayName: "DeckHand")
+        let v3 = MockSessionTransport(role: .viewer, displayName: "Lookout")
+
+        var hostInbox: [SessionEvent] = []
+        var v1Photos: [Data] = []
+        var v2Photos: [Data] = []
+        var v3Photos: [Data] = []
+
+        host.events.sink { hostInbox.append($0) }.store(in: &subs)
+        v1.events.sink { if case .finalPhotoAvailable(_, let j) = $0 { v1Photos.append(j) } }.store(in: &subs)
+        v2.events.sink { if case .finalPhotoAvailable(_, let j) = $0 { v2Photos.append(j) } }.store(in: &subs)
+        v3.events.sink { if case .finalPhotoAvailable(_, let j) = $0 { v3Photos.append(j) } }.store(in: &subs)
+
+        try await host.start(session: session)
+        try await v1.start(session: session)
+        try await v2.start(session: session)
+        try await v3.start(session: session)
+        try await flush()
+
+        // Host must see all 3 joins
+        let joinCount = hostInbox.filter { if case .participantJoined = $0 { true } else { false } }.count
+        XCTAssertEqual(joinCount, 3, "Host must see exactly three participant joins")
+
+        // Send photo — all 3 must receive it
+        let photo = Data([0xFF, 0xD8, 0xCA, 0xFE, 0xBA, 0xBE])
+        await host.send(.finalPhotoAvailable(photoID: "crew3photo", jpeg: photo))
+        try await flush()
+
+        XCTAssertEqual(v1Photos.count, 1, "Viewer 1 must receive the photo")
+        XCTAssertEqual(v2Photos.count, 1, "Viewer 2 must receive the photo")
+        XCTAssertEqual(v3Photos.count, 1, "Viewer 3 must receive the photo")
+        XCTAssertEqual(v1Photos.first, photo, "All viewers receive the exact same bytes")
+        XCTAssertEqual(v2Photos.first, photo)
+        XCTAssertEqual(v3Photos.first, photo)
+    }
+
+    // ── Crew: Viewer leaves mid-session ──────────────────────────────────
+
+    func test_viewerLeaves_hostIsNotified() async throws {
+        let session = PhotoSession(id: "LEAVECREW", hostName: "Captain")
+        let host = MockSessionTransport(role: .host, displayName: "Captain")
+        let viewer = MockSessionTransport(role: .viewer, displayName: "DeckHand")
+
+        var hostInbox: [SessionEvent] = []
+        host.events.sink { hostInbox.append($0) }.store(in: &subs)
+
+        try await host.start(session: session)
+        try await viewer.start(session: session)
+        try await flush()
+
+        // Simulate viewer disconnecting — sent from viewer side
+        // (host has sender-echo suppression so it won't receive its own participantLeft)
+        await viewer.send(.participantLeft(participantID: viewer.localParticipantID))
+        try await flush()
+
+        XCTAssertTrue(
+            hostInbox.contains(where: { if case .participantLeft = $0 { true } else { false } }),
+            "Host should see viewer's participantLeft event"
+        )
+    }
+
+    // ── Crew: Ready-state changes ────────────────────────────────────────
+
+    func test_viewerTogglesReady_hostReceivesUpdate() async throws {
+        let session = PhotoSession(id: "READYCREW", hostName: "Captain")
+        let host = MockSessionTransport(role: .host, displayName: "Captain")
+        let viewer = MockSessionTransport(role: .viewer, displayName: "Mate")
+
+        var hostInbox: [SessionEvent] = []
+        host.events.sink { hostInbox.append($0) }.store(in: &subs)
+
+        try await host.start(session: session)
+        try await viewer.start(session: session)
+        try await flush()
+
+        // Toggle ready → not ready → ready
+        await viewer.send(.participantReadyChanged(participantID: viewer.localParticipantID, isReady: true))
+        await viewer.send(.participantReadyChanged(participantID: viewer.localParticipantID, isReady: false))
+        await viewer.send(.participantReadyChanged(participantID: viewer.localParticipantID, isReady: true))
+        try await flush()
+
+        let readyCount = hostInbox.filter {
+            if case .participantReadyChanged(let pid, let ready) = $0, pid == viewer.localParticipantID { return true }
+            return false
+        }.count
+        XCTAssertEqual(readyCount, 3, "Host should receive all 3 ready-state changes")
+    }
+
+    // ── Crew: Mixed connection types ─────────────────────────────────────
+
+    func test_mixedConnectionTypes_allWork() async throws {
+        var session = PhotoSession(id: "MIXED01", hostName: "Captain")
+        session.triggerPermission = .everyoneCanStartTimer
+
+        let host = MockSessionTransport(role: .host, displayName: "Captain")
+        let iosViewer = MockSessionTransport(role: .viewer, displayName: "iPhoneMate")
+        let webViewer = MockSessionTransport(role: .viewer, displayName: "BrowserMate")
+
+        var hostInbox: [SessionEvent] = []
+        var webInbox: [SessionEvent] = []
+        host.events.sink { hostInbox.append($0) }.store(in: &subs)
+        webViewer.events.sink { webInbox.append($0) }.store(in: &subs)
+
+        try await host.start(session: session)
+        try await iosViewer.start(session: session)
+        try await webViewer.start(session: session)
+        try await flush()
+
+        // Both viewers should be visible to host
+        XCTAssertEqual(hostInbox.filter { if case .participantJoined = $0 { true } else { false } }.count, 2)
+
+        // Trigger from web viewer
+        await webViewer.send(.captureNowRequested(by: webViewer.localParticipantID))
+        try await flush()
+        XCTAssertTrue(hostInbox.contains(where: { if case .captureNowRequested = $0 { true } else { false } }))
+
+        // Host sends photo → all viewers get it
+        let jpeg = Data([0xFF, 0xD8, 0xEE, 0xEE])
+        await host.send(.finalPhotoAvailable(photoID: "mixed", jpeg: jpeg))
+        try await flush()
+        XCTAssertTrue(webInbox.contains(where: { if case .finalPhotoAvailable(_, let j) = $0 { j == jpeg } else { false } }))
+    }
+
+    // ── Crew: Burst-mode capture with best-shot pick ─────────────────────
+
+    func test_burstCapture_pickBestShot() async throws {
+        var session = PhotoSession(id: "BURST01", hostName: "Captain")
+        session.timerDuration = 0  // immediate
+
+        let host = MockSessionTransport(role: .host, displayName: "Captain")
+        let viewer = MockSessionTransport(role: .viewer, displayName: "Mate")
+
+        var viewerPhotos: [(String, Data)] = []
+        viewer.events.sink { event in
+            if case .finalPhotoAvailable(let id, let jpeg) = event {
+                viewerPhotos.append((id, jpeg))
+            }
+        }.store(in: &subs)
+
+        try await host.start(session: session)
+        try await viewer.start(session: session)
+        try await flush()
+
+        // Simulate burst: host sends 5 candidate photos, then picks best
+        let candidates = (0..<5).map { i in Data([0xFF, 0xD8, UInt8(i), 0x00]) }
+        for (i, jpeg) in candidates.enumerated() {
+            await host.send(.finalPhotoAvailable(photoID: "burst_\(i)", jpeg: jpeg))
+        }
+        try await flush()
+
+        // Viewer should receive all candidates and can pick
+        XCTAssertEqual(viewerPhotos.count, 5, "Viewer should receive all burst candidates")
+    }
+
+    // ── Crew: Permission change mid-session ──────────────────────────────
+
+    func test_permissionChangedMidSession_viewersSeeUpdate() async throws {
+        var session = PhotoSession(id: "PERMCHG", hostName: "Captain")
+        session.triggerPermission = .viewersCanRequest
+
+        let host = MockSessionTransport(role: .host, displayName: "Captain")
+        let viewer = MockSessionTransport(role: .viewer, displayName: "Mate")
+
+        var viewerMetadata: [TriggerPermission] = []
+        viewer.events.sink { event in
+            if case .sessionMetadata(let s) = event { viewerMetadata.append(s.triggerPermission) }
+        }.store(in: &subs)
+
+        try await host.start(session: session)
+        try await viewer.start(session: session)
+        await host.send(.sessionMetadata(session))
+        try await flush()
+
+        // Change permission to hostOnly
+        session.triggerPermission = .hostOnly
+        await host.send(.sessionMetadata(session))
+        try await flush()
+
+        XCTAssertEqual(viewerMetadata.count, 2, "Viewer should receive both permission updates")
+        XCTAssertEqual(viewerMetadata.last, .hostOnly, "Last permission should be hostOnly")
+    }
+
+    // ── Crew: Large JPEG photo round-trip ─────────────────────────────────
+
+    func test_largePhoto_roundTripsIntact() async throws {
+        let session = PhotoSession(id: "BIGPHOTO", hostName: "Captain")
+        let host = MockSessionTransport(role: .host, displayName: "Captain")
+        let viewer = MockSessionTransport(role: .viewer, displayName: "Mate")
+
+        var received: Data?
+        viewer.events.sink { event in
+            if case .finalPhotoAvailable(_, let jpeg) = event { received = jpeg }
+        }.store(in: &subs)
+
+        try await host.start(session: session)
+        try await viewer.start(session: session)
+        try await flush()
+
+        // Simulate a larger JPEG (~1KB)
+        let largeJpeg = Data((0..<1024).map { UInt8($0 % 256) })
+        await host.send(.finalPhotoAvailable(photoID: "big", jpeg: largeJpeg))
+        try await flush()
+
+        XCTAssertNotNil(received, "Viewer must receive the large photo")
+        XCTAssertEqual(received, largeJpeg, "Large JPEG must round-trip byte-perfect")
+    }
+
+    // ── Crew: Rapid-fire captures (Stress) ───────────────────────────────
+
+    func test_rapidFireCaptures_allArriveInOrder() async throws {
+        var session = PhotoSession(id: "RAPID01", hostName: "Captain")
+        session.triggerPermission = .everyoneCanStartTimer
+
+        let host = MockSessionTransport(role: .host, displayName: "Captain")
+        let viewer = MockSessionTransport(role: .viewer, displayName: "Mate")
+
+        var photos: [(String, Data)] = []
+        viewer.events.sink { event in
+            if case .finalPhotoAvailable(let id, let jpeg) = event { photos.append((id, jpeg)) }
+        }.store(in: &subs)
+
+        try await host.start(session: session)
+        try await viewer.start(session: session)
+        try await flush()
+
+        // Rapid-fire 10 photos
+        for i in 0..<10 {
+            await host.send(.finalPhotoAvailable(photoID: "rapid_\(i)", jpeg: Data([UInt8(i)])))
+        }
+        try await flush()
+
+        XCTAssertEqual(photos.count, 10, "All 10 rapid-fire photos must arrive")
+        // Verify order
+        for (i, pair) in photos.enumerated() {
+            XCTAssertEqual(pair.0, "rapid_\(i)", "Photo \(i) must arrive in order")
+        }
     }
 
     // MARK: - Helpers

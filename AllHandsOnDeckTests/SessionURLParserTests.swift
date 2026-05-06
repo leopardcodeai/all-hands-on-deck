@@ -30,6 +30,20 @@ final class SessionURLParserTests: XCTestCase {
         XCTAssertEqual(id, "QWERTY1234")
     }
 
+    func test_joinRequest_readsSessionIDAndShortLivedToken() {
+        let request = SessionURLParser.joinRequest(
+            from: "https://example.com/join/QWERTY1234?session_id=QWERTY1234&token=abc&expires_at=2026-05-06T08:10:00Z"
+        )
+
+        XCTAssertEqual(request?.sessionID, "QWERTY1234")
+        XCTAssertEqual(request?.token, "abc")
+    }
+
+    func test_customSchemePath_readsSessionID() {
+        let id = SessionURLParser.sessionID(from: "allhands://join/QWERTY1234?token=abc")
+        XCTAssertEqual(id, "QWERTY1234")
+    }
+
     func test_bareCode_uppercased() {
         let id = SessionURLParser.sessionID(from: "abcdef1234")
         XCTAssertEqual(id, "ABCDEF1234")

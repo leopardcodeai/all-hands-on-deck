@@ -1,8 +1,8 @@
 /**
  * Pure reducer for session events — kept separate from `SessionClient` so the
- * wire-format consumption can be tested without bringing Firebase along.
+ * wire-format consumption can be tested without bringing Supabase along.
  *
- * `SessionClient` owns the IO side (Firebase listeners, blob URL lifecycle);
+ * `SessionClient` owns the IO side (Supabase listeners, blob URL lifecycle);
  * this module owns the "what does this event mean for our local view?" rules.
  */
 

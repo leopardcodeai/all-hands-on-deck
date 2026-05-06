@@ -7,7 +7,7 @@ options:
     iOS: "17.0"
     watchOS: "10.0"
   createIntermediateGroups: true
-  xcodeVersion: "16.0"
+  xcodeVersion: "26.4"
   groupSortPosition: top
   developmentLanguage: en
   organizationName: "Alexander Brunker"
@@ -32,9 +32,16 @@ targets:
     deploymentTarget: "17.0"
 
     sources:
-      - path: AllHandsOnDeck
+      - path: AllHandsOnDeck/App
+      - path: AllHandsOnDeck/Core
         excludes:
-          - "Resources/Info.plist.snippet.xml"
+          - "Services/Camera/CameraPreviewView.swift"
+          - "Services/QR/QRScannerView.swift"
+      - path: AllHandsOnDeck/Features
+      - path: AllHandsOnDeck/Shared
+        excludes:
+          - "Components/StatusPillView.swift"
+      - path: AllHandsOnDeck/Resources
 
     info:
       path: AllHandsOnDeck/Resources/Info.plist
@@ -43,6 +50,9 @@ targets:
         CFBundleDisplayName: Crew Photo
         NSCameraUsageDescription: "All Hands On Deck uses the camera to stream a live viewfinder to your crew and to scan QR codes for joining sessions."
         NSPhotoLibraryAddUsageDescription: "Saves the final crew photo to your photo library."
+        SUPABASE_URL: $(SUPABASE_URL)
+        SUPABASE_ANON_KEY: $(SUPABASE_ANON_KEY)
+        WEB_JOIN_BASE_URL: $(WEB_JOIN_BASE_URL)
         NSLocalNetworkUsageDescription: "Finds nearby iPhones for the live crew photo preview session."
         NSBonjourServices:
           - _allhands._tcp
@@ -71,6 +81,9 @@ targets:
         ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES: YES
         DEVELOPMENT_TEAM: LPHP8KBWW8
         CODE_SIGN_STYLE: Automatic
+      configFiles:
+        Debug: Debug.xcconfig
+        Release: Release.xcconfig
 
     dependencies:
       - sdk: GameKit.framework
@@ -120,6 +133,25 @@ targets:
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: app.captainleopard.allhands.tests
+        GENERATE_INFOPLIST_FILE: YES
+        DEVELOPMENT_TEAM: LPHP8KBWW8
+        CODE_SIGN_STYLE: Automatic
+
+    dependencies:
+      - target: AllHandsOnDeck
+
+  # ── UI Tests (XCUITest) ─────────────────────────────────────────────────────
+  AllHandsOnDeckUITests:
+    type: bundle.ui-testing
+    platform: iOS
+    deploymentTarget: "17.0"
+
+    sources:
+      - path: AllHandsOnDeckUITests
+
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: app.captainleopard.allhands.uitests
         GENERATE_INFOPLIST_FILE: YES
         DEVELOPMENT_TEAM: LPHP8KBWW8
         CODE_SIGN_STYLE: Automatic
