@@ -137,6 +137,52 @@ final class HappyPathUITests: XCTestCase {
         XCTAssertFalse(app.staticTexts["Nobody in frame"].exists, "In-frame warning should be hidden while reviewing a captured photo")
     }
 
+    func test_crewPopupFitsBetweenTopChromeAndQRCode() throws {
+        tapStartCrewPhoto()
+        guard anyHostSessionElementExists() else {
+            XCTFail("Host session not reached"); return
+        }
+
+        app.buttons["host_crew"].tap()
+
+        let crewPopup = app.otherElements["host_crew_popup"]
+        let qrPanel = app.otherElements["host_qr_panel"]
+        XCTAssertTrue(crewPopup.waitForExistence(timeout: 5), "Crew popup missing")
+        XCTAssertTrue(qrPanel.waitForExistence(timeout: 5), "QR panel missing")
+        XCTAssertTrue(app.buttons["host_qr_toggle"].exists, "Top QR button should remain available")
+        XCTAssertTrue(app.buttons["host_settings"].exists, "Top settings button should remain available")
+
+        XCTAssertFalse(app.otherElements["host_camera_controls"].exists, "Camera controls should not overlap the crew popup")
+        XCTAssertLessThanOrEqual(
+            app.buttons["host_crew"].frame.maxY + 24,
+            crewPopup.frame.minY,
+            "Crew popup overlaps top action icons"
+        )
+        XCTAssertLessThanOrEqual(
+            crewPopup.frame.maxY + 24,
+            qrPanel.frame.minY,
+            "Crew popup overlaps QR panel"
+        )
+    }
+
+    func test_settingsSheetHidesCameraChromeAndCrewList() throws {
+        tapStartCrewPhoto()
+        guard anyHostSessionElementExists() else {
+            XCTFail("Host session not reached"); return
+        }
+
+        app.buttons["host_settings"].tap()
+
+        let sheet = app.otherElements["host_settings_sheet"]
+        XCTAssertTrue(sheet.waitForExistence(timeout: 5), "Settings sheet missing")
+        XCTAssertFalse(app.buttons["host_qr_toggle"].exists, "QR top button should be hidden while settings is open")
+        XCTAssertFalse(app.buttons["host_crew"].exists, "Crew top button should be hidden while settings is open")
+        XCTAssertFalse(app.otherElements["host_camera_controls"].exists, "Camera controls should be hidden while settings is open")
+        XCTAssertFalse(app.buttons["host_start_timer"].exists, "Bottom timer should be hidden while settings is open")
+        XCTAssertFalse(app.buttons["host_capture_now"].exists, "Capture-now should be hidden while settings is open")
+        XCTAssertFalse(app.otherElements["host_settings_crew_section"].exists, "Crew section should be removed from settings")
+    }
+
     // MARK: - Viewer: Crew Interaction ──────────────────────────────────────────
 
     func test_joinSession_reachesViewerSessionView() throws {

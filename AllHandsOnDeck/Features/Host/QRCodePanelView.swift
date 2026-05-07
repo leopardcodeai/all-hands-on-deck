@@ -68,6 +68,8 @@ struct QRCodePanelView: View {
         }
         .padding(12)
         .liquidGlass()
+        .accessibilityElement(children: .contain)
+        .accessibilityIdentifier("host_qr_panel")
     }
 }
 

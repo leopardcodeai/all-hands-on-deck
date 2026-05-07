@@ -59,25 +59,28 @@ struct HostSessionView: View {
             .allowsHitTesting(false)
 
             // Backdrop behind popups — tap empty space to dismiss both
-            if crewOpen || showQR {
+            if !showSettings && (crewOpen || showQR) {
                 Color.black.opacity(0.25)
                     .ignoresSafeArea(edges: .all)
                     .onTapGesture { withAnimation { crewOpen = false; showQR = false } }
                     .transition(.opacity)
             }
 
-            // Crew popup in UPPER area — liquid glass, camera visible through blur
-            if crewOpen {
-                VStack(spacing: 0) {
-                    Spacer().frame(height: 60)
-                    crewPopup
-                    Spacer()
+            if crewOpen && !showSettings {
+                GeometryReader { proxy in
+                    VStack(spacing: 0) {
+                        Spacer().frame(height: crewPopupTopOffset(in: proxy))
+                        crewPopup
+                            .frame(maxHeight: crewPopupMaxHeight(in: proxy))
+                        Spacer(minLength: 0)
+                    }
+                    .frame(width: proxy.size.width, height: proxy.size.height, alignment: .top)
+                    .allowsHitTesting(true)
                 }
                 .transition(.opacity)
             }
 
-            // QR popup in LOWER area — liquid glass, camera visible through blur
-            if showQR {
+            if showQR && !showSettings {
                 VStack(spacing: 0) {
                     Spacer()
                     QRCodePanelView(payload: vm.qrPayload, sessionID: vm.session.id)
@@ -124,11 +127,11 @@ struct HostSessionView: View {
                     .transition(.opacity)
             }
 
-            if showDebugOverlays && !isPhotoReviewActive {
+            if showDebugOverlays && !isPhotoReviewActive && !showSettings {
                 DebugOverlayView()
             }
 
-            if !isPhotoReviewActive {
+            if !isPhotoReviewActive && !showSettings {
                 GeometryReader { proxy in
                     hostChrome(in: proxy)
                 }
@@ -221,6 +224,16 @@ struct HostSessionView: View {
         .padding(14)
         .frame(width: 260)
         .liquidGlass()
+        .accessibilityElement(children: .contain)
+        .accessibilityIdentifier("host_crew_popup")
+    }
+
+    private func crewPopupTopOffset(in proxy: GeometryProxy) -> CGFloat {
+        max(proxy.safeAreaInsets.top + 76, 116)
+    }
+
+    private func crewPopupMaxHeight(in proxy: GeometryProxy) -> CGFloat {
+        max(150, proxy.size.height * 0.26)
     }
 
     private func hostChrome(in proxy: GeometryProxy) -> some View {
@@ -275,7 +288,10 @@ struct HostSessionView: View {
                 qrToggleButton
 
                 Button {
-                    withAnimation(.spring(response: 0.35, dampingFraction: 0.85)) { crewOpen.toggle() }
+                    withAnimation(.spring(response: 0.35, dampingFraction: 0.85)) {
+                        showSettings = false
+                        crewOpen.toggle()
+                    }
                 } label: {
                     ZStack {
                         Image(systemName: DesignLabels.iconCrew)
@@ -296,10 +312,19 @@ struct HostSessionView: View {
                     }
                 }
                 .buttonStyle(.plain)
-                .accessibilityIdentifier("host_crew_count_\(vm.participants.count)")
+                .accessibilityLabel(DesignLabels.crew)
+                .accessibilityValue("\(vm.participants.count)")
+                .accessibilityIdentifier("host_crew")
 
                 Button {
-                    withAnimation { showSettings.toggle() }
+                    withAnimation {
+                        let opens = !showSettings
+                        showSettings = opens
+                        if opens {
+                            crewOpen = false
+                            showQR = false
+                        }
+                    }
                 } label: {
                     Image(systemName: "slider.horizontal.3")
                         .font(.system(size: 16, weight: .heavy))
@@ -313,26 +338,28 @@ struct HostSessionView: View {
                 .accessibilityIdentifier("host_settings")
             }
 
-            HStack(spacing: 10) {
-                LensSelectorView(camera: vm.camera, onSelect: { lens in
-                    vm.camera.switchLens(lens)
-                    switch lens {
-                    case .ultraWide: baseZoom = vm.camera.minVirtualZoom
-                    case .wide:      baseZoom = 1.0
-                    case .tele:      baseZoom = vm.camera.teleEquivalentZoom
-                    }
-                    flashZoomLabel()
-                })
+            if !crewOpen {
+                HStack(spacing: 10) {
+                    LensSelectorView(camera: vm.camera, onSelect: { lens in
+                        vm.camera.switchLens(lens)
+                        switch lens {
+                        case .ultraWide: baseZoom = vm.camera.minVirtualZoom
+                        case .wide:      baseZoom = 1.0
+                        case .tele:      baseZoom = vm.camera.teleEquivalentZoom
+                        }
+                        flashZoomLabel()
+                    })
 
-                Spacer()
+                    Spacer()
 
-                HighResButton(camera: vm.camera)
+                    HighResButton(camera: vm.camera)
 
-                // Torch + flip — observes camera directly so only these buttons re-render.
-                CameraButtons(camera: vm.camera, onFlip: {
-                    withAnimation(.spring(response: 0.35, dampingFraction: 0.7)) { baseZoom = 1.0 }
-                    vm.camera.flipCamera()
-                })
+                    CameraButtons(camera: vm.camera, onFlip: {
+                        withAnimation(.spring(response: 0.35, dampingFraction: 0.7)) { baseZoom = 1.0 }
+                        vm.camera.flipCamera()
+                    })
+                }
+                .accessibilityIdentifier("host_camera_controls")
             }
         }
     }
@@ -512,13 +539,6 @@ struct HostSessionView: View {
                 isOn: $showLevel
             )
 
-            ParticipantListView(
-                participants: vm.participants,
-                pendingRequestIDs: vm.pendingCaptureRequests,
-                onApprove: { id in Task { await vm.approve(participantID: id) } },
-                onDeny: { id in Task { await vm.deny(participantID: id) } }
-            )
-
             PrimaryButton(title: DesignLabels.close, style: .ghost) {
                 withAnimation { showSettings = false }
             }
@@ -537,6 +557,8 @@ struct HostSessionView: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
         .padding(.horizontal, 8)
         .ignoresSafeArea(edges: .bottom)
+        .accessibilityElement(children: .contain)
+        .accessibilityIdentifier("host_settings_sheet")
     }
 
     @ViewBuilder
