@@ -6,7 +6,8 @@ import { getOrAssignRank } from './pirateRank';
 import { getDebugState } from './debugState';
 import { ConnectionLostPage } from './ConnectionLostPage';
 import { DesignLabels } from './DesignLabels';
-import { LiveKitBetaControls } from './LiveKitBetaControls';
+import { LiveKitVideo } from './LiveKitVideo';
+import { isLiveKitBetaEnabled } from './lib/livekit/livekitClient';
 
 // Isolated frame viewer — updates img.src via DOM ref so the parent never
 // re-renders at 3fps. Only re-renders once when the first frame arrives.
@@ -67,7 +68,8 @@ export function JoinPage() {
   const { sessionId } = useParams<{ sessionId: string }>();
   const navigate = useNavigate();
   const rank = useMemo(() => getOrAssignRank(), []);
-  const client = useMemo(() => new SessionClient(sessionId ?? '', rank), [sessionId, rank]);
+  const token = new URLSearchParams(window.location.search).get('token') ?? undefined;
+  const client = useMemo(() => new SessionClient(sessionId ?? '', rank, token), [sessionId, rank, token]);
 
   const [, force] = useState(0);
   const [flash, setFlash] = useState(false);
@@ -75,6 +77,7 @@ export function JoinPage() {
   const [dismissedPhoto, setDismissedPhoto] = useState(false);
   const [crewOpen, setCrewOpen] = useState(false);
   const [debugOpen, setDebugOpen] = useState(false);
+  const [liveVideoActive, setLiveVideoActive] = useState(false);
   const [, debugTick] = useState(0);
   const tickRef = useRef<number | null>(null);
 
@@ -139,7 +142,14 @@ export function JoinPage() {
 
   return (
     <div className="preview-stage">
-      <FrameImage client={client} />
+      {!liveVideoActive && <FrameImage client={client} />}
+      {isLiveKitBetaEnabled() && (
+        <LiveKitVideo
+          sessionId={sessionId ?? ''}
+          participantId={client.participantId}
+          onVideoActiveChange={setLiveVideoActive}
+        />
+      )}
 
       <div className="scrim-top" />
       <div className="scrim-bottom" />
@@ -180,9 +190,6 @@ export function JoinPage() {
       <div className="bottom-bar">
         {client.status === 'connected' && remaining === null && (
           <ReactionStrip onReact={(id) => client.sendReaction(id)} />
-        )}
-        {client.status === 'connected' && remaining === null && (
-          <LiveKitBetaControls sessionId={sessionId ?? ''} participantId={client.participantId} />
         )}
         {client.status === 'connected' && canTrigger && remaining === null && (
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -307,7 +314,7 @@ function DebugPanel({ open, onToggle }: { open: boolean; onToggle: () => void })
       <button onClick={onToggle} className="debug-bar">
         <span className="debug-dot" />
         <span>{ds.framesPerSecond}fps SB:{ds.framesReceived}/{ds.supabaseEvents} {ds.lastEvent}</span>
-        <span className="debug-version">v2.4.1</span>
+        <span className="debug-version">v2.4.2</span>
         <span style={{ marginLeft: 'auto' }}>{open ? '▼' : '▲'}</span>
       </button>
       {open && (
