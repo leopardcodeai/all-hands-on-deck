@@ -74,6 +74,13 @@ export interface JoinSessionInput {
   client?: SupabaseClient;
 }
 
+interface JoinTokenMetadata {
+  value: string;
+  expires_at: string;
+  issued_at: string;
+  session_id: string;
+}
+
 export interface SessionBootstrap {
   session: SessionRow;
   participant: ParticipantRow;
@@ -196,6 +203,11 @@ export async function joinSession(input: JoinSessionInput): Promise<SessionBoots
 
   if (session.join_token_expires_at && Date.parse(session.join_token_expires_at) < Date.now()) {
     throw new Error('Join QR code expired.');
+  }
+
+  const storedToken = (session.metadata as Record<string, unknown>)?.join_token as JoinTokenMetadata | undefined;
+  if (storedToken?.value && input.token && storedToken.value !== input.token) {
+    throw new Error('Invalid join token.');
   }
 
   const { data: participant, error: participantError } = await client

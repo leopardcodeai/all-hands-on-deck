@@ -51,7 +51,7 @@ export async function createLiveKitToken(
   }
 
   const participantQuery = admin
-    .from('participants')
+    .from('session_participants')
     .select('id, anonymous_id, session_id')
     .eq('session_id', session.id);
   const { data: participant, error: participantError } = await (

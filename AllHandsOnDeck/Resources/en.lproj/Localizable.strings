@@ -112,6 +112,9 @@
 "rank.quartermaster" = "Quartermaster";
 "rank.firstMate"     = "First Mate";
 "rank.captain"       = "Captain";
+"rank.commodore"     = "Commodore";
+"rank.admiral"       = "Admiral";
+"rank.pirateKing"    = "Pirate King";
 
 /* ── Identity Settings ── */
 "identity.settings.title"           = "Identity";
@@ -125,4 +128,4 @@
 "identity.progress.label"           = "Rank Progress";
 "identity.progress.points"          = "points";
 "identity.progress.hint"            = "Host sessions, take photos, send reactions — everything counts.";
-"identity.progress.maxRank"         = "Maximum rank reached. Legend of the seven seas! 🏴‍☠️";
+"identity.progress.maxRank"         = "Pirate King! All hail the ruler of the seven seas! 👑";

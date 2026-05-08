@@ -112,6 +112,9 @@
 "rank.quartermaster" = "Quartiermeister";
 "rank.firstMate"     = "Erster Offizier";
 "rank.captain"       = "Kapitän";
+"rank.commodore"     = "Kommodore";
+"rank.admiral"       = "Admiral";
+"rank.pirateKing"    = "Piratenkönig";
 
 /* ── Identity Settings ── */
 "identity.settings.title"           = "Identität";
@@ -125,4 +128,4 @@
 "identity.progress.label"           = "Rang-Fortschritt";
 "identity.progress.points"          = "Punkte";
 "identity.progress.hint"            = "Sessions hosten, Fotos machen, Reaktionen senden — alles zählt.";
-"identity.progress.maxRank"         = "Maximaler Rang erreicht. Legende der sieben Meere! 🏴‍☠️";
+"identity.progress.maxRank"         = "Piratenkönig! Alle huldigen dem Herrscher der sieben Meere! 👑";

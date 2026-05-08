@@ -45,24 +45,31 @@ final class LiveKitHostPublisher {
     /// Fetch a fresh token, connect to the room, create the buffer-driven video
     /// track, and publish it. Throws on token-fetch failure or connect failure.
     func start() async throws {
+        print("[LiveKit] Fetching token for session=\(sessionID) participant=\(participantID)")
         let token = try await LiveKitTokenClient.fetch(
             sessionID: sessionID,
             participantID: participantID
         )
+        print("[LiveKit] Token fetched, room=\(token.room)")
 
+        print("[LiveKit] Connecting to room \(token.room) at \(token.url)")
         try await room.connect(url: token.url, token: token.token)
         isConnected = true
+        print("[LiveKit] Connected to room, localParticipant=\(room.localParticipant.identity)")
 
         // .camera so the webapp's track-source filter picks this up as the host
         // viewfinder rather than a screenshare.
+        print("[LiveKit] Creating video track")
         let track = LocalVideoTrack.createBufferTrack(
             name: "host_camera",
             source: .camera
         )
         self.localVideoTrack = track
         self.bufferCapturer = track.capturer as? BufferCapturer
+        print("[LiveKit] Video track created, publishing...")
 
         self.publication = try await room.localParticipant.publish(videoTrack: track)
+        print("[LiveKit] Video track published successfully")
     }
 
     /// Forward a CMSampleBuffer from the camera's video-data-output delegate.
@@ -73,7 +80,11 @@ final class LiveKitHostPublisher {
         // itself is `@unchecked Sendable` and its `capture(_:)` is fine to call
         // off-main, but we read the optional under MainActor isolation.
         Task { @MainActor [weak self] in
-            self?.bufferCapturer?.capture(sampleBuffer)
+            guard let capturer = self?.bufferCapturer else {
+                // Not yet ready; frame is dropped (normal during startup).
+                return
+            }
+            capturer.capture(sampleBuffer)
         }
     }
 

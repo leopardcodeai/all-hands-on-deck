@@ -9,6 +9,9 @@ enum PirateRank: Int, CaseIterable, Codable {
     case quartermaster  = 5
     case firstMate      = 6
     case captain        = 7
+    case commodore      = 8
+    case admiral        = 9
+    case pirateKing     = 10
 
     // Minimum action points required to hold this rank.
     var threshold: Int {
@@ -21,6 +24,9 @@ enum PirateRank: Int, CaseIterable, Codable {
         case .quartermaster: return 150
         case .firstMate:     return 200
         case .captain:       return 300
+        case .commodore:     return 400
+        case .admiral:       return 550
+        case .pirateKing:    return 750
         }
     }
 
@@ -34,6 +40,9 @@ enum PirateRank: Int, CaseIterable, Codable {
         case .quartermaster: return "⚖️"
         case .firstMate:     return "⚓"
         case .captain:       return "🏴‍☠️"
+        case .commodore:     return "🚩"
+        case .admiral:       return "🚢"
+        case .pirateKing:    return "👑"
         }
     }
 
@@ -47,6 +56,9 @@ enum PirateRank: Int, CaseIterable, Codable {
         case .quartermaster: return String(localized: "rank.quartermaster")
         case .firstMate:     return String(localized: "rank.firstMate")
         case .captain:       return String(localized: "rank.captain")
+        case .commodore:     return String(localized: "rank.commodore")
+        case .admiral:       return String(localized: "rank.admiral")
+        case .pirateKing:    return String(localized: "rank.pirateKing")
         }
     }
 

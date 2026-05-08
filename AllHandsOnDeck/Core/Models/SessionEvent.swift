@@ -20,4 +20,11 @@ enum SessionEvent: Codable, Sendable, Equatable {
     case finalPhotoAvailable(photoID: String, jpeg: Data)
     case reactionSent(by: String, reaction: String)
     case sessionEnded
+
+    var isMediaEvent: Bool {
+        switch self {
+        case .previewFrame, .finalPhotoAvailable: return true
+        default: return false
+        }
+    }
 }

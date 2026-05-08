@@ -1,6 +1,5 @@
 import GameKit
 import Foundation
-
 /// Wraps Game Center authentication and achievement reporting.
 /// Opt-in: the user triggers authentication by enabling GC identity in settings.
 @MainActor
@@ -39,3 +38,4 @@ final class GameCenterService: ObservableObject {
         GKAchievement.report([achievement]) { _ in }
     }
 }
+

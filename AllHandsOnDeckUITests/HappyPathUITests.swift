@@ -100,11 +100,13 @@ final class HappyPathUITests: XCTestCase {
         let screen = app.frame
         let topBand = screen.minY + 24...screen.minY + 132
         let bottomBand = screen.maxY - 150...screen.maxY - 20
+        let horizontalBand = screen.minX + 16...screen.maxX - 16
 
         let topButtons = [
             app.buttons["host_back"],
             app.buttons["host_settings"],
-            app.buttons["host_qr_toggle"]
+            app.buttons["host_qr_toggle"],
+            app.buttons["host_crew"]
         ]
         let bottomButtons = [
             app.buttons["host_start_timer"],
@@ -114,11 +116,13 @@ final class HappyPathUITests: XCTestCase {
         for button in topButtons {
             XCTAssertTrue(button.waitForExistence(timeout: 5), "Missing top chrome button: \(button)")
             assertButton(button, staysInside: topBand, axis: .vertical)
+            assertButton(button, staysInside: horizontalBand, axis: .horizontal)
         }
 
         for button in bottomButtons {
             XCTAssertTrue(button.waitForExistence(timeout: 5), "Missing bottom chrome button: \(button)")
             assertButton(button, staysInside: bottomBand, axis: .vertical)
+            assertButton(button, staysInside: horizontalBand, axis: .horizontal)
         }
     }
 
@@ -312,6 +316,7 @@ final class HappyPathUITests: XCTestCase {
 
     private enum LayoutAxis {
         case vertical
+        case horizontal
     }
 
     private func assertButton(
@@ -329,6 +334,21 @@ final class HappyPathUITests: XCTestCase {
         case .vertical:
             XCTAssertGreaterThanOrEqual(frame.minY, band.lowerBound, "Button is too high: \(button)", file: file, line: line)
             XCTAssertLessThanOrEqual(frame.maxY, band.upperBound, "Button is too low: \(button)", file: file, line: line)
+        case .horizontal:
+            XCTAssertGreaterThanOrEqual(
+                frame.minX,
+                band.lowerBound - 1,
+                "Button is clipped on the left: \(button)",
+                file: file,
+                line: line
+            )
+            XCTAssertLessThanOrEqual(
+                frame.maxX,
+                band.upperBound + 1,
+                "Button is clipped on the right: \(button)",
+                file: file,
+                line: line
+            )
         }
     }
 }

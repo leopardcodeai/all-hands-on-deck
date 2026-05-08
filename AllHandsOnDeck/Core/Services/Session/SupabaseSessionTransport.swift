@@ -107,6 +107,8 @@ final class SupabaseSessionTransport: SessionTransport {
               let supabaseSessionID,
               Self.isConfigured else { return }
 
+        if event.isMediaEvent { return }
+
         let envelope = SessionWireMessage(
             sessionId: session.id,
             senderId: localParticipantID,
@@ -380,4 +382,5 @@ private extension SessionEvent {
         case .sessionEnded: return "sessionEnded"
         }
     }
+
 }

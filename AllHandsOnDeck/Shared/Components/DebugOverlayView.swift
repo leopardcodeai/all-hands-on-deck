@@ -5,7 +5,7 @@ struct DebugOverlayView: View {
     @State private var expanded = false
     let version: String
 
-    init(version: String = "2.4.1") {
+    init(version: String = "2.4.2") {
         self.version = version
     }
 

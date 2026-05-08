@@ -224,6 +224,20 @@ async function warnIfPlaceholderAASA(): Promise<void> {
 
 setInterval(() => registry.reap(TTL_MS), 60_000).unref();
 
-httpServer.listen(PORT, () => {
+// Bind to 0.0.0.0 so the container is reachable on Cloud Run / Docker / k8s.
+// Node defaults to dual-stack any-address but being explicit avoids surprises.
+httpServer.listen(PORT, '0.0.0.0', () => {
   console.log(`[allhands] signaling server listening on :${PORT}`);
 });
+
+// Graceful shutdown: Cloud Run sends SIGTERM ~10s before forcibly killing the
+// container. Stop accepting new connections, close the WS server, then exit.
+function shutdown(signal: string): void {
+  console.log(`[allhands] received ${signal}, shutting down`);
+  httpServer.close(() => process.exit(0));
+  wss.clients.forEach((ws) => ws.close(1001, 'server_shutdown'));
+  // Hard ceiling so we never hang past Cloud Run's grace period.
+  setTimeout(() => process.exit(0), 8_000).unref();
+}
+process.on('SIGTERM', () => shutdown('SIGTERM'));
+process.on('SIGINT', () => shutdown('SIGINT'));

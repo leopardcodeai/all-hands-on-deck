@@ -116,6 +116,7 @@ final class HostSessionViewModel: ObservableObject {
         // <LiveKitVideo> viewer can subscribe. Strictly additive — the existing
         // Supabase JPEG preview keeps flowing for native peers and as a fallback.
         if LiveKitConfig.isBetaEnabled && session.allowWebJoin {
+            print("[Host] LiveKit beta enabled and web join allowed, starting publisher")
             let publisher = LiveKitHostPublisher(
                 sessionID: session.id,
                 participantID: transport.localParticipantID
@@ -126,16 +127,21 @@ final class HostSessionViewModel: ObservableObject {
             }
             Task { [weak self] in
                 do {
+                    print("[Host] Awaiting publisher.start()...")
                     try await publisher.start()
+                    print("[Host] Publisher started successfully")
                 } catch {
                     // Non-fatal: the native preview path keeps working. We surface
                     // the error so the dev console catches it but don't block the
                     // session UI on a LiveKit failure.
+                    print("[Host] Publisher error: \(error.localizedDescription)")
                     await MainActor.run {
                         self?.errorMessage = "LiveKit beta unavailable: \(error.localizedDescription)"
                     }
                 }
             }
+        } else {
+            print("[Host] LiveKit beta not enabled (beta=\(LiveKitConfig.isBetaEnabled), webJoin=\(session.allowWebJoin))")
         }
 
         // In mock mode, generate synthetic preview frames since the

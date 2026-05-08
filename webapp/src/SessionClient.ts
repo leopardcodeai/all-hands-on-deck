@@ -42,10 +42,12 @@ export class SessionClient {
   private peer?: SessionPeer;
 
   readonly displayName: string;
+  readonly token?: string;
 
-  constructor(sessionId: string, displayName: string) {
+  constructor(sessionId: string, displayName: string, token?: string) {
     this.sessionId = sessionId;
     this.displayName = displayName;
+    this.token = token;
   }
 
   subscribe(l: Listener): () => void {
@@ -69,6 +71,7 @@ export class SessionClient {
     try {
       this.bootstrap = await joinSession({
         code: this.sessionId,
+        token: this.token,
         anonymousId: this.participantId,
         displayName: this.displayName,
         peerId: this.participantId,
