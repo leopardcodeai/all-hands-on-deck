@@ -122,14 +122,18 @@ final class HostSessionViewModel: ObservableObject {
                 participantID: transport.localParticipantID
             )
             liveKitPublisher = publisher
-            camera.sampleBufferConsumer = { [weak publisher] buffer in
-                publisher?.ingest(sampleBuffer: buffer)
-            }
             Task { [weak self] in
                 do {
                     print("[Host] Awaiting publisher.start()...")
                     try await publisher.start()
-                    print("[Host] Publisher started successfully")
+                    print("[Host] Publisher started successfully, connecting camera frames")
+                    // Only wire camera frames AFTER publisher is ready to receive them,
+                    // to avoid dropping frames during startup race condition.
+                    await MainActor.run {
+                        self?.camera.sampleBufferConsumer = { [weak publisher] buffer in
+                            publisher?.ingest(sampleBuffer: buffer)
+                        }
+                    }
                 } catch {
                     // Non-fatal: the native preview path keeps working. We surface
                     // the error so the dev console catches it but don't block the
