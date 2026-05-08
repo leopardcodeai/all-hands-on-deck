@@ -66,27 +66,8 @@ struct HostSessionView: View {
                     .transition(.opacity)
             }
 
-            if crewOpen && !showSettings {
-                GeometryReader { proxy in
-                    VStack(spacing: 0) {
-                        Spacer().frame(height: crewPopupTopOffset(in: proxy))
-                        crewPopup
-                            .frame(maxHeight: crewPopupMaxHeight(in: proxy))
-                        Spacer(minLength: 0)
-                    }
-                    .frame(width: proxy.size.width, height: proxy.size.height, alignment: .top)
-                    .allowsHitTesting(true)
-                }
-                .transition(.opacity)
-            }
-
-            if showQR && !showSettings {
-                VStack(spacing: 0) {
-                    Spacer()
-                    QRCodePanelView(payload: vm.qrPayload, sessionID: vm.session.id)
-                        .frame(maxWidth: 260)
-                    Spacer().frame(height: 180) // above in-frame hints
-                }
+            if !showSettings && (crewOpen || showQR) {
+                sessionPopups
                 .transition(.opacity)
             }
 
@@ -131,12 +112,21 @@ struct HostSessionView: View {
                 DebugOverlayView()
             }
 
+        }
+        .overlay(alignment: .top) {
             if !isPhotoReviewActive && !showSettings {
-                GeometryReader { proxy in
-                    hostChrome(in: proxy)
-                }
+                topBar
+                    .padding(.horizontal, 16)
+                    .padding(.top, 12)
+                    .padding(.bottom, 8)
             }
-
+        }
+        .safeAreaInset(edge: .bottom, spacing: 0) {
+            if !isPhotoReviewActive && !showSettings {
+                bottomBar
+                    .padding(.horizontal, 16)
+                    .padding(.bottom, 24)
+            }
         }
         .navigationBarBackButtonHidden(true)
         .toolbar(.hidden, for: .navigationBar)
@@ -222,35 +212,32 @@ struct HostSessionView: View {
             .frame(maxHeight: 200)
         }
         .padding(14)
-        .frame(width: 260)
+        .frame(maxWidth: .infinity)
         .liquidGlass()
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier("host_crew_popup")
     }
 
-    private func crewPopupTopOffset(in proxy: GeometryProxy) -> CGFloat {
-        max(proxy.safeAreaInsets.top + 76, 116)
-    }
+    private var sessionPopups: some View {
+        VStack(spacing: 12) {
+            if crewOpen {
+                topBar
+                    .hidden()
+                    .allowsHitTesting(false)
+                crewPopup
+            }
 
-    private func crewPopupMaxHeight(in proxy: GeometryProxy) -> CGFloat {
-        max(150, proxy.size.height * 0.26)
-    }
+            Spacer(minLength: crewOpen ? 12 : 0)
 
-    private func hostChrome(in proxy: GeometryProxy) -> some View {
-        VStack(spacing: 0) {
-            topBar
-                .padding(.horizontal, Spacing.lg)
-                .padding(.top, Spacing.lg)
-                .padding(.bottom, Spacing.sm)
+            if showQR {
+                QRCodePanelView(payload: vm.qrPayload, sessionID: vm.session.id)
+                    .frame(maxWidth: .infinity)
+            }
 
-            Spacer(minLength: 0)
-
-            bottomBar
-                .padding(.horizontal, Spacing.lg)
-                .padding(.bottom, max(proxy.safeAreaInsets.bottom, Spacing.sm) + Spacing.md)
+            Spacer(minLength: 96)
         }
-        .frame(width: proxy.size.width, height: proxy.size.height, alignment: .top)
-        .clipped(antialiased: false)
+        .padding(.horizontal, 16)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 
     private var isPhotoReviewActive: Bool {
@@ -275,13 +262,6 @@ struct HostSessionView: View {
         VStack(spacing: 8) {
             HStack(spacing: 10) {
                 backButton
-                StatusPill(
-                    label: vm.statusLabel,
-                    systemImage: "dot.radiowaves.left.and.right",
-                    tint: vm.transportStatus == .connected || vm.transportStatus == .advertising
-                        ? Theme.signal
-                        : Theme.amber
-                )
 
                 Spacer(minLength: 8)
 
@@ -298,7 +278,7 @@ struct HostSessionView: View {
                             .font(.system(size: 14, weight: .heavy))
                             .foregroundStyle(crewOpen ? .black : Theme.bone)
                     }
-                    .frame(width: 36, height: 36)
+                    .frame(minWidth: 36, minHeight: 36)
                     .background(crewOpen ? AnyShapeStyle(Theme.goldShine) : AnyShapeStyle(.ultraThinMaterial), in: Circle())
                     .overlay(alignment: .topTrailing) {
                         if !vm.participants.isEmpty {
@@ -307,7 +287,8 @@ struct HostSessionView: View {
                                 .foregroundStyle(.black)
                                 .frame(width: 16, height: 16)
                                 .background(Theme.goldShine, in: Circle())
-                                .offset(x: 4, y: -4)
+                                .padding(.top, -4)
+                                .padding(.trailing, -4)
                         }
                     }
                 }
@@ -329,7 +310,7 @@ struct HostSessionView: View {
                     Image(systemName: "slider.horizontal.3")
                         .font(.system(size: 16, weight: .heavy))
                         .foregroundStyle(Theme.bone)
-                        .frame(width: 40, height: 40)
+                        .frame(minWidth: 40, minHeight: 40)
                         .background(.ultraThinMaterial, in: Circle())
                 }
                 .buttonStyle(.plain)
@@ -337,8 +318,21 @@ struct HostSessionView: View {
                 .accessibilityHint(DesignLabels.settingsHint)
                 .accessibilityIdentifier("host_settings")
             }
+            .frame(maxWidth: .infinity)
 
-            if !crewOpen {
+            HStack {
+                StatusPill(
+                    label: vm.statusLabel,
+                    systemImage: "dot.radiowaves.left.and.right",
+                    tint: vm.transportStatus == .connected || vm.transportStatus == .advertising
+                        ? Theme.signal
+                        : Theme.amber
+                )
+                Spacer(minLength: 0)
+            }
+            .frame(maxWidth: .infinity)
+
+            if !crewOpen && !showQR {
                 HStack(spacing: 10) {
                     LensSelectorView(camera: vm.camera, onSelect: { lens in
                         vm.camera.switchLens(lens)
@@ -371,7 +365,7 @@ struct HostSessionView: View {
             Image(systemName: showQR ? DesignLabels.iconQR : DesignLabels.iconQRScan)
                 .font(.system(size: 16, weight: .heavy))
                 .foregroundStyle(showQR ? .black : Theme.bone)
-                .frame(width: 40, height: 40)
+                .frame(minWidth: 40, minHeight: 40)
                 .background(showQR ? AnyShapeStyle(Theme.goldShine) : AnyShapeStyle(.ultraThinMaterial), in: Circle())
         }
         .buttonStyle(.plain)
@@ -388,7 +382,7 @@ struct HostSessionView: View {
                 .labelStyle(.iconOnly)
                 .font(.system(size: 16, weight: .heavy))
                 .foregroundStyle(Theme.bone)
-                .frame(width: 44, height: 44)
+                .frame(minWidth: 44, minHeight: 44)
                 .background(.ultraThinMaterial, in: Circle())
         }
         .buttonStyle(.plain)
@@ -555,8 +549,8 @@ struct HostSessionView: View {
                 )
         )
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
-        .padding(.horizontal, 8)
-        .ignoresSafeArea(edges: .bottom)
+        .padding(.horizontal, 16)
+        .padding(.bottom, 12)
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier("host_settings_sheet")
     }
@@ -742,7 +736,7 @@ private struct CameraButtons: View {
                     Image(systemName: camera.isTorchOn ? "flashlight.on.fill" : "flashlight.off.fill")
                         .font(.system(size: 16, weight: .heavy))
                         .foregroundStyle(camera.isTorchOn ? .black : Theme.bone)
-                        .frame(width: 40, height: 40)
+                        .frame(minWidth: 40, minHeight: 40)
                         .background(
                             camera.isTorchOn ? AnyShapeStyle(Theme.goldShine) : AnyShapeStyle(.ultraThinMaterial),
                             in: Circle()
@@ -755,7 +749,7 @@ private struct CameraButtons: View {
                 Image(systemName: "camera.rotate.fill")
                     .font(.system(size: 16, weight: .heavy))
                     .foregroundStyle(Theme.bone)
-                    .frame(width: 40, height: 40)
+                    .frame(minWidth: 40, minHeight: 40)
                     .background(.ultraThinMaterial, in: Circle())
             }
             .buttonStyle(.plain)
@@ -782,6 +776,7 @@ private struct LensSelectorView: View {
                             if isActive {
                                 Circle()
                                     .fill(Color.black.opacity(0.55))
+                                    .frame(width: 32, height: 32)
                                     .matchedGeometryEffect(id: "lens-bg", in: ns)
                             }
                             Text(label(for: lens, active: isActive))
@@ -790,6 +785,7 @@ private struct LensSelectorView: View {
                                 .foregroundStyle(isActive ? Color.yellow : Theme.bone)
                         }
                         .frame(width: 32, height: 32)
+                        .contentShape(Rectangle())
                     }
                     .buttonStyle(.plain)
                     .accessibilityLabel(accessibilityLabel(for: lens))
@@ -883,7 +879,7 @@ private struct HighResButton: View {
                     .tracking(0.5)
             }
             .foregroundStyle(camera.highResMode != .off ? .black : Theme.bone)
-            .frame(width: 40, height: 40)
+            .frame(minWidth: 40, minHeight: 40)
             .background(
                 camera.highResMode != .off
                     ? AnyShapeStyle(Theme.goldShine)
