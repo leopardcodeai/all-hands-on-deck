@@ -4,4 +4,4 @@
 -- invalid / forged token instead of relying solely on the session code.
 
 alter table public.sessions
-  add column if not exists join_token_value text null;
+  add column if not exists join_token_value uuid null;

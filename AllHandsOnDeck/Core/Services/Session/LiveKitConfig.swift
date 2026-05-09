@@ -12,9 +12,12 @@ enum LiveKitConfig {
     }
 
     /// Absolute URL to the Cloud Run token endpoint, or `nil` if unset / malformed.
+    /// Only accepts http/https schemes to prevent injection attacks.
     static var tokenEndpoint: URL? {
         let raw = plistString("LIVEKIT_TOKEN_ENDPOINT")
-        guard !raw.isEmpty, let url = URL(string: raw), url.scheme?.hasPrefix("http") == true else {
+        guard !raw.isEmpty,
+              let url = URL(string: raw),
+              url.scheme == "http" || url.scheme == "https" else {
             return nil
         }
         return url
@@ -33,11 +36,12 @@ enum LiveKitConfig {
 
     /// Pure helper used by unit tests so they can verify the gating logic without
     /// having to mutate the host bundle's Info.plist at runtime.
+    /// Only accepts http/https schemes to prevent injection attacks.
     nonisolated static func evaluate(flagRaw: String, endpointRaw: String) -> Bool {
         let endpointTrimmed = endpointRaw.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !endpointTrimmed.isEmpty,
               let url = URL(string: endpointTrimmed),
-              url.scheme?.hasPrefix("http") == true
+              url.scheme == "http" || url.scheme == "https"
         else {
             return false
         }

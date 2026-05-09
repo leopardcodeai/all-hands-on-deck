@@ -26,8 +26,8 @@ ENV PORT=8080
 COPY --from=builder --chown=node:node /app/node_modules ./node_modules
 COPY --from=builder --chown=node:node /app/dist ./dist
 COPY --chown=node:node package.json ./
-# `public/` is referenced by index.ts for static assets / AASA. Copy it if present.
-COPY --chown=node:node public ./public
+# `public/` is referenced by index.ts for static assets / AASA. Copy if present.
+COPY --chown=node:node public* ./
 
 USER node
 EXPOSE 8080

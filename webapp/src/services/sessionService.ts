@@ -206,8 +206,12 @@ export async function joinSession(input: JoinSessionInput): Promise<SessionBoots
   }
 
   const storedToken = (session.metadata as Record<string, unknown>)?.join_token as JoinTokenMetadata | undefined;
-  if (storedToken?.value && input.token && storedToken.value !== input.token) {
-    throw new Error('Invalid join token.');
+  if (storedToken?.value) {
+    // If a join token is stored (e.g., from QR code), the input MUST provide a matching token.
+    // This prevents unauthorized access to sessions that require a token.
+    if (!input.token || storedToken.value !== input.token) {
+      throw new Error('Invalid or missing join token.');
+    }
   }
 
   const { data: participant, error: participantError } = await client

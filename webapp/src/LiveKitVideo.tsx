@@ -22,6 +22,14 @@ export function LiveKitVideo({ sessionId, participantId, onVideoActiveChange }: 
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const [hasVideo, setHasVideo] = useState(false);
   const [errorLabel, setErrorLabel] = useState<string | null>(null);
+  const callbackRef = useRef(onVideoActiveChange);
+
+  // Update callback ref whenever the prop changes, without triggering reconnect.
+  // This separates the callback update (which is frequent from parent renders)
+  // from the LiveKit connection lifecycle (which is expensive).
+  useEffect(() => {
+    callbackRef.current = onVideoActiveChange;
+  }, [onVideoActiveChange]);
 
   useEffect(() => {
     if (!isLiveKitBetaEnabled() || !sessionId) return;
@@ -41,7 +49,7 @@ export function LiveKitVideo({ sessionId, participantId, onVideoActiveChange }: 
             track.attach(el);
             attachedTrack = track;
             setHasVideo(true);
-            onVideoActiveChange?.(true);
+            callbackRef.current?.(true);
           },
           onTrackUnsubscribed: (track) => {
             if (track.kind !== Track.Kind.Video) return;
@@ -49,7 +57,7 @@ export function LiveKitVideo({ sessionId, participantId, onVideoActiveChange }: 
             if (el) track.detach(el);
             if (attachedTrack === track) attachedTrack = null;
             setHasVideo(false);
-            onVideoActiveChange?.(false);
+            callbackRef.current?.(false);
           },
         });
       } catch (err) {
@@ -65,9 +73,9 @@ export function LiveKitVideo({ sessionId, participantId, onVideoActiveChange }: 
       const el = videoRef.current;
       if (attachedTrack && el) attachedTrack.detach(el);
       session?.disconnect();
-      onVideoActiveChange?.(false);
+      callbackRef.current?.(false);
     };
-  }, [sessionId, participantId, onVideoActiveChange]);
+  }, [sessionId, participantId]);
 
   if (!isLiveKitBetaEnabled()) return null;
 

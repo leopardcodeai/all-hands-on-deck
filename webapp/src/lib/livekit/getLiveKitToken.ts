@@ -3,15 +3,18 @@ export interface LiveKitTokenResponse {
   url: string;
 }
 
-const TOKEN_ENDPOINT = (import.meta.env.VITE_LIVEKIT_TOKEN_ENDPOINT as string | undefined)
-  ?? 'https://edylzgxrknbqjdgtrgic.supabase.co/functions/v1/livekit-token';
+const TOKEN_ENDPOINT = import.meta.env.VITE_LIVEKIT_TOKEN_ENDPOINT as string | undefined;
 
 /**
  * Calls the Supabase Edge Function `livekit-token` (verify_jwt disabled —
  * the function does its own session/participant validation against the
- * service-role-key'd database). Override the URL via `VITE_LIVEKIT_TOKEN_ENDPOINT`.
+ * service-role-key'd database). Requires `VITE_LIVEKIT_TOKEN_ENDPOINT` to be set.
  */
 export async function getLiveKitToken(sessionId: string, participantId: string): Promise<LiveKitTokenResponse> {
+  if (!TOKEN_ENDPOINT) {
+    throw new Error('VITE_LIVEKIT_TOKEN_ENDPOINT is not configured. Set it in .env.local.');
+  }
+
   const response = await fetch(TOKEN_ENDPOINT, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },

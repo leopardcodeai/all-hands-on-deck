@@ -3,7 +3,7 @@
 Mints a short-lived LiveKit JWT for a participant of an active session.
 
 ## Endpoint
-`POST https://edylzgxrknbqjdgtrgic.supabase.co/functions/v1/livekit-token`
+`POST https://<your-project-ref>.supabase.co/functions/v1/livekit-token`
 
 Body:
 ```json

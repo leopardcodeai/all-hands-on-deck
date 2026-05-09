@@ -95,8 +95,6 @@ targets:
       - sdk: GameKit.framework
         embed: false
       - package: LiveKit
-      - package: LiveKit
-        product: LiveKitWebRTC
 
     # dependencies:                        # ── re-enable Watch ──
     #   - target: AllHandsOnDeckWatch
