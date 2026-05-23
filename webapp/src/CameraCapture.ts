@@ -10,7 +10,7 @@ export interface CameraCapture {
 export async function startCamera(): Promise<CameraCapture> {
   logger.info('Camera', 'Requesting camera access');
   const stream = await navigator.mediaDevices.getUserMedia({
-    video: { facingMode: 'user', width: { ideal: 1280 }, height: { ideal: 720 } },
+    video: { width: { ideal: 1280 }, height: { ideal: 720 } },
     audio: false,
   });
   logger.info('Camera', 'Camera access granted', { tracks: stream.getTracks().length });

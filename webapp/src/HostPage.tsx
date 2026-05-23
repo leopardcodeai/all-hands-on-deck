@@ -34,6 +34,7 @@ export function HostPage() {
   useEffect(() => {
     if (camera && videoRef.current) {
       videoRef.current.srcObject = camera.stream;
+      void videoRef.current.play().catch(() => {});
     }
   }, [camera]);
 
