@@ -1,9 +1,9 @@
 # All Hands on Deck
 
-[![iOS CI](https://github.com/alexanderbrunker-star/AllHandsOnDeck/actions/workflows/ios-ci.yml/badge.svg)](https://github.com/alexanderbrunker-star/AllHandsOnDeck/actions/workflows/ios-ci.yml)
-[![Webapp CI](https://github.com/alexanderbrunker-star/AllHandsOnDeck/actions/workflows/webapp-ci.yml/badge.svg)](https://github.com/alexanderbrunker-star/AllHandsOnDeck/actions/workflows/webapp-ci.yml)
-[![Server CI](https://github.com/alexanderbrunker-star/AllHandsOnDeck/actions/workflows/server-ci.yml/badge.svg)](https://github.com/alexanderbrunker-star/AllHandsOnDeck/actions/workflows/server-ci.yml)
-[![CodeQL](https://github.com/alexanderbrunker-star/AllHandsOnDeck/actions/workflows/codeql.yml/badge.svg)](https://github.com/alexanderbrunker-star/AllHandsOnDeck/actions/workflows/codeql.yml)
+[![iOS CI](https://github.com/alexanderbrunker-star/all-hands-on-deck/actions/workflows/ios-ci.yml/badge.svg)](https://github.com/alexanderbrunker-star/all-hands-on-deck/actions/workflows/ios-ci.yml)
+[![Webapp CI](https://github.com/alexanderbrunker-star/all-hands-on-deck/actions/workflows/webapp-ci.yml/badge.svg)](https://github.com/alexanderbrunker-star/all-hands-on-deck/actions/workflows/webapp-ci.yml)
+[![Server CI](https://github.com/alexanderbrunker-star/all-hands-on-deck/actions/workflows/server-ci.yml/badge.svg)](https://github.com/alexanderbrunker-star/all-hands-on-deck/actions/workflows/server-ci.yml)
+[![CodeQL](https://github.com/alexanderbrunker-star/all-hands-on-deck/actions/workflows/codeql.yml/badge.svg)](https://github.com/alexanderbrunker-star/all-hands-on-deck/actions/workflows/codeql.yml)
 
 > by Captain Leopard 🏴‍☠️🐆
 > *"Alle sehen das Gruppenfoto, bevor es aufgenommen wird."*
