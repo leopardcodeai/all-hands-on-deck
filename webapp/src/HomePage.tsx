@@ -6,7 +6,7 @@ const pirateJokes = [
   "Why is pirating so addictive? Lose one hand and ye get hooked!",
   "What's a pirate's fav letter? Ye think it's R — but it's the C!",
   "How much did peg leg and hook cost? An arm and a leg!",
-  "What d'ye call a pirate who skips class? Captain Hooky!",
+  "What d'ye call a pirate who skips class? Host Hooky!",
   "Why couldn't the pirate play cards? He was standing on the deck!",
   "What's a pirate's fav country? ARRRgentina!",
   "What did the ocean say to the pirate? Nothing — it just waved!",
@@ -35,7 +35,7 @@ export function HomePage() {
   return (
     <div className="center-stack">
       <div className="app-header">
-        <span className="pill pill-gold">⚓︎ {DesignLabels.byCaptainLeopard}</span>
+        <span className="pill pill-gold">⚓︎ {DesignLabels.byHostLeopard}</span>
         <button className="icon-button" aria-label="Settings">⚙</button>
       </div>
 
