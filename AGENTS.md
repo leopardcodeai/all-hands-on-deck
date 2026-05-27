@@ -1,74 +1,74 @@
 # All Hands On Deck — Development Workflow
 
-## Projektstruktur
+## Project Structure
 
-| System | Zweck |
+| System | Purpose |
 |--------|-------|
-| **Linear** (captain-leopard-ai-engineering) | Projektmanagement: Planung, Status, Fortschritt |
-| **GitHub** (alexanderbrunker-star/AllHandsOnDeck) | Code: Issues, Branches, PRs, Reviews, Tests |
+| **Linear** (captain-leopard-ai-engineering) | Project management: planning, status, progress |
+| **GitHub** (alexanderbrunker-star/all-hands-on-deck) | Code: Issues, Branches, PRs, Reviews, Tests |
 
-## Workflow-Stati
+## Workflow States
 
 ```
 Backlog → Todo → In Progress → In Review → Testing / QA → Done
 ```
 
-## AI Coding Rules (siehe CONTRIBUTING.md)
+## AI Coding Rules (see CONTRIBUTING.md)
 
-- Views nur Zustand + User-Intents. Keine Business-Logik.
-- ViewModels koordinieren. Services sprechen mit externen Systemen.
+- Views only state + user intents. No business logic.
+- ViewModels coordinate. Services talk to external systems.
 - Dependency Injection via Protocols.
-- DesignLabels für alle User-facing Strings.
-- Keine Hardcoded Strings, keine Magic Numbers (Spacing tokens nutzen).
-- Accessibility Identifier für UI-Test-Elemente.
-- Preview States (loading, empty, error) für alle Views.
-- PR-Template mit Test Plan + Screenshot Evidence.
+- DesignLabels for all user-facing strings.
+- No hardcoded strings, no magic numbers (use spacing tokens).
+- Accessibility identifiers for UI test elements.
+- Preview states (loading, empty, error) for all views.
+- PR template with test plan + screenshot evidence.
 - Definition of Done in CHECKLIST.md.
 
-## Regeln
+## Rules
 
-### 1. Linear als führendes System
+### 1. Linear as leading system
 
-- Jede Aufgabe hat ein Linear-Issue im Projekt **"All Hands On Deck"**
-- Klarer Titel, Beschreibung, Akzeptanzkriterien
-- Status spiegelt tatsächlichen Arbeitsstand
+- Every task has a Linear issue in the **"All Hands On Deck"** project
+- Clear title, description, acceptance criteria
+- Status reflects actual work progress
 
-### 2. GitHub Issues parallel
+### 2. GitHub Issues in parallel
 
-- Jedes technische Linear-Issue bekommt ein GitHub Issue
-- Gegenseitige Verlinkung (Linear ↔ GitHub)
-- GitHub Issue enthält Linear-Link im Body
+- Every technical Linear issue gets a GitHub issue
+- Cross-linking (Linear ↔ GitHub)
+- GitHub issue contains Linear link in body
 
-### 3. Branch-Konvention
+### 3. Branch Convention
 
 ```
-feature/AHOD-{id}-kurzbeschreibung
-fix/AHOD-{id}-kurzbeschreibung
+feature/AHOD-{id}-short-description
+fix/AHOD-{id}-short-description
 ```
 
-### 4. PR-Konvention
+### 4. PR Convention
 
-- PR-Titel: `[APP-XX] Beschreibung`
-- PR-Body: Linear-Link, GitHub-Issue-Link, Summary, Testplan, Checkliste
-- PR erst nach grünen Tests und Review mergen
-- Nach Merge: Linear auf **Done**, GitHub Issue schließen
+- PR title: `[APP-XX] Description`
+- PR body: Linear link, GitHub issue link, summary, test plan, checklist
+- Merge PR only after green tests and review
+- After merge: set Linear to **Done**, close GitHub issue
 
 ### 5. Test-Driven
 
-- Vor Implementierung: erwartete Tests beschreiben
-- Tests müssen grün sein vor Review
-- Ticket erst Done wenn: Tests grün + Review bestanden + PR gemerged
+- Before implementation: describe expected tests
+- Tests must be green before review
+- Ticket Done only when: tests green + review passed + PR merged
 
-### 6. Versionierung
+### 6. Versioning
 
-- Bei jedem User-facing Change Version bumpen (alle surfaces)
+- Bump version on every user-facing change (all surfaces)
 - Version in: `DebugOverlayView.swift`, `webapp/src/HomePage.tsx`, `webapp/src/JoinPage.tsx`
 
 ### 7. DesignLabels
 
-- Alle User-facing Strings über `DesignLabels.swift` (iOS) / `DesignLabels.ts` (webapp)
-- Keine Hardcoded Strings in UI-Komponenten
-- Englisch ist Source-of-Truth
+- All user-facing strings via `DesignLabels.swift` (iOS) / `DesignLabels.ts` (webapp)
+- No hardcoded strings in UI components
+- English is source of truth
 
 ## Commands
 
@@ -92,7 +92,7 @@ cd webapp && npx playwright test
 # Webapp all
 cd webapp && npm run build && npm test && npx playwright test
 
-# Multi-Device E2E (braucht idb + 3 gebootete Simulatoren)
+# Multi-Device E2E (requires idb + 3 booted simulators)
 python3 scripts/happy_path_e2e.py
 
 # Deploy webapp
@@ -100,59 +100,59 @@ cd webapp && npm run build
 ```
 
 ---
-## Agents-Konfiguration (Dual-Model)
+## Agent Configuration (Dual-Model)
 
-Dieses Projekt verwendet einen **Advisor-Strategy-Ansatz** mit zwei Modellen:
+This project uses an **Advisor-Strategy** approach with two models:
 
-| Agent | Modell | Zweck |
+| Agent | Model | Purpose |
 |-------|--------|-------|
-| **Flash** | deepseek-v4-flash | Schnelle, kleine Aufgaben, Analyse, Planung |
-| **Pro** | deepseek-v4-pro | Komplexe Code-Änderungen, Refactoring, kritische Tools |
+| **Flash** | deepseek-v4-flash | Fast, small tasks, analysis, planning |
+| **Pro** | deepseek-v4-pro | Complex code changes, refactoring, critical tools |
 
-### Wechsel-Trigger (Flash → Pro)
+### Switch Triggers (Flash → Pro)
 
-| Trigger | Beschreibung |
+| Trigger | Description |
 |---------|-------------|
-| Code-Änderungen >100 Zeilen oder mehrere Dateien | → Pro |
-| Refactoring mit Abhängigkeitsanalyse | → Pro |
-| Produktions-Tools (Git-Push, Hosting-Deploy, PR-Merge) | → Pro |
-| Fehlerbehebung >3 Iterationen | → Pro |
-| Flash erkennt selbst: mehr logische Tiefe nötig | → Pro |
+| Code changes >100 lines or multiple files | → Pro |
+| Refactoring with dependency analysis | → Pro |
+| Production tools (git push, hosting deploy, PR merge) | → Pro |
+| Troubleshooting >3 iterations | → Pro |
+| Flash recognizes: more logical depth needed | → Pro |
 
-Flash bleibt für: Fragen beantworten, Status abfragen, Pläne erstellen, einfache Edits.
+Flash stays for: answering questions, checking status, creating plans, simple edits.
 
 ---
-## Vorne — Versionsänderungen & Redesigns
+## Front — Version Changes & Redesigns
 
-*Hier werden grundlegende Änderungen, Redesigns und Versionssprünge dokumentiert.*
+*Fundamental changes, redesigns, and version jumps are documented here.*
 
-| Datum | Version | Grund | Agent |
+| Date | Version | Reason | Agent |
 |-------|---------|-------|-------|
-| 2026-05-03 | 2.3.4 → 2.3.9 | DesignLabels-Zentralisierung, Viewer-Crew-Popup, Retake-Fix, Countdown-Sync, QR-Piratenflagge, Adaptive Grid | Pro |
+| 2026-05-03 | 2.3.4 → 2.3.9 | DesignLabels centralization, viewer crew popup, retake fix, countdown sync, QR pirate flag, adaptive grid | Pro |
 
 ---
-## Mittig — Große Jobs & Komplexität (Pro)
+## Middle — Large Jobs & Complexity (Pro)
 
-*Hier werden komplexe Aufgaben, Tool-Nutzungen und Pro-Einsätze dokumentiert.*
+*Complex tasks, tool usage, and Pro assignments are documented here.*
 
-| Datum | Issue | Beschreibung | Status |
+| Date | Issue | Description | Status |
 |-------|-------|-------------|--------|
-| 2026-05-04 | APP-78 | Happy Path E2E Test: 3-Geräte (iOS Host + iOS Viewer + Safari Webapp) | ✅ Gemerged |
-| 2026-05-04 | APP-79 | Better Software Developer — Projektstruktur, CI, Coding Rules | ✅ Done |
-| 2026-05-04 | APP-80 | Host View UI Fix: Notch-Abstand + Bottom-Buttons kompakter + DesignLabels | ✅ Done |
-| 2026-05-03 | APP-69 | Host View: crew icon round + popup above QR | ✅ Gemerged PR #31 |
+| 2026-05-04 | APP-78 | Happy Path E2E Test: 3-device (iOS Host + iOS Viewer + Safari Webapp) | ✅ Merged |
+| 2026-05-04 | APP-79 | Better Software Developer — project structure, CI, coding rules | ✅ Done |
+| 2026-05-04 | APP-80 | Host View UI Fix: notch spacing + bottom buttons more compact + DesignLabels | ✅ Done |
+| 2026-05-03 | APP-69 | Host View: crew icon round + popup above QR | ✅ Merged PR #31 |
 | 2026-05-03 | APP-70 | Popup restructure: crew top, QR bottom, liquid glass, landscape+portrait | PR #33 In Review |
-| 2026-05-03 | APP-46–56 | 11 Issues: DesignLabels, Viewer/Host Crew Popups, QR, Countdown, Webapp | ✅ Gemerged PR #18 |
-| 2026-05-03 | — | Linear + GitHub Workflow-Initialisierung (23 Issues) | ✅ Done |
+| 2026-05-03 | APP-46–56 | 11 Issues: DesignLabels, Viewer/Host Crew Popups, QR, Countdown, Webapp | ✅ Merged PR #18 |
+| 2026-05-03 | — | Linear + GitHub workflow initialization (23 Issues) | ✅ Done |
 
 ---
-## Hinten — Kleine Aufgaben & Änderungen (Flash)
+## Back — Small Tasks & Changes (Flash)
 
-*Hier werden schnelle, unkomplizierte Aufgaben und Flash-Einsätze dokumentiert.*
+*Quick, straightforward tasks and Flash assignments are documented here.*
 
-| Datum | Aufgabe | Agent |
+| Date | Task | Agent |
 |-------|---------|-------|
-| 2026-05-03 | AGENTS.md Dual-Modell-Konfiguration + Restrukturierung | Flash |
+| 2026-05-03 | AGENTS.md dual-model configuration + restructuring | Flash |
 | 2026-05-03 | Cleanup .DS_Store + .gitignore | Flash |
-| 2026-05-03 | PR #18 mergen (11 Issues finalisiert) | Pro |
-| 2026-05-03 | 23 Linear-Issues → Done gesetzt | Pro |
+| 2026-05-03 | Merge PR #18 (11 issues finalized) | Pro |
+| 2026-05-03 | 23 Linear issues → set to Done | Pro |

@@ -5,85 +5,79 @@
 [![Server CI](https://github.com/alexanderbrunker-star/all-hands-on-deck/actions/workflows/server-ci.yml/badge.svg)](https://github.com/alexanderbrunker-star/all-hands-on-deck/actions/workflows/server-ci.yml)
 [![CodeQL](https://github.com/alexanderbrunker-star/all-hands-on-deck/actions/workflows/codeql.yml/badge.svg)](https://github.com/alexanderbrunker-star/all-hands-on-deck/actions/workflows/codeql.yml)
 
-> by Captain Leopard 🏴‍☠️🐆
-> *"Alle sehen das Gruppenfoto, bevor es aufgenommen wird."*
+> by Captain Leopard
+> *"Everyone sees the group photo before it's taken."*
 
-iOS-first MVP für ein Live-Viewfinder-Gruppenfoto. Eine Person stellt ihr iPhone als
-Kamera auf, alle anderen sehen den Bildausschnitt live auf ihren Geräten — nativ
-oder im Browser, ohne Installation.
+iOS-first MVP for a live-viewfinder group photo. One person sets up their iPhone as the camera; everyone else sees the frame live on their devices — natively or in a browser, no installation required.
 
-Runtime backend: Supabase replaces the old relay backend for database,
-Storage, and Realtime fallback. Setup details live in [`SETUP.md`](SETUP.md).
-Web Viewers are currently marked and treated as a **Beta** feature: Supabase is
-the session backend, while live video remains WebRTC/P2P-first and is never
-stored in Supabase.
+Runtime backend: Supabase replaces the old relay backend for database, Storage, and Realtime fallback. Setup details live in [`SETUP.md`](SETUP.md). Web Viewers are currently marked and treated as a **Beta** feature: Supabase is the session backend, while live video remains WebRTC/P2P-first and is never stored in Supabase.
 
 ---
 
 ## Status
 
-- ✅ **Step 1**: SwiftUI-Skelett, Mock-Transport, Host- und Viewer-Flow.
-- ✅ **Step 2**: Multipeer Connectivity, QR-Scanner, echtes Frame-Streaming, Nearby-Discovery.
-- ✅ **Step 3**: Node/TS Signaling-Server, Vite-Web-App-Viewer, iOS WebSocket-Transport, Composite-Transport (Multipeer + Web parallel).
-- ✅ **Step 4**: Vision-basierte "Bin ich im Bild?" Hinweise (Face-Detection, Schief-/Abgeschnitten-Erkennung).
-- ✅ **Step 5**: Best-Shot Burst-Capture mit KI-Ranking (Gesichter, offene Augen, Schärfe).
-- ✅ **Step 6**: Apple Watch Companion (WCSession-Bridge, Live-Countdown auf der Wrist, Trigger/Cancel/Now).
-- ✅ **Step 7**: Universal Links + Custom-URL-Scheme (`allhands://`), Server liefert AASA.
-- ✅ **Step 8**: Reactions ("Bereit", "Kamera höher", "Weiter links" etc.) — auf iOS-Viewer und Web-Viewer, Host bekommt Toast + Watch-Snapshot.
-- ✅ **Step 9**: XCTest-Suite für die deterministischen Bausteine (CountdownCoordinator, URL-Parser, Wire-Format, ID-Generator, Mock-Broker, Image-Compression).
-- ✅ **Step 10**: PrivacyInfo.xcprivacy Manifest, Session-TTL-Expiry-Enforcement (host-side timer triggert `.sessionEnded` automatisch).
-- ✅ **Step 11**: XcodeGen `project.yml` → `AllHandsOnDeck.xcodeproj` (iOS + Watch + Tests), Entitlements, AppIcon-Scaffold.
-- ✅ **Step 12**: Lokalisierung (de + en) — `Localizable.strings` für iOS und Watch; alle UI-Strings und Modell-Properties lokalisiert.
-- ✅ **Step 13**: Fly.io Deployment — `Dockerfile` (multi-stage) + `fly.toml`; Webapp-Build-Bug (`vite/client` types) gefixt.
-- ✅ **Step 14**: App Store Draft (`STORE.md`) — Beschreibung, Keywords, Privacy Nutrition Label.
-- ✅ **Step 15**: Automatisierte Happy-Path-Tests (121 Tests: XCTest 76 + XCUITest 15 + Webapp 18 + Playwright 11 + Python E2E)
-- ✅ **Step 16**: UI Fixes — Notch-Abstand Host View, Bottom-Buttons kompakter (Viewer-Style), DesignLabels-Zentralisierung
+- ✅ **Step 1**: SwiftUI skeleton, mock transport, host and viewer flow.
+- ✅ **Step 2**: Multipeer Connectivity, QR scanner, real frame streaming, nearby discovery.
+- ✅ **Step 3**: Node/TS signaling server, Vite web app viewer, iOS WebSocket transport, composite transport (Multipeer + Web in parallel).
+- ✅ **Step 4**: Vision-based "Am I in the picture?" hints (face detection, tilt/crop recognition).
+- ✅ **Step 5**: Best-Shot burst capture with AI ranking (faces, open eyes, sharpness).
+- ✅ **Step 6**: Apple Watch Companion (WCSession bridge, live countdown on wrist, trigger/cancel/now).
+- ✅ **Step 7**: Universal Links + custom URL scheme (`allhands://`), server serves AASA.
+- ✅ **Step 8**: Reactions ("Ready", "Camera higher", "Further left" etc.) — on iOS viewer and web viewer, host gets toast + watch snapshot.
+- ✅ **Step 9**: XCTest suite for deterministic building blocks (CountdownCoordinator, URL parser, wire format, ID generator, mock broker, image compression).
+- ✅ **Step 10**: PrivacyInfo.xcprivacy manifest, session TTL expiry enforcement (host-side timer triggers `.sessionEnded` automatically).
+- ✅ **Step 11**: XcodeGen `project.yml` → `AllHandsOnDeck.xcodeproj` (iOS + Watch + Tests), entitlements, app icon scaffold.
+- ✅ **Step 12**: Localization (de + en) — `Localizable.strings` for iOS and Watch; all UI strings and model properties localized.
+- ✅ **Step 13**: Fly.io deployment — `Dockerfile` (multi-stage) + `fly.toml`; webapp build bug (`vite/client` types) fixed.
+- ✅ **Step 14**: App Store Draft (`STORE.md`) — description, keywords, privacy nutrition label.
+- ✅ **Step 15**: Automated happy-path tests (121 tests: XCTest 76 + XCUITest 15 + Webapp 18 + Playwright 11 + Python E2E)
+- ✅ **Step 16**: UI fixes — notch spacing host view, bottom buttons more compact (viewer-style), DesignLabels centralization
 - ✅ **Step 17**: Supabase session backend + Web Viewers **Beta** policy controls (10 min sessions, 3 P2P viewers, short-lived QR token, TURN hard limit, no Supabase video storage).
-- ⏭ **Deferred (post-MVP)**: persistente Galerie / Event-Modus, Smile-Detection, SFU for larger viewer groups.
+- ⏭ **Deferred (post-MVP)**: persistent gallery / event mode, smile detection, SFU for larger viewer groups.
 
-**Alles fertig — App-Store-ready.**
+**Everything done — App Store ready.**
 
-### Noch offen (braucht deine Daten)
+### Still outstanding (needs your data)
 
-| Was | Wo ersetzen |
+| What | Where to replace |
 |---|---|
 | Apple Team ID | `project.yml` → `TEAMID`, `server/public/.well-known/apple-app-site-association` |
 | Vercel Webapp URL | `WEB_JOIN_BASE_URL` / iOS `joinBaseURL` |
-| Echte Domain | `project.yml` Entitlements, AASA, Vercel Domain |
-| App-Icon (1024×1024 PNG) | `AllHandsOnDeck/Resources/Assets.xcassets/AppIcon.appiconset/` |
+| Real domain | `project.yml` entitlements, AASA, Vercel domain |
+| App icon (1024×1024 PNG) | `AllHandsOnDeck/Resources/Assets.xcassets/AppIcon.appiconset/` |
 
 ```bash
-# Projekt bauen
-xcodegen generate   # nach jeder Änderung an project.yml
+# Build project
+xcodegen generate   # after every change to project.yml
 
-# Webapp deployen
-# GitHub -> Vercel baut webapp/ per vercel.json.
-# Manuell: vercel --prod
+# Deploy webapp
+# GitHub → Vercel builds webapp/ via vercel.json.
+# Manual: vercel --prod
 ```
 
 ---
 
-## Repository-Layout
+## Repository Layout
 
 ```
 AllHandsOnDeck/        iOS App (SwiftUI)
 AllHandsOnDeckWatch/   Apple Watch Companion App (Step 6)
 AllHandsOnDeckTests/   XCTest unit tests (Step 9)
-server/                Optionaler Node/TS WebSocket-Signaling/Relay + AASA
-webapp/                Vite + React Web-Viewer (PWA-fähig)
+server/                Optional Node/TS WebSocket signaling/relay + AASA
+webapp/                Vite + React web viewer (PWA-capable)
 ```
 
 ---
 
-## Lokal alles zusammen starten
+## Running everything locally
 
-Du brauchst dafür:
+You'll need:
 - Node 20+
 - Xcode 16+
-- 2 echte iPhones (für Multipeer-Test) **oder** 1 iPhone + Browser (für Web-Viewer-Test)
-- Alle Geräte im selben WLAN
+- 2 real iPhones (for Multipeer test) **or** 1 iPhone + browser (for web viewer test)
+- All devices on the same Wi-Fi
 
-### 1. Backend starten
+### 1. Start backend
 
 ```bash
 cd server
@@ -91,9 +85,9 @@ npm install
 npm run dev
 ```
 
-→ läuft auf `:8787`. Health-Check: `curl http://localhost:8787/health`.
+→ runs on `:8787`. Health check: `curl http://localhost:8787/health`.
 
-### 2. Web-App starten
+### 2. Start web app
 
 ```bash
 cd webapp
@@ -101,44 +95,38 @@ npm install
 npm run dev
 ```
 
-→ läuft auf `http://localhost:5173`. Vite ist auf `0.0.0.0` gebunden, du
-erreichst sie also vom iPhone aus auch über `http://<dein-mac-im-LAN>:5173`.
+→ runs on `http://localhost:5173`. Vite is bound to `0.0.0.0`, so you can reach it from your iPhone via `http://<your-mac-lan-ip>:5173`.
 
-Server-URL überschreiben: `VITE_SERVER_URL=ws://192.168.1.10:8787 npm run dev`.
+Override server URL: `VITE_SERVER_URL=ws://192.168.1.10:8787 npm run dev`.
 
-### 3. iOS App-Konfiguration (UserDefaults)
+### 3. iOS App Configuration (UserDefaults)
 
-Über das Xcode-Scheme oder eine `Settings.bundle` setzen:
+Set via Xcode scheme or `Settings.bundle`:
 
-| Key | Wert | Wofür |
+| Key | Value | Purpose |
 | --- | --- | --- |
-| `webSocketServerURL` | `ws://192.168.1.10:8787` | Wo der iOS-Host hin verbindet wenn "Web-Viewer erlauben" an ist |
-| `joinBaseURL` | `http://192.168.1.10:5173` | Was der QR-Code im Host-Panel verlinkt |
+| `webSocketServerURL` | `ws://192.168.1.10:8787` | Where the iOS host connects when "Allow Web Viewers" is enabled |
+| `joinBaseURL` | `http://192.168.1.10:5173` | What the QR code in the host panel links to |
 
-Schnellster Weg: In Xcode → Edit Scheme → Run → Arguments → Environment
-Variables ist nicht kompatibel mit `UserDefaults`. Einfacher:
-**Launch Arguments**:
+Fastest way: Xcode → Edit Scheme → Run → Arguments. Environment Variables are not compatible with `UserDefaults`. Use **Launch Arguments** instead:
 
 ```
 -webSocketServerURL ws://192.168.1.10:8787
 -joinBaseURL http://192.168.1.10:5173
 ```
 
-(Xcode mappt diese als `UserDefaults` Standard-Werte für die Session.)
+(Xcode maps these as `UserDefaults` default values for the session.)
 
-### 4. Host-Session mit Web-Viewer (Beta)
+### 4. Host session with web viewer (Beta)
 
-Web Viewers are a **Beta** feature in the app UI and policy. Use them for MVP
-testing; native nearby viewers remain the default path.
+Web Viewers are a **Beta** feature in the app UI and policy. Use them for MVP testing; native nearby viewers remain the default path.
 
-1. iPhone A → "Web-Viewer erlauben" mit **BETA** Badge einschalten → "Gruppenfoto starten".
-2. QR-Panel zeigt einen Code, der auf `http://<mac>:5173/join/<sessionId>` zeigt.
-3. iPhone B Safari oder Mac-Browser → QR scannen / URL öffnen.
-4. Web-App verbindet sich zur Backend-WebSocket → bekommt `sessionMetadata`,
-   anschließend Live-Frames.
-5. Host startet 10s-Timer → beide Clients (Multipeer-Native + Web) sehen
-   synchronen Countdown.
-6. Foto-Aufnahme → Web-Viewer zeigt finales Foto + "Speichern"-Button.
+1. iPhone A → enable "Allow Web Viewers" with **BETA** badge → "Start Group Photo".
+2. QR panel shows a code pointing to `http://<mac>:5173/join/<sessionId>`.
+3. iPhone B Safari or Mac browser → scan QR / open URL.
+4. Web app connects to backend WebSocket → receives `sessionMetadata`, then live frames.
+5. Host starts 10s timer → both clients (Multipeer native + Web) see synchronized countdown.
+6. Photo capture → web viewer shows final photo + "Save" button.
 
 ### Happy Path Flow
 
@@ -184,54 +172,49 @@ flowchart TD
 
 ---
 
-## Step 4 — "Bin ich im Bild?" Vision-Hints
+## Step 4 — "Am I in the picture?" Vision Hints
 
-- Läuft auf der gleichen 3 fps Preview-Pipeline, kein Extra-Tap auf
-  AVCaptureSession.
+- Runs on the same 3 fps preview pipeline, no extra tap on AVCaptureSession.
 - `VNDetectFaceRectanglesRequest` → Bounding Boxes → Verdict:
   - `noFaces` / `allInside` / `someClipped`
-  - Schwerpunkt-Skew: `skewedLeft`, `skewedRight`, `tooHigh`, `tooLow`
-- Zeigt sich als Chip oberhalb des Capture-Buttons. Bei "Alle drin" wird er
-  grün (Theme.signal), sonst gold.
-- Throttle 0.5s, läuft auf eigener `DispatchQueue` damit Main bei 60 fps bleibt.
+  - Center-of-mass skew: `skewedLeft`, `skewedRight`, `tooHigh`, `tooLow`
+- Shows as a chip above the capture button. When "everyone's in" it turns green (Theme.signal), otherwise gold.
+- Throttle 0.5s, runs on its own `DispatchQueue` so main stays at 60 fps.
 
-Architektur-Slot für später: `InFrameDetector` ist als `ObservableObject`
-designed, du kannst Verdicts auch über das Transport-Protokoll an Viewer
-broadcasten ("Du bist links abgeschnitten").
+Architecture slot for later: `InFrameDetector` is designed as `ObservableObject`, you can broadcast verdicts over the transport protocol to viewers ("You're cut off on the left").
 
 ## Step 5 — Best-Shot Burst
 
-- Settings-Sheet → "Best-Shot Burst" Toggle.
-- Bei aktiver Burst-Aufnahme nimmt `CameraService.captureBurst` 5 Bilder mit
-  ~0.35s Abstand.
-- `PhotoQualityScorer` verteilt asynchron Tasks pro Bild:
+- Settings sheet → "Best-Shot Burst" toggle.
+- During active burst capture, `CameraService.captureBurst` takes 5 photos with ~0.35s gap.
+- `PhotoQualityScorer` distributes async tasks per photo:
   - Face Count via `VNDetectFaceLandmarksRequest`
-  - Eyes-Open Score via Augenlandmark-Bounding-Box-Aspect-Ratio
+  - Eyes-Open Score via eye landmark bounding box aspect ratio
   - Sharpness via Variance-of-Laplacian (CIConvolution3x3 + CIAreaAverage)
-  - Composite mit gewichtetem Sum
-- `BurstPickerView` zeigt alle Kandidaten, das KI-Top-1 mit ⭐-Badge.
-- Captain pickt → `acceptBurstPick` rebroadcastet als `finalPhotoAvailable`.
+  - Composite with weighted sum
+- `BurstPickerView` shows all candidates, the AI top-1 with ⭐ badge.
+- Captain picks → `acceptBurstPick` rebroadcasts as `finalPhotoAvailable`.
 
 ---
 
-## Build- und Fehlerfix-Checkliste (kombiniert)
+## Build and Troubleshooting Checklist
 
-| Symptom | Ursache → Fix |
+| Symptom | Cause → Fix |
 | --- | --- |
-| App crasht beim "Gruppenfoto starten" | `NSCameraUsageDescription` fehlt → Info.plist |
-| Local-Network-Prompt erscheint nicht | `NSLocalNetworkUsageDescription` + `NSBonjourServices` fehlen → Info.plist + **App vom Gerät löschen und neu installieren** |
-| Nearby findet nichts | Service-Type-Mismatch zwischen `MultipeerSessionTransport.serviceType` und Bonjour-Eintrag |
-| Web-Viewer zeigt "connecting" und passiert nichts | Backend nicht erreichbar / falsche `webSocketServerURL` → `curl http://<mac>:8787/health` aus iOS-Browser checken |
-| Web-Viewer connected aber kein Frame | Host hat Web-Join Beta nicht aktiviert → Toggle auf Home → neu in Host-Session gehen |
-| QR-Code öffnet `https://allhands.captainleopard.app/...` und 404 | `joinBaseURL` UserDefaults nicht überschrieben |
-| Vision-Hints flackern bei dunklen Räumen | Throttle erhöhen in `InFrameDetector.minInterval` (default 0.5s) |
-| Burst-Picker leer trotz Auslösung | `captureBurst` schlug ab Photo 1 fehl → AVCapturePhotoOutput erlaubt keine Captures während `isAvailable == false`. Schau in Xcode-Console auf Camera-Errors |
-| Multipeer findet Peer langsam | Geräte nicht im selben WLAN (Gast-WLAN, Captive-Portal) |
-| Mehr als 3 Web-Viewer wollen beitreten | MVP-Policy limitiert WebRTC/P2P auf 3 Viewer pro Host; größere Gruppen brauchen später SFU |
+| App crashes on "Start Group Photo" | `NSCameraUsageDescription` missing → Info.plist |
+| Local network prompt doesn't appear | `NSLocalNetworkUsageDescription` + `NSBonjourServices` missing → Info.plist + **delete app from device and reinstall** |
+| Nearby finds nothing | Service type mismatch between `MultipeerSessionTransport.serviceType` and Bonjour entry |
+| Web viewer shows "connecting" with no progress | Backend unreachable / wrong `webSocketServerURL` → check `curl http://<mac>:8787/health` from iOS browser |
+| Web viewer connected but no frame | Host hasn't enabled Web Join Beta → toggle on Home → re-enter host session |
+| QR code opens `https://allhands.captainleopard.app/...` and 404 | `joinBaseURL` UserDefaults not overridden |
+| Vision hints flicker in dark rooms | Increase throttle in `InFrameDetector.minInterval` (default 0.5s) |
+| Burst picker empty despite triggering | `captureBurst` failed after photo 1 → AVCapturePhotoOutput won't allow captures while `isAvailable == false`. Check Xcode console for Camera errors |
+| Multipeer finds peer slowly | Devices not on same Wi-Fi (guest Wi-Fi, captive portal) |
+| More than 3 web viewers trying to join | MVP policy limits WebRTC/P2P to 3 viewers per host; larger groups need SFU later |
 
 ---
 
-## Architektur — Transport-Layer
+## Architecture — Transport Layer
 
 ```
 SessionTransport (protocol)
@@ -239,11 +222,10 @@ SessionTransport (protocol)
 ├── MultipeerSessionTransport       MCSession + Bonjour
 ├── WebSocketSessionTransport       URLSessionWebSocketTask → Node relay
 └── CompositeSessionTransport       fan-out across multiple children
-                                     (Host benutzt es für Multipeer + Web)
+                                     (Host uses it for Multipeer + Web)
 ```
 
-`SessionWireMessage` ist das Codable-Envelope und identisch über alle
-Transports. Der Web-Client benutzt eine TS-Spiegelung (`webapp/src/wire.ts`).
+`SessionWireMessage` is the Codable envelope and identical across all transports. The web client uses a TS mirror (`webapp/src/wire.ts`).
 
 ```
 Frame Pipeline:
@@ -273,43 +255,37 @@ Capture Pipeline:
 
 ## Step 6 — Apple Watch Companion
 
-Die Watch-App ist ein separates Xcode-Target — Apple lässt das nicht via
-File-Drop allein erledigen. Anleitung siehe
-[`AllHandsOnDeckWatch/README.md`](../AllHandsOnDeckWatch/README.md).
+The Watch app is a separate Xcode target — Apple doesn't let you do that via file drop alone. Guide at [`AllHandsOnDeckWatch/README.md`](../AllHandsOnDeckWatch/README.md).
 
-Kurzfassung:
+Quick version:
 1. Xcode → File → New → Target → watchOS → App.
-2. Stub-Dateien löschen, alle Files aus `AllHandsOnDeckWatch/` reindragen.
-3. **Wichtig**: `AllHandsOnDeck/Services/Watch/WatchProtocol.swift` an
-   beide Targets hängen (Target Membership in den File Inspector).
-4. Watch-Scheme bauen.
+2. Delete stub files, drag all files from `AllHandsOnDeckWatch/` in.
+3. **Important**: Add `AllHandsOnDeck/Services/Watch/WatchProtocol.swift` to both targets (Target Membership in the File Inspector).
+4. Build Watch scheme.
 
-Was sie kann:
-- Auto-Connect via WCSession beim App-Start.
-- Live-Snapshot vom iPhone: Captain-Name, Crew-Anzahl, Timer-Dauer.
-- Trigger-Buttons: "Timer 10s", "Jetzt", "Abbrechen während Countdown".
-- Synchroner Countdown-Zähler via `TimelineView` gegen `photoAtEpochMs`.
-- Letzte Reaction-Anzeige ("Bereit", "Kamera höher" etc.).
+What it can do:
+- Auto-connect via WCSession on app start.
+- Live snapshot from iPhone: captain name, crew count, timer duration.
+- Trigger buttons: "Timer 10s", "Now", "Cancel during countdown".
+- Synchronized countdown counter via `TimelineView` against `photoAtEpochMs`.
+- Latest reaction display ("Ready", "Camera higher" etc.).
 
 ## Step 7 — Universal Links
 
-iOS-Setup:
+iOS Setup:
 1. Xcode → Target → Signing & Capabilities → **+ Associated Domains**.
-2. Domain hinzufügen: `applinks:allhands.captainleopard.app`
-   (deine Domain ersetzen).
-3. App-URL-Scheme `allhands://` ist bereits in der Info.plist konfiguriert.
+2. Add domain: `applinks:allhands.captainleopard.app` (replace with your domain).
+3. App URL scheme `allhands://` is already configured in Info.plist.
 
-Server-Setup:
-1. `server/public/.well-known/apple-app-site-association` anpassen:
-   - `TEAMID` durch dein Apple-Team-ID ersetzen
-   - Bundle-ID durch deine ersetzen
-2. Webapp auf Vercel deployen; optionalen Token-/Relay-Server auf Supabase
-   Edge Functions, Cloud Run, Fly.io, Railway oder DigitalOcean betreiben.
-3. HTTPS-Pflicht für Apple — meiste Plattformen liefern das automatisch.
-4. Validierung: `curl https://your-domain/.well-known/apple-app-site-association`
-   muss `application/json` ausliefern.
+Server Setup:
+1. Adjust `server/public/.well-known/apple-app-site-association`:
+   - Replace `TEAMID` with your Apple Team ID
+   - Replace bundle ID with yours
+2. Deploy webapp to Vercel; run optional token/relay server on Supabase Edge Functions, Cloud Run, Fly.io, Railway, or DigitalOcean.
+3. HTTPS required for Apple — most platforms deliver this automatically.
+4. Validation: `curl https://your-domain/.well-known/apple-app-site-association` must return `application/json`.
 
-Code-Pfad:
+Code path:
 ```
 Universal Link → onContinueUserActivity (NSUserActivityTypeBrowsingWeb)
                   → UniversalLinkHandler.handle(url:)
@@ -317,60 +293,47 @@ Universal Link → onContinueUserActivity (NSUserActivityTypeBrowsingWeb)
                       → HomeView pendingSessionID → ViewerSessionView push
 ```
 
-Custom-Scheme `allhands://join?session=ABC` greift identisch über
-`onOpenURL` und ist Fallback für Geräte ohne installierte App-Umleitung.
+Custom scheme `allhands://join?session=ABC` works identically via `onOpenURL` and is a fallback for devices without installed app redirection.
 
 ## Step 8 — Reactions
 
-- Viewer (iOS und Web): tippt Chip aus 7-Reaktion-Strip.
-- Wire: `SessionEvent.reactionSent(by, reaction)` mit `Reaction.rawValue`.
-- Host: Toast oben in der Capture-View für 2.5s, Watch-Snapshot updated.
-- Framing-Hints (Kamera höher, links, rechts, "sehe mich nicht") triggern
-  `Haptics.warning()`, normale Reaktionen nur `Haptics.tick()`.
+- Viewer (iOS and Web): taps chip from 7-reaction strip.
+- Wire: `SessionEvent.reactionSent(by, reaction)` with `Reaction.rawValue`.
+- Host: toast at top of capture view for 2.5s, watch snapshot updated.
+- Framing hints (camera higher, left, right, "can't see myself") trigger `Haptics.warning()`, normal reactions only `Haptics.tick()`.
 
 ## Step 9 — Tests
 
-Setup-Anleitung in [`AllHandsOnDeckTests/README.md`](../AllHandsOnDeckTests/README.md).
-Quick: Xcode → File → New → Target → Unit Testing Bundle → alle Files
-reindragen → ⌘U.
+Setup guide in [`AllHandsOnDeckTests/README.md`](../AllHandsOnDeckTests/README.md). Quick: Xcode → File → New → Target → Unit Testing Bundle → drag all files in → ⌘U.
 
 Coverage:
-- `CountdownCoordinatorTests` — State-Maschine + Target-Date-Math
-- `SessionURLParserTests` — alle drei URL-Formate + Garbage-Input
-- `SessionWireMessageTests` — Codable-Round-Trip inkl. großer Frame-Blob
-- `PhotoSessionTests` — ID-Alphabet, Uniqueness, JoinURL-Override
-- `NearbySessionSummaryTests` — Discovery-Info-Decoding
-- `MockSessionTransportTests` — Broker-Isolation, kein Self-Echo
-- `ImageCompressionTests` — Downscale + Garbage-Passthrough
+- `CountdownCoordinatorTests` — state machine + target date math
+- `SessionURLParserTests` — all three URL formats + garbage input
+- `SessionWireMessageTests` — Codable round-trip including large frame blob
+- `PhotoSessionTests` — ID alphabet, uniqueness, joinURL override
+- `NearbySessionSummaryTests` — discovery info decoding
+- `MockSessionTransportTests` — broker isolation, no self-echo
+- `ImageCompressionTests` — downscale + garbage passthrough
 
-Webapp + Server-seitig:
-- `webapp/` — Vitest. `applyEvent` Reducer (alle Wire-Events), `pirateRank`
-  Persistenz, Wire-Format-Golden-Tests gegen iOS-konforme Envelopes.
-- `server/` — `node:test` via `tsx`. `RoomRegistry` Routing-Regeln (host →
-  alle Viewer, viewer → host only), Closed-Socket-Skip, GC, Join-Param-Validation.
+Webapp + Server side:
+- `webapp/` — Vitest. `applyEvent` reducer (all wire events), `pirateRank` persistence, wire format golden tests against iOS-conformant envelopes.
+- `server/` — `node:test` via `tsx`. `RoomRegistry` routing rules (host → all viewers, viewer → host only), closed socket skip, GC, join param validation.
 
-Was nicht gecovert ist (AVFoundation, Multipeer, WebSocket, Vision) sind
-Integration-Pfade die Hardware oder Live-Server brauchen — manuell via die
-Test-Pläne oben durchziehen.
+What's not covered (AVFoundation, Multipeer, WebSocket, Vision) are integration paths that need hardware or live servers — run through manually via the test plans above.
 
 ### CI / GitHub / Vercel
 
-GitHub-Actions-Workflows in `.github/workflows/`:
-- `ios-ci.yml` — `xcodegen generate` + `xcodebuild test` auf macOS-14.
+GitHub Actions workflows in `.github/workflows/`:
+- `ios-ci.yml` — `xcodegen generate` + `xcodebuild test` on macOS-14.
 - `webapp-ci.yml` — `npm ci` → `tsc -b` → `vitest run` → `vite build`.
-- `server-ci.yml` — `npm ci` → `tsc --noEmit` → `node:test` → `tsc` →
-  `docker buildx` Smoke-Build des produktiven Images.
-- `vercel-webapp.yml` — Preview-Deploys für Pull Requests und Production-
-  Deploys bei Push auf `main`, wenn `ENABLE_VERCEL_DEPLOY=true` gesetzt ist.
+- `server-ci.yml` — `npm ci` → `tsc --noEmit` → `node:test` → `tsc` → `docker buildx` smoke-build of the production image.
+- `vercel-webapp.yml` — Preview deploys for pull requests and production deploys on push to `main`, when `ENABLE_VERCEL_DEPLOY=true` is set.
 
-Jeder Workflow läuft nur, wenn der dazugehörige Pfad sich geändert hat
-(siehe `paths:` Filter), damit ein Web-PR keine 15-Minuten-iOS-Build-Queue
-auslöst. CodeQL läuft zusätzlich auf jeden Push und wöchentlich.
+Each workflow only runs when its associated path has changed (see `paths:` filter), so a web PR doesn't trigger a 15-minute iOS build queue. CodeQL additionally runs on every push and weekly.
 
-Vercel ist der Webapp-Host. Die Root-Konfiguration `vercel.json` baut die
-Vite-App aus `webapp/` und liefert `webapp/dist` mit SPA-Rewrites aus.
+Vercel is the webapp host. The root configuration `vercel.json` builds the Vite app from `webapp/` and serves `webapp/dist` with SPA rewrites.
 
-GitHub-Secrets für Vercel:
+GitHub Secrets for Vercel:
 
 ```text
 VERCEL_TOKEN
@@ -379,7 +342,7 @@ VERCEL_PROJECT_ID
 VITE_SUPABASE_ANON_KEY
 ```
 
-GitHub-Variablen:
+GitHub Variables:
 
 ```text
 ENABLE_VERCEL_DEPLOY=true
@@ -388,11 +351,9 @@ VITE_ENABLE_LIVEKIT_BETA
 VITE_LIVEKIT_TOKEN_ENDPOINT
 ```
 
-Hinweis: `ENABLE_VERCEL_DEPLOY` bleibt auf `false`, bis in Vercel die GitHub
-Login Connection gesetzt und ein `VERCEL_TOKEN` als GitHub Secret hinterlegt
-ist. Manuelle CLI-Deploys funktionieren unabhängig davon.
+Note: `ENABLE_VERCEL_DEPLOY` stays `false` until the GitHub Login Connection is set in Vercel and a `VERCEL_TOKEN` is stored as a GitHub Secret. Manual CLI deploys work independently.
 
-Lokal alles gleichzeitig laufen lassen:
+Run everything locally at once:
 
 ```bash
 ( cd webapp && npm ci && npm run typecheck && npm test && npm run build )
@@ -402,45 +363,38 @@ xcodegen generate && xcodebuild test \
   -destination 'platform=iOS Simulator,name=iPhone 15,OS=latest'
 ```
 
-## Step 10 — App-Store-Readiness
+## Step 10 — App Store Readiness
 
 **Privacy Manifest** (`AllHandsOnDeck/Resources/PrivacyInfo.xcprivacy`):
 - `NSPrivacyTracking` = false
-- Keine Tracking-Domains
-- Kein Daten-Collection
-- Deklariert `NSPrivacyAccessedAPICategoryUserDefaults` mit Reason `CA92.1`
-- Drag-and-drop ins Xcode-Projekt, Target Membership iOS-App.
+- No tracking domains
+- No data collection
+- Declares `NSPrivacyAccessedAPICategoryUserDefaults` with Reason `CA92.1`
+- Drag-and-drop into Xcode project, Target Membership iOS App.
 
-**Session-Expiry-Enforcement**:
-- HostSessionViewModel startet einen Task gegen `session.expiresAt`.
-- Bei Ablauf: `transport.send(.sessionEnded)` an alle Peers, lokaler Alert,
-  Pop nach Home.
-- Default-TTL ist 10 Minuten (`PhotoSession.init(ttlMinutes:)` Default).
-- Privacy-Garantie aus dem Brief: ephemeral, no accounts, no lingering rooms.
+**Session Expiry Enforcement**:
+- HostSessionViewModel starts a task against `session.expiresAt`.
+- On expiry: `transport.send(.sessionEnded)` to all peers, local alert, pop to Home.
+- Default TTL is 10 minutes (`PhotoSession.init(ttlMinutes:)` default).
+- Privacy guarantee: ephemeral, no accounts, no lingering rooms.
 
-**Privacy-Position für Store-Listing** (zur Hand):
-- Daten gesammelt: KEINE.
-- Daten geteilt: KEINE.
-- Tracking: Nein.
-- Account-Erstellung: Nein.
-- Foto-Speicherung: nur lokal in der Mediathek nach explizitem
-  "Speichern"-Tap.
-- Session-Daten: ephemeral im Multipeer-Mesh oder im Relay-Server-RAM.
-  Nach 10 min idle GC, kein Persistenz-Layer.
+**Privacy Position for Store Listing** (for reference):
+- Data collected: NONE.
+- Data shared: NONE.
+- Tracking: No.
+- Account creation: No.
+- Photo storage: only locally in the photo library after explicit "Save" tap.
+- Session data: ephemeral in the Multipeer mesh or in relay server RAM. After 10 min idle GC, no persistence layer.
 
-## Was bewusst ausgelassen ist
+## What's deliberately left out
 
-- **WebRTC**: WebSocket-Relay reicht für 3 fps Preview problemlos. WebRTC würde
-  sich erst bei 30 fps oder Bidirectional-Audio lohnen.
-- **Persistente Foto-Galerie / Event-Modus**: kein Backend-State, keine Accounts.
-  Sessions sind ephemeral, TTL 30 Min, dann GC.
-- **Smile-Detection**: Vision hat keinen direkten Smile-Score auf iOS (CoreImage
-  hat einen schwachen `CIDetectorSmile`, lohnt sich nicht). Erweiterbar via
-  CoreML später.
+- **WebRTC**: WebSocket relay handles 3 fps preview just fine. WebRTC would only be worthwhile at 30 fps or bidirectional audio.
+- **Persistent photo gallery / event mode**: no backend state, no accounts. Sessions are ephemeral, TTL 30 min, then GC.
+- **Smile detection**: Vision has no direct smile score on iOS (CoreImage has a weak `CIDetectorSmile`, not worth it). Extensible via CoreML later.
 
 ---
 
-## Verzeichnisbaum
+## Directory Tree
 
 ```
 AllHandsOnDeck/

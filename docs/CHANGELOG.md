@@ -17,13 +17,13 @@ All notable changes to this project will be documented in this file.
 
 ### Changed
 - AGENTS.md: AI Coding Rules section, new test commands
-- PR template: erweitert mit Screenshots + Preview-States
-- CI workflows: iOS (inkl. UITests), Webapp (inkl. Playwright)
-- project.yml: XCUITest target, Duplikat-Exclusions
+- PR template: expanded with screenshots + preview states
+- CI workflows: iOS (incl. UITests), Webapp (incl. Playwright)
+- project.yml: XCUITest target, duplicate exclusions
 - .gitignore: Secrets.xcconfig added
 
 ### Fixed
-- HostView: Button-Abstand für Notch/Dynamic Island (top: 50)
-- HostView: Bottom-Buttons kompakter, Viewer-Style (HStack spacing: 10)
-- Hardcoded "Abbrechen"/"Jetzt" → DesignLabels.cancel/now
-- Duplikate: CameraPreviewView, QRScannerView, StatusPillView ausgeschlossen
+- HostView: button spacing for notch/Dynamic Island (top: 50)
+- HostView: bottom buttons more compact, viewer-style (HStack spacing: 10)
+- Hardcoded "Cancel"/"Now" → DesignLabels.cancel/now
+- Duplicates: CameraPreviewView, QRScannerView, StatusPillView excluded
