@@ -1,6 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 
-const CAPTAIN_NAMES = [
+const PIRATE_NAMES = [
   'Captain Alex',
   'Captain Morgan',
   'Captain Hook',
