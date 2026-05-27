@@ -4,11 +4,11 @@ import { DesignLabels } from './DesignLabels';
 
 const pirateJokes = [
   "Why is pirating so addictive? Lose one hand and ye get hooked!",
-  "Why did the AI break up with the database? Too many tables!",
+  "What's a pirate's fav letter? Ye think it's R — but it's the C!",
   "How much did peg leg and hook cost? An arm and a leg!",
-  "What did the GPU say to the CPU? You're the brains, I'm just here for the graphics!",
-  "How many AI engineers does it take to change a lightbulb? None — it's a hardware problem!",
-  "Why do LLMs love gardening? They're great at pruning parameters!",
+  "What d'ye call a pirate who skips class? Captain Hooky!",
+  "Why couldn't the pirate play cards? He was standing on the deck!",
+  "What's a pirate's fav country? ARRRgentina!",
   "What did the ocean say to the pirate? Nothing — it just waved!",
 ];
 
