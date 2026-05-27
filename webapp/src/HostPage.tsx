@@ -45,7 +45,7 @@ export function HostPage() {
       try {
         const cam = await startCamera();
         setCamera(cam);
-        await client.startSession('Captain');
+        await client.startSession('Host');
       } catch (e: unknown) {
         if (e instanceof DOMException && e.name === 'NotAllowedError') {
           setCamError('Camera access denied.');
@@ -182,7 +182,7 @@ export function HostPage() {
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                       {(['hostOnly', 'everyoneCanStartTimer', 'viewersCanRequest'] as const).map(p => (
                         <button key={p} className={p === triggerPermission ? 'btn-primary' : 'btn-secondary'} style={{ padding: '10px 14px', fontSize: 12, textAlign: 'left', justifyContent: 'flex-start' }} onClick={() => setTriggerPermission(p)}>
-                          {p === 'hostOnly' ? '👑 Captain Only' : p === 'everyoneCanStartTimer' ? '👥 Crew can trigger' : '🙋 Crew asks — Captain decides'}
+                          {p === 'hostOnly' ? '👑 Host Only' : p === 'everyoneCanStartTimer' ? '👥 Crew can trigger' : '🙋 Crew asks — Host decides'}
                         </button>
                       ))}
                     </div>
@@ -223,7 +223,7 @@ export function HostPage() {
                 <div className="crew-list">
                   <div className="crew-row me">
                     <span className="crew-rank">🏴‍☠️</span>
-                    <span className="crew-name">Captain (You)</span>
+                    <span className="crew-name">Host (You)</span>
                     <span className="crew-conn">🌐</span>
                   </div>
                   {state.participants.map(p => (
