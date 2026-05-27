@@ -94,7 +94,7 @@ export const DesignLabels = {
   nearbyHostStarting: (name: string) => `${name} is starting a crew photo`,
 
   // Home
-  byCaptainLeopard: 'vibecoded with ❤️ by Captain Leopard',
+  byCaptainLeopard: 'vibecoded with ❤️ by LeopardCode.AI',
   appName: 'All Hands On Deck',
   homeSubtitle: "Web viewer for Captain's live crew photo session.\nEnter the code below or scan the Captain's QR code.",
   sessionCodePlaceholder: 'ABCDEF1234',

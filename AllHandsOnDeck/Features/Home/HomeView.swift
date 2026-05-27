@@ -72,7 +72,7 @@ struct HomeView: View {
     private var header: some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack {
-                StatusPill(label: "vibecoded with ❤️ by Captain Leopard", systemImage: "flag.fill", tint: Theme.gold)
+                StatusPill(label: "vibecoded with ❤️ by LeopardCode.AI", systemImage: "flag.fill", tint: Theme.gold)
                 Spacer()
                 Button { showingIdentity = true } label: {
                     Image(systemName: "gearshape.fill")

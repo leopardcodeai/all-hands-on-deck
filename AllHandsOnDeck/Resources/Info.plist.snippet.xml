@@ -11,7 +11,7 @@
 
   Universal-Links-Setup (Step 7):
    - Associated Domains Capability hinzufügen (Target → Signing → +).
-   - Eintrag: applinks:allhands.captainleopard.app
+   - Eintrag: applinks:allhands.leopardcode.ai
      (deine Domain ersetzen — und sicherstellen dass der Server unter
      /.well-known/apple-app-site-association das passende AASA-File
      liefert; ein Beispiel liegt in `server/public/.well-known/`).

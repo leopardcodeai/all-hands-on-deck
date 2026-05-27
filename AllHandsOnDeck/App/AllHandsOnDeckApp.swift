@@ -27,7 +27,7 @@ struct AllHandsOnDeckApp: App {
                     linkHandler.handle(url: url)
                 }
                 .onContinueUserActivity(NSUserActivityTypeBrowsingWeb) { activity in
-                    // Universal Link: https://allhands.captainleopard.app/join/<id>
+                    // Universal Link: https://allhands.leopardcode.ai/join/<id>
                     if let url = activity.webpageURL {
                         linkHandler.handle(url: url)
                     }

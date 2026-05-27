@@ -1,6 +1,6 @@
 # App Store Listing — All Hands on Deck
 
-> Captain Leopard · iOS 17+ · iPhone + Apple Watch
+> LeopardCode.AI · iOS 17+ · iPhone + Apple Watch
 
 ---
 
@@ -76,10 +76,10 @@ First release. Live group-photo preview for iPhone and Apple Watch.
 ---
 
 ## Support URL
-https://allhands.captainleopard.app   ← replace with your real URL
+https://allhands.leopardcode.ai   ← replace with your real URL
 
 ## Marketing URL (optional)
-https://allhands.captainleopard.app
+https://allhands.leopardcode.ai
 
 ---
 

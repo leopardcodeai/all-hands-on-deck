@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// Captain Leopard's pirate-meets-engineering palette.
+/// LeopardCode.AI's pirate-meets-engineering palette.
 /// Deep ocean black, warm leopard amber, pirate gold, signal teal.
 enum Theme {
     // MARK: - Colors

@@ -16,7 +16,7 @@ final class SessionURLParserTests: XCTestCase {
     }
 
     func test_universalLink_extractsLastPathComponent() {
-        let id = SessionURLParser.sessionID(from: "https://allhands.captainleopard.app/join/QWERTY1234")
+        let id = SessionURLParser.sessionID(from: "https://allhands.leopardcode.ai/join/QWERTY1234")
         XCTAssertEqual(id, "QWERTY1234")
     }
 

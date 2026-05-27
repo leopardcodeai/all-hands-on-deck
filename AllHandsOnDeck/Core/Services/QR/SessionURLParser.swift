@@ -48,7 +48,7 @@ enum SessionURLParser {
                 }
             }
 
-            // Web link: https://allhands.captainleopard.app/join/<id>
+            // Web link: https://allhands.leopardcode.ai/join/<id>
             if scheme == "https" || scheme == "http" {
                 let parts = url.pathComponents.filter { $0 != "/" }
                 if let joinIdx = parts.firstIndex(of: "join"),

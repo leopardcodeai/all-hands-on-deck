@@ -5,7 +5,7 @@
 [![Server CI](https://github.com/leopardcodeai/all-hands-on-deck/actions/workflows/server-ci.yml/badge.svg)](https://github.com/leopardcodeai/all-hands-on-deck/actions/workflows/server-ci.yml)
 [![CodeQL](https://github.com/leopardcodeai/all-hands-on-deck/actions/workflows/codeql.yml/badge.svg)](https://github.com/leopardcodeai/all-hands-on-deck/actions/workflows/codeql.yml)
 
-> by Captain Leopard
+> by LeopardCode.AI
 > *"Everyone sees the group photo before it's taken."*
 
 iOS-first MVP for a live-viewfinder group photo. One person sets up their iPhone as the camera; everyone else sees the frame live on their devices — natively or in a browser, no installation required.
@@ -206,7 +206,7 @@ Architecture slot for later: `InFrameDetector` is designed as `ObservableObject`
 | Nearby finds nothing | Service type mismatch between `MultipeerSessionTransport.serviceType` and Bonjour entry |
 | Web viewer shows "connecting" with no progress | Backend unreachable / wrong `webSocketServerURL` → check `curl http://<mac>:8787/health` from iOS browser |
 | Web viewer connected but no frame | Host hasn't enabled Web Join Beta → toggle on Home → re-enter host session |
-| QR code opens `https://allhands.captainleopard.app/...` and 404 | `joinBaseURL` UserDefaults not overridden |
+| QR code opens `https://allhands.leopardcode.ai/...` and 404 | `joinBaseURL` UserDefaults not overridden |
 | Vision hints flicker in dark rooms | Increase throttle in `InFrameDetector.minInterval` (default 0.5s) |
 | Burst picker empty despite triggering | `captureBurst` failed after photo 1 → AVCapturePhotoOutput won't allow captures while `isAvailable == false`. Check Xcode console for Camera errors |
 | Multipeer finds peer slowly | Devices not on same Wi-Fi (guest Wi-Fi, captive portal) |
@@ -274,7 +274,7 @@ What it can do:
 
 iOS Setup:
 1. Xcode → Target → Signing & Capabilities → **+ Associated Domains**.
-2. Add domain: `applinks:allhands.captainleopard.app` (replace with your domain).
+2. Add domain: `applinks:allhands.leopardcode.ai` (replace with your domain).
 3. App URL scheme `allhands://` is already configured in Info.plist.
 
 Server Setup:
