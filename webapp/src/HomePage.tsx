@@ -4,11 +4,11 @@ import { DesignLabels } from './DesignLabels';
 
 const pirateJokes = [
   "Why is pirating so addictive? Lose one hand and ye get hooked!",
-  "What's a pirate's fav letter? Ye think it's R — but it's the C!",
+  "Why did the AI break up with the database? Too many tables!",
   "How much did peg leg and hook cost? An arm and a leg!",
-  "What d'ye call a pirate who skips class? Host Hooky!",
-  "Why couldn't the pirate play cards? He was standing on the deck!",
-  "What's a pirate's fav country? ARRRgentina!",
+  "What did the GPU say to the CPU? You're the brains, I'm just here for the graphics!",
+  "How many AI engineers does it take to change a lightbulb? None — it's a hardware problem!",
+  "Why do LLMs love gardening? They're great at pruning parameters!",
   "What did the ocean say to the pirate? Nothing — it just waved!",
 ];
 
@@ -35,7 +35,7 @@ export function HomePage() {
   return (
     <div className="center-stack">
       <div className="app-header">
-        <span className="pill pill-gold">⚓︎ {DesignLabels.byHostLeopard}</span>
+        <span className="pill pill-gold">⚓︎ {DesignLabels.byCaptainLeopard}</span>
         <button className="icon-button" aria-label="Settings">⚙</button>
       </div>
 
