@@ -4,9 +4,9 @@ import { createSession, type SessionBootstrap } from './services/sessionService'
 import { subscribeToSessionRealtime } from './services/realtimeService';
 import type { WireEvent, WireEnvelope, ParticipantDTO } from './wire';
 
-type Listener = (state: HostState) => void;
+type Listener = (state: CaptainState) => void;
 
-export interface HostState {
+export interface CaptainState {
   sessionCode: string;
   sessionId: string;
   status: 'idle' | 'creating' | 'active' | 'countdown' | 'captured' | 'ended';
@@ -19,11 +19,11 @@ function uuid(): string {
   return globalThis.crypto.randomUUID();
 }
 
-export class HostClient {
+export class CaptainClient {
   private bootstrap?: SessionBootstrap;
   private realtimeSub?: ReturnType<typeof subscribeToSessionRealtime>;
   private listeners = new Set<Listener>();
-  private state: HostState;
+  private state: CaptainState;
 
   readonly participantId = uuid();
 
@@ -36,15 +36,15 @@ export class HostClient {
       countdownAt: null,
       finalPhotoBase64: null,
     };
-    logger.info('HostClient', 'Initialized', { participantId: this.participantId });
+    logger.info('CaptainClient', 'Initialized', { participantId: this.participantId });
   }
 
-  getState(): HostState { return this.state; }
+  getState(): CaptainState { return this.state; }
   subscribe(l: Listener) { this.listeners.add(l); return () => this.listeners.delete(l); }
   private notify() { for (const l of this.listeners) l(this.state); }
 
   async startSession(displayName: string) {
-    logger.info('HostClient', 'Starting session', { displayName });
+    logger.info('CaptainClient', 'Starting session', { displayName });
     this.state = { ...this.state, status: 'creating' };
     this.notify();
 
@@ -54,7 +54,7 @@ export class HostClient {
         anonymousId: this.participantId,
         peerId: this.participantId,
       });
-      logger.info('HostClient', 'Session created', { code: this.bootstrap.session.code, id: this.bootstrap.session.id });
+      logger.info('CaptainClient', 'Session created', { code: this.bootstrap.session.code, id: this.bootstrap.session.id });
 
       this.state = {
         ...this.state,
@@ -70,7 +70,7 @@ export class HostClient {
         onParticipantsChanged: () => void this.refreshParticipants(),
         onPhotosChanged: () => {},
         onError: () => {
-          logger.warn('HostClient', 'Realtime error');
+          logger.warn('CaptainClient', 'Realtime error');
         },
       });
 
@@ -89,7 +89,7 @@ export class HostClient {
         },
       });
     } catch (e) {
-      logger.error('HostClient', 'Session creation failed', { error: String(e) });
+      logger.error('CaptainClient', 'Session creation failed', { error: String(e) });
       throw e;
     }
   }
@@ -100,7 +100,7 @@ export class HostClient {
   }
 
   async sendFinalPhoto(jpeg: string) {
-    logger.info('HostClient', 'Sending final photo', { size: jpeg.length });
+    logger.info('CaptainClient', 'Sending final photo', { size: jpeg.length });
     this.state = { ...this.state, finalPhotoBase64: jpeg, status: 'active' };
     this.notify();
     await this.send({ finalPhotoAvailable: { photoID: uuid(), jpeg } });
@@ -112,7 +112,7 @@ export class HostClient {
   }
 
   stop() {
-    logger.info('HostClient', 'Stopping');
+    logger.info('CaptainClient', 'Stopping');
     this.realtimeSub?.unsubscribe();
     this.listeners.clear();
   }
@@ -138,7 +138,7 @@ export class HostClient {
           client_generated_id: clientGeneratedId,
         });
     } catch (e) {
-      logger.error('HostClient', 'Send failed', { type, error: String(e) });
+      logger.error('CaptainClient', 'Send failed', { type, error: String(e) });
     }
   }
 
@@ -147,7 +147,7 @@ export class HostClient {
     if (!env?.event || env.senderId === this.participantId) return;
 
     if ('captureRequested' in env.event || 'captureNowRequested' in env.event) {
-      logger.info('HostClient', 'Capture requested by viewer', { type: Object.keys(env.event)[0] });
+      logger.info('CaptainClient', 'Capture requested by viewer', { type: Object.keys(env.event)[0] });
       this.listeners.forEach(l => l(this.state));
     }
   }
@@ -160,11 +160,11 @@ export class HostClient {
       .select()
       .eq('session_id', this.bootstrap.session.id);
     if (error) {
-      logger.error('HostClient', 'Failed to refresh participants', { error: String(error) });
+      logger.error('CaptainClient', 'Failed to refresh participants', { error: String(error) });
       return;
     }
     if (data) {
-      logger.info('HostClient', 'Participants refreshed', { count: data.length });
+      logger.info('CaptainClient', 'Participants refreshed', { count: data.length });
       this.state = {
         ...this.state,
         participants: data.map(p => ({

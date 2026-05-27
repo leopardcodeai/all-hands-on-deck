@@ -48,6 +48,9 @@ export const DesignLabels = {
   noCrewYet: "No crew yet — waiting for the captain's manifest…",
   waitingForFraming: "Waiting for Captain's framing…",
   onBoard: 'on board',
+  pirate: 'Pirate',
+  iconPirate: '🏴‍☠️',
+  captainNoViewers: 'No crew yet — share the code above',
 
   // Home
   startCrewPhoto: 'Start Crew Photo',

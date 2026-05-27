@@ -1,5 +1,5 @@
 import { describe, expect, it, vi, beforeEach } from 'vitest';
-import { HostClient, type HostState } from '../HostClient';
+import { CaptainClient, type CaptainState } from '../CaptainClient';
 
 vi.mock('../lib/supabase', () => ({
   getSupabaseClient: () => {
@@ -31,11 +31,11 @@ vi.mock('../services/sessionService', () => ({
   }),
 }));
 
-describe('HostClient', () => {
-  let client: HostClient;
+describe('CaptainClient', () => {
+  let client: CaptainClient;
 
   beforeEach(() => {
-    client = new HostClient();
+    client = new CaptainClient();
   });
 
   it('starts in idle state', () => {
@@ -48,7 +48,7 @@ describe('HostClient', () => {
   });
 
   it('creates a session and transitions to active', async () => {
-    const states: HostState[] = [];
+    const states: CaptainState[] = [];
     client.subscribe(s => states.push(s));
 
     await client.startSession('Captain');
