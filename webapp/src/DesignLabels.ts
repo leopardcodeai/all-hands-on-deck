@@ -50,6 +50,7 @@ export const DesignLabels = {
   onBoard: 'on board',
   pirate: 'Pirate',
   iconPirate: '🏴‍☠️',
+  captain: 'Captain',
   captainNoViewers: 'No crew yet — share the code above',
 
   // Home

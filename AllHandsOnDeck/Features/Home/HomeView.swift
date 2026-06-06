@@ -1,5 +1,10 @@
 import SwiftUI
 
+enum HomeTab {
+    case join
+    case host
+}
+
 struct HomeView: View {
     @EnvironmentObject private var appState: AppState
     @EnvironmentObject private var linkHandler: UniversalLinkHandler
@@ -13,16 +18,18 @@ struct HomeView: View {
     @State private var deepLinkSession: PhotoSession?
     @State private var allowWebJoin: Bool = UserDefaults.standard.bool(forKey: "allowWebJoinDefault")
     @State private var jokeIndex: Int = 0
+    @State private var activeTab: HomeTab = .join
 
     var body: some View {
         NavigationStack {
             ZStack {
                 LeopardWallpaperView()
+                AmbientGlowView() // Ambient pulsing background glows
 
                 VStack(spacing: 0) {
                     header
                     Spacer(minLength: 24)
-                    actions
+                    actionsCard
                     Spacer()
                     footer
                 }
@@ -96,7 +103,93 @@ struct HomeView: View {
         }
     }
 
-    private var actions: some View {
+    private var actionsCard: some View {
+        VStack(spacing: 20) {
+            tabSelector
+
+            switch activeTab {
+            case .join:
+                joinTabContents
+                    .transition(.asymmetric(
+                        insertion: .scale(scale: 0.98, anchor: .center).combined(with: .opacity),
+                        removal: .opacity
+                    ))
+            case .host:
+                hostTabContents
+                    .transition(.asymmetric(
+                        insertion: .scale(scale: 0.98, anchor: .center).combined(with: .opacity),
+                        removal: .opacity
+                    ))
+            }
+        }
+        .padding(20)
+        .liquidGlass() // Glassmorphism container
+    }
+
+    private var tabSelector: some View {
+        HStack(spacing: 0) {
+            Button {
+                withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+                    activeTab = .join
+                }
+            } label: {
+                Text("Join Crew")
+                    .font(.system(size: 13, weight: .bold, design: .rounded))
+                    .foregroundStyle(activeTab == .join ? Color.black : Theme.mist)
+                    .padding(.vertical, 12)
+                    .frame(maxWidth: .infinity)
+                    .background {
+                        if activeTab == .join {
+                            RoundedRectangle(cornerRadius: 10, style: .continuous)
+                                .fill(Theme.goldShine)
+                                .shadow(color: Theme.gold.opacity(0.3), radius: 6, y: 3)
+                        }
+                    }
+            }
+            
+            Button {
+                withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+                    activeTab = .host
+                }
+            } label: {
+                Text("Captain")
+                    .font(.system(size: 13, weight: .bold, design: .rounded))
+                    .foregroundStyle(activeTab == .host ? Color.black : Theme.mist)
+                    .padding(.vertical, 12)
+                    .frame(maxWidth: .infinity)
+                    .background {
+                        if activeTab == .host {
+                            RoundedRectangle(cornerRadius: 10, style: .continuous)
+                                .fill(Theme.goldShine)
+                                .shadow(color: Theme.gold.opacity(0.3), radius: 6, y: 3)
+                        }
+                    }
+            }
+        }
+        .padding(4)
+        .background(Color.white.opacity(0.04))
+        .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+        .overlay(
+            RoundedRectangle(cornerRadius: 14, style: .continuous)
+                .stroke(Color.white.opacity(0.06), lineWidth: 1)
+        )
+    }
+
+    private var joinTabContents: some View {
+        VStack(spacing: 14) {
+            PrimaryButton(title: "Join Session", systemImage: "qrcode.viewfinder", style: .primary) {
+                showingJoin = true
+            }
+            .accessibilityIdentifier("host_join_session")
+
+            PrimaryButton(title: "Nearby Sessions", systemImage: "antenna.radiowaves.left.and.right", style: .secondary) {
+                showingNearby = true
+            }
+            .accessibilityIdentifier("host_nearby_sessions")
+        }
+    }
+
+    private var hostTabContents: some View {
         VStack(spacing: 14) {
             identityChip
 
@@ -110,14 +203,6 @@ struct HomeView: View {
                 showingHost = true
             }
             .accessibilityIdentifier("host_start_crew_photo")
-            PrimaryButton(title: "Join Session", systemImage: "qrcode.viewfinder", style: .secondary) {
-                showingJoin = true
-            }
-            .accessibilityIdentifier("host_join_session")
-            PrimaryButton(title: "Nearby Sessions", systemImage: "antenna.radiowaves.left.and.right", style: .ghost) {
-                showingNearby = true
-            }
-            .accessibilityIdentifier("host_nearby_sessions")
 
             // Web-Join toggle. Persisted; off by default — most sessions
             // happen in person and don't need a backend.
@@ -238,31 +323,45 @@ struct HomeView: View {
             .foregroundStyle(Theme.mist.opacity(0.7))
         }
     }
-
-    private var leopardSpots: some View {
-        Canvas { ctx, size in
-            var rng = SeededRandom(seed: 42)
-            for _ in 0..<60 {
-                let x = CGFloat(rng.next()) * size.width
-                let y = CGFloat(rng.next()) * size.height
-                let r = 4 + CGFloat(rng.next()) * 18
-                let path = Path(ellipseIn: CGRect(x: x, y: y, width: r, height: r * 0.85))
-                ctx.fill(path, with: .color(Theme.amber))
-            }
-        }
-        .blur(radius: 1)
-        .ignoresSafeArea()
-        .allowsHitTesting(false)
-    }
 }
 
-private struct SeededRandom {
-    var state: UInt64
-    init(seed: UInt64) { self.state = seed | 1 }
-    mutating func next() -> Double {
-        state &*= 6364136223846793005
-        state &+= 1442695040888963407
-        return Double(state >> 11) / Double(UInt64(1) << 53)
+// MARK: - Ambient Glow
+
+struct AmbientGlowView: View {
+    @State private var animate = false
+
+    var body: some View {
+        ZStack {
+            // Orb 1
+            Circle()
+                .fill(RadialGradient(
+                    colors: [Theme.gold.opacity(0.12), .clear],
+                    center: .center,
+                    startRadius: 0,
+                    endRadius: 150
+                ))
+                .frame(width: 300, height: 300)
+                .blur(radius: 50)
+                .offset(x: animate ? -40 : -80, y: animate ? -100 : -150)
+            
+            // Orb 2
+            Circle()
+                .fill(RadialGradient(
+                    colors: [Theme.amber.opacity(0.1), .clear],
+                    center: .center,
+                    startRadius: 0,
+                    endRadius: 180
+                ))
+                .frame(width: 350, height: 350)
+                .blur(radius: 60)
+                .offset(x: animate ? 80 : 40, y: animate ? 150 : 200)
+        }
+        .onAppear {
+            withAnimation(.easeInOut(duration: 8).repeatForever(autoreverses: true)) {
+                animate.toggle()
+            }
+        }
+        .allowsHitTesting(false)
     }
 }
 

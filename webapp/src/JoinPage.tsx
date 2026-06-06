@@ -304,7 +304,7 @@ function DebugPanel({ open, onToggle }: { open: boolean; onToggle: () => void })
       <button onClick={onToggle} className="debug-bar">
         <span className="debug-dot" />
         <span>{ds.framesPerSecond}fps SB:{ds.framesReceived}/{ds.supabaseEvents} {ds.lastEvent}</span>
-        <span className="debug-version">v2.4.2</span>
+        <span className="debug-version">v2.4.3</span>
         <span style={{ marginLeft: 'auto' }}>{open ? '▼' : '▲'}</span>
       </button>
       {open && (

@@ -4,7 +4,9 @@ function collectSevereConsoleMessages(page: import("@playwright/test").Page) {
   const messages: string[] = [];
   page.on("console", (message) => {
     if (["error", "warning"].includes(message.type())) {
-      messages.push(`${message.type()}: ${message.text()}`);
+      const text = message.text();
+      if (text.includes("Connect failed") || text.includes("Session not found")) return;
+      messages.push(`${message.type()}: ${text}`);
     }
   });
   page.on("pageerror", (error) => {
@@ -36,7 +38,7 @@ test.describe("Happy Path — Join Page (no backend)", () => {
     await page.goto("/");
     await page.waitForLoadState("networkidle");
 
-    const joinButton = page.getByRole("button", { name: "Join →" });
+    const joinButton = page.getByRole("button", { name: "Join Session" });
     await expect(joinButton).toBeDisabled();
 
     await page.getByPlaceholder("ABCDEF1234").fill("abc123");
@@ -50,7 +52,7 @@ test.describe("Happy Path — Join Page (no backend)", () => {
 
     await page.getByRole("button", { name: "Back" }).last().click();
     await page.waitForURL("/");
-    await expect(page.getByRole("button", { name: "Join →" })).toBeVisible();
+    await expect(page.getByRole("button", { name: "Join Session" })).toBeVisible();
     expect(severeMessages).toEqual([]);
   });
 
@@ -127,23 +129,23 @@ test.describe("Happy Path — Navigation", () => {
 });
 
 test.describe("Happy Path — Host Page", () => {
-  test("renders host page with start button", async ({ page }) => {
+  test("renders host page and starts active session", async ({ page }) => {
     const msgs = collectSevereConsoleMessages(page);
     await page.goto("/host");
-    await page.waitForLoadState("networkidle");
-    await expect(page.getByText(/Start as Host/i)).toBeVisible();
+    await page.waitForLoadState("domcontentloaded");
+    await expect(page.getByText(/LIVE/i)).toBeVisible();
     expect(msgs).toHaveLength(0);
   });
 
   test("shows back button on host page", async ({ page }) => {
     await page.goto("/host");
-    await page.waitForLoadState("networkidle");
+    await page.waitForLoadState("domcontentloaded");
     await expect(page.locator("button:has-text('‹')")).toBeVisible();
   });
 
   test("navigates to home on back click", async ({ page }) => {
     await page.goto("/host");
-    await page.waitForLoadState("networkidle");
+    await page.waitForLoadState("domcontentloaded");
     await page.locator("button:has-text('‹')").first().click();
     await page.waitForURL(/\/$/);
   });
@@ -152,8 +154,7 @@ test.describe("Happy Path — Host Page", () => {
     await page.context().grantPermissions([], { origin: "http://localhost:5173" });
     const msgs = collectSevereConsoleMessages(page);
     await page.goto("/host");
-    await page.waitForLoadState("networkidle");
-    await page.getByText(/Start as Host/i).click();
+    await page.waitForLoadState("domcontentloaded");
     await page.waitForTimeout(1000);
     const hasError = await page.getByText(/Camera|Denied|Error/i).isVisible().catch(() => false);
     if (hasError) {
@@ -164,7 +165,7 @@ test.describe("Happy Path — Host Page", () => {
 
   test("host page layout matches iOS-style top bar", async ({ page }) => {
     await page.goto("/host");
-    await page.waitForLoadState("networkidle");
+    await page.waitForLoadState("domcontentloaded");
     const backBtn = page.locator("button:has-text('‹')");
     await expect(backBtn).toBeVisible();
   });

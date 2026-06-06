@@ -128,6 +128,7 @@ Flash stays for: answering questions, checking status, creating plans, simple ed
 
 | Date | Version | Reason | Agent |
 |-------|---------|-------|-------|
+| 2026-06-06 | 2.4.2 → 2.4.3 | Startscreen redesign with glassmorphism, host/join tabs, background glow animations, E2E stability fixes | Pro |
 | 2026-05-03 | 2.3.4 → 2.3.9 | DesignLabels centralization, viewer crew popup, retake fix, countdown sync, QR pirate flag, adaptive grid | Pro |
 
 ---
