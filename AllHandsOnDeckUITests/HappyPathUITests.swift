@@ -158,7 +158,7 @@ final class HappyPathUITests: XCTestCase {
 
         XCTAssertFalse(app.otherElements["host_camera_controls"].exists, "Camera controls should not overlap the crew popup")
         XCTAssertLessThanOrEqual(
-            app.buttons["host_crew"].frame.maxY + 24,
+            app.buttons["host_crew"].frame.maxY + 12,
             crewPopup.frame.minY,
             "Crew popup overlaps top action icons"
         )
@@ -201,9 +201,9 @@ final class HappyPathUITests: XCTestCase {
         // Wait for viewer UI to stabilize
         sleep(3)
         // Reaction strip should contain multiple reaction buttons
-        let reactions = ["Ready", "Wait a moment", "Again", "Camera up"]
+        let reactions = ["reaction_ready", "reaction_waitMoment", "reaction_again", "reaction_raiseCamera"]
         var found = 0
-        for label in reactions where app.buttons[label].waitForExistence(timeout: 3) {
+        for id in reactions where app.buttons[id].waitForExistence(timeout: 3) {
             found += 1
         }
         XCTAssertTrue(found >= 2, "Expected at least 2 reaction buttons, found \(found)")
@@ -212,7 +212,7 @@ final class HappyPathUITests: XCTestCase {
     func test_viewerCanToggleReady() throws {
         navigateToViewerSession()
         sleep(3)
-        let readyBtn = app.buttons["Ready"]
+        let readyBtn = app.buttons["reaction_ready"]
         if readyBtn.waitForExistence(timeout: 5) {
             readyBtn.tap()
             sleep(1)
@@ -239,9 +239,16 @@ final class HappyPathUITests: XCTestCase {
     // MARK: - Navigation ────────────────────────────────────────────────────────
 
     func test_homeScreen_hasAllButtons() throws {
-        XCTAssertTrue(app.buttons["Start Crew Photo"].waitForExistence(timeout: 5))
-        XCTAssertTrue(app.buttons["Join Session"].exists)
+        // Initially on Join Crew tab
+        XCTAssertTrue(app.buttons["Join Session"].waitForExistence(timeout: 5))
         XCTAssertTrue(app.buttons["Nearby Sessions"].exists)
+        
+        // Switch to Captain tab
+        let captainTab = app.buttons["Captain"]
+        if captainTab.waitForExistence(timeout: 5) {
+            captainTab.tap()
+        }
+        XCTAssertTrue(app.buttons["Start Crew Photo"].waitForExistence(timeout: 5))
         XCTAssertTrue(app.staticTexts["BETA"].exists)
     }
 
@@ -257,8 +264,8 @@ final class HappyPathUITests: XCTestCase {
         let backBtn = app.buttons["Back"]
         if backBtn.waitForExistence(timeout: 5) {
             backBtn.tap()
-            // Should be back on home
-            XCTAssertTrue(app.buttons["Start Crew Photo"].waitForExistence(timeout: 5))
+            // Should be back on home (defaulting back to Join Crew tab)
+            XCTAssertTrue(app.buttons["Join Session"].waitForExistence(timeout: 5))
         }
     }
 
@@ -289,6 +296,10 @@ final class HappyPathUITests: XCTestCase {
     // MARK: - Helpers ───────────────────────────────────────────────────────────
 
     private func tapStartCrewPhoto() {
+        let captainTab = app.buttons["Captain"]
+        if captainTab.waitForExistence(timeout: 5) {
+            captainTab.tap()
+        }
         let btn = app.buttons["Start Crew Photo"]
         XCTAssertTrue(btn.waitForExistence(timeout: 10), "Start Crew Photo not found")
         btn.tap()

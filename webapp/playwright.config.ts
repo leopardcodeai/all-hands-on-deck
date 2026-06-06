@@ -7,6 +7,13 @@ export default defineConfig({
   use: {
     baseURL: "http://localhost:5173",
     viewport: { width: 390, height: 844 },
+    permissions: ["camera"],
+    launchOptions: {
+      args: [
+        "--use-fake-ui-for-media-stream",
+        "--use-fake-device-for-media-stream",
+      ],
+    },
   },
   webServer: {
     command: "npx vite --port 5173",

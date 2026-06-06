@@ -18,6 +18,10 @@ enum SessionManager {
                                   enableMultipeer: Bool = true) -> SessionTransport {
         let sharedID = UUID().uuidString
 
+        if ProcessInfo.processInfo.arguments.contains("-useMockTransport") {
+            return MockSessionTransport(role: .host, localParticipantID: sharedID)
+        }
+
         var children: [SessionTransport] = []
 
         if enableMultipeer {
@@ -44,6 +48,10 @@ enum SessionManager {
 
     static func makeViewerTransport(displayName: String) -> SessionTransport {
         let sharedID = UUID().uuidString
+
+        if ProcessInfo.processInfo.arguments.contains("-useMockTransport") {
+            return MockSessionTransport(role: .viewer, localParticipantID: sharedID)
+        }
 
         let multi = MultipeerSessionTransport(
             role: .viewer, displayName: displayName, localParticipantID: sharedID

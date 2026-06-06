@@ -17,6 +17,7 @@ export function HomePage() {
   const [code, setCode] = useState('');
   const [jokeIndex, setJokeIndex] = useState(0);
   const [webJoin, setWebJoin] = useState(false);
+  const [activeTab, setActiveTab] = useState<'join' | 'host'>('join');
 
   useEffect(() => {
     setJokeIndex(Math.floor(Math.random() * pirateJokes.length));
@@ -33,61 +34,111 @@ export function HomePage() {
   };
 
   return (
-    <div className="center-stack">
-      <div className="app-header">
-        <span className="pill pill-gold">⚓︎ {DesignLabels.byCaptainLeopard}</span>
-        <button className="icon-button" aria-label="Settings">⚙</button>
+    <div className="center-stack" style={{ position: 'relative', overflow: 'hidden' }}>
+      {/* Ambient Pulsing Background Glows */}
+      <div className="bg-glow-container">
+        <div className="bg-glow-1" />
+        <div className="bg-glow-2" />
       </div>
 
-      <h1 className="app-title">All Hands{'\n'}On Deck</h1>
-      <p className="app-subtitle">{DesignLabels.homeSubtitle.split('\n')[0]}</p>
+      <div className="home-card">
+        {/* Logo and Brand Header */}
+        <div className="home-logo-container">
+          <span className="home-logo-icon" aria-hidden>⚓︎</span>
+          <span className="pill pill-gold" style={{ fontSize: 9, padding: '4px 10px' }}>
+            {DesignLabels.byCaptainLeopard}
+          </span>
+        </div>
 
-      <button className="btn-primary btn-full" style={{ marginBottom: 8 }} onClick={() => navigate('/host')}>
-        📷 {DesignLabels.startCrewPhoto}
-      </button>
+        {/* Title */}
+        <h1 className="app-title-gradient">
+          All Hands
+          <span className="app-title-highlight">On Deck</span>
+        </h1>
+        <p className="app-subtitle" style={{ margin: 0 }}>
+          {DesignLabels.homeSubtitle.split('\n')[0]}
+        </p>
 
-      <input
-        className="id-input"
-        placeholder={DesignLabels.sessionCodePlaceholder}
-        value={code}
-        onChange={e => setCode(e.target.value)}
-        autoCapitalize="characters"
-        autoCorrect="off"
-        autoComplete="off"
-        spellCheck={false}
-        style={{ marginBottom: 8 }}
-        onKeyDown={e => { if (e.key === 'Enter') handleJoin(); }}
-      />
-      <button
-        className="btn-primary btn-full"
-        disabled={extractCode(code).length < 6}
-        onClick={handleJoin}
-        style={{ opacity: extractCode(code).length < 6 ? 0.5 : 1, marginBottom: 8 }}
-      >
-        ◈ {DesignLabels.joinSession}
-      </button>
+        {/* Tab Selector Segment */}
+        <div className="tab-selector">
+          <button
+            className={`tab-btn ${activeTab === 'join' ? 'active' : ''}`}
+            onClick={() => setActiveTab('join')}
+          >
+            {DesignLabels.join}
+          </button>
+          <button
+            className={`tab-btn ${activeTab === 'host' ? 'active' : ''}`}
+            onClick={() => setActiveTab('host')}
+          >
+            {DesignLabels.captain}
+          </button>
+        </div>
 
-      <div className="join-toggle">
-        <span style={{ fontSize: 18, opacity: 0.7 }}>🌐</span>
-        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 2 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-            <span style={{ fontSize: 13, fontWeight: 800, color: 'var(--bone)' }}>{DesignLabels.allowWebViewers}</span>
-            <span className="beta-tag">{DesignLabels.betaBadge}</span>
+        {/* Tab 1: Join Crew */}
+        {activeTab === 'join' && (
+          <div className="tab-content">
+            <input
+              className="id-input id-input-glow"
+              placeholder={DesignLabels.sessionCodePlaceholder}
+              value={code}
+              onChange={e => setCode(e.target.value.toUpperCase())}
+              autoCapitalize="characters"
+              autoCorrect="off"
+              autoComplete="off"
+              spellCheck={false}
+              onKeyDown={e => { if (e.key === 'Enter') handleJoin(); }}
+            />
+            <button
+              className="btn-primary btn-full btn-glow"
+              disabled={extractCode(code).length < 6}
+              onClick={handleJoin}
+              style={{ opacity: extractCode(code).length < 6 ? 0.5 : 1 }}
+            >
+              ◈ {DesignLabels.joinSession}
+            </button>
           </div>
-          <span style={{ fontSize: 11, color: 'var(--mist)' }}>{webJoin ? 'On — web join enabled' : 'Off — nearby only'}</span>
-        </div>
-        <div className="join-toggle-switch" onClick={() => setWebJoin(o => !o)}
-          style={{ background: webJoin ? 'linear-gradient(135deg, var(--gold), var(--amber))' : 'rgba(255,255,255,0.15)' }}>
-          <div className="join-toggle-knob" style={{ left: webJoin ? 22 : 2 }} />
-        </div>
+        )}
+
+        {/* Tab 2: Be the Captain */}
+        {activeTab === 'host' && (
+          <div className="tab-content">
+            <button className="btn-primary btn-full btn-glow" onClick={() => navigate('/host')}>
+              📷 {DesignLabels.startCrewPhoto}
+            </button>
+
+            <div className="join-toggle">
+              <span style={{ fontSize: 18, opacity: 0.7 }}>🌐</span>
+              <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 2, textAlign: 'left' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <span style={{ fontSize: 13, fontWeight: 800, color: 'var(--bone)' }}>{DesignLabels.allowWebViewers}</span>
+                  <span className="beta-tag">{DesignLabels.betaBadge}</span>
+                </div>
+                <span style={{ fontSize: 11, color: 'var(--mist)' }}>{webJoin ? 'On — web join enabled' : 'Off — nearby only'}</span>
+              </div>
+              <div className="join-toggle-switch" onClick={() => setWebJoin(o => !o)}
+                style={{ background: webJoin ? 'linear-gradient(135deg, var(--gold), var(--amber))' : 'rgba(255,255,255,0.15)' }}>
+                <div className="join-toggle-knob" style={{ left: webJoin ? 22 : 2 }} />
+              </div>
+            </div>
+          </div>
+        )}
+
+        <p className="muted-note" style={{ fontSize: 11, margin: 0 }}>{DesignLabels.noInstall}</p>
       </div>
 
-      <p className="muted-note" style={{ marginTop: 12, fontSize: 11 }}>{DesignLabels.noInstall}</p>
-      <p style={{ marginTop: 24, fontSize: 13, fontStyle: 'italic', color: 'var(--mist)', maxWidth: 300, textAlign: 'center', opacity: 0.75 }}>"{pirateJokes[jokeIndex]}"</p>
-      <p className="muted-note" style={{ marginTop: 12, fontSize: 11 }}>
+      {/* Floating speech bubble for Pirate Joke */}
+      <div className="joke-bubble">
+        <span className="joke-emoji">🏴‍☠️</span>
+        "{pirateJokes[jokeIndex]}"
+      </div>
+
+      <p className="muted-note" style={{ marginTop: 24, fontSize: 11, zIndex: 10 }}>
         <a href="/privacy" style={{ color: 'inherit', opacity: 0.7 }}>{DesignLabels.privacy}</a>
         {' · '}
         <a href="/imprint" style={{ color: 'inherit', opacity: 0.7 }}>{DesignLabels.imprint}</a>
+        {' · '}
+        <span style={{ opacity: 0.5 }}>v2.4.3</span>
       </p>
     </div>
   );
