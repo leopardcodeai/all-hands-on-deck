@@ -21,3 +21,19 @@ dist/
 .DS_Store
 Secrets.xcconfig
 .vercel
+
+# AI Agents & Environment Configurations
+.agents/
+.gemini/
+.aionrs/
+.env.development.local
+.env.test.local
+.env.production.local
+.vscode/
+.idea/
+.venv/
+venv/
+.python-version
+.eslintcache
+.mypy_cache/
+.pytest_cache/
