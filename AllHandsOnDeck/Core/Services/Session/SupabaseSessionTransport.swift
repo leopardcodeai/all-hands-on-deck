@@ -52,6 +52,7 @@ final class SupabaseSessionTransport: SessionTransport {
     private var lastEventCreatedAt: String?
     private var seenEventIDs = Set<String>()
     private var pollingTask: Task<Void, Never>?
+    private var frameChannel: SupabaseRealtimeFrameChannel?
 
     private let eventsSubject = PassthroughSubject<SessionEvent, Never>()
     var events: AnyPublisher<SessionEvent, Never> { eventsSubject.eraseToAnyPublisher() }
@@ -94,11 +95,19 @@ final class SupabaseSessionTransport: SessionTransport {
 
         statusSubject.send(.connected)
         startPolling()
+
+        // Viewers receive preview frames over Realtime Broadcast (the host
+        // only sends, so it needs no receive channel).
+        if role == .viewer {
+            startFrameChannel()
+        }
     }
 
     func stop() {
         pollingTask?.cancel()
         pollingTask = nil
+        frameChannel?.stop()
+        frameChannel = nil
         statusSubject.send(.idle)
     }
 
@@ -106,6 +115,14 @@ final class SupabaseSessionTransport: SessionTransport {
         guard let session = photoSession,
               let supabaseSessionID,
               Self.isConfigured else { return }
+
+        // Preview frames are too chatty for the table (~3fps INSERT churn);
+        // they go through Realtime Broadcast instead. Fire-and-forget, same
+        // error posture as the table writes below.
+        if case .previewFrame(let jpeg, let capturedAt) = event {
+            await broadcastPreviewFrame(jpeg: jpeg, capturedAt: capturedAt, sessionID: supabaseSessionID)
+            return
+        }
 
         let envelope = SessionWireMessage(
             sessionId: session.id,
@@ -129,6 +146,27 @@ final class SupabaseSessionTransport: SessionTransport {
                 preferRepresentation: true,
                 response: [SupabaseInsertedID].self
             )
+        } catch { }
+    }
+
+    /// Sends one preview frame via `POST /realtime/v1/api/broadcast`.
+    /// Errors are swallowed silently — a dropped frame is replaced ~330ms
+    /// later by the next one.
+    private func broadcastPreviewFrame(jpeg: Data, capturedAt: Date, sessionID: String) async {
+        guard let url = URL(string: "\(Self.supabaseURLString)/realtime/v1/api/broadcast") else { return }
+        do {
+            var request = URLRequest(url: url)
+            request.httpMethod = "POST"
+            request.setValue(Self.anonKey, forHTTPHeaderField: "apikey")
+            request.setValue("Bearer \(Self.anonKey)", forHTTPHeaderField: "Authorization")
+            request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+            request.httpBody = try SupabaseFrameBroadcast.requestBody(
+                sessionID: sessionID,
+                jpeg: jpeg,
+                capturedAt: capturedAt,
+                senderId: localParticipantID
+            )
+            _ = try await URLSession.shared.data(for: request)
         } catch { }
     }
 
@@ -201,6 +239,22 @@ final class SupabaseSessionTransport: SessionTransport {
         supabaseParticipantID = row.id
     }
 
+    // MARK: - Realtime frame channel (viewer)
+
+    private func startFrameChannel() {
+        guard let supabaseSessionID else { return }
+        let channel = SupabaseRealtimeFrameChannel(
+            supabaseURLString: Self.supabaseURLString,
+            anonKey: Self.anonKey,
+            sessionID: supabaseSessionID,
+            localSenderID: localParticipantID
+        ) { [weak self] jpeg, capturedAt, _ in
+            self?.eventsSubject.send(.previewFrame(jpeg: jpeg, capturedAt: capturedAt))
+        }
+        frameChannel = channel
+        channel.start()
+    }
+
     // MARK: - Polling fallback
 
     private func startPolling() {
@@ -218,10 +272,23 @@ final class SupabaseSessionTransport: SessionTransport {
         var queryItems = [
             URLQueryItem(name: "select", value: "*"),
             URLQueryItem(name: "session_id", value: "eq.\(supabaseSessionID)"),
-            URLQueryItem(name: "order", value: "created_at.asc")
+            // Frames travel via Realtime Broadcast, never through the table —
+            // skip any stragglers from older clients.
+            URLQueryItem(name: "type", value: "neq.previewFrame"),
+            URLQueryItem(name: "order", value: "created_at.asc"),
+            URLQueryItem(name: "limit", value: "200")
         ]
         if let lastEventCreatedAt {
             queryItems.append(URLQueryItem(name: "created_at", value: "gt.\(lastEventCreatedAt)"))
+        }
+        // Filter our own events server-side. The `is.null` arm keeps rows
+        // without a sender (a bare `neq` would silently drop NULLs too);
+        // the client-side senderId check below stays as a second line of defense.
+        if let supabaseParticipantID {
+            queryItems.append(URLQueryItem(
+                name: "or",
+                value: "(sender_participant_id.is.null,sender_participant_id.neq.\(supabaseParticipantID))"
+            ))
         }
 
         do {
