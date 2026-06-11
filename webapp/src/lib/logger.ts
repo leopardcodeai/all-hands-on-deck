@@ -1,5 +1,3 @@
-import { getSupabaseClient } from './supabase';
-
 type LogLevel = 'info' | 'warn' | 'error';
 
 interface LogEntry {
@@ -39,6 +37,9 @@ function log(level: LogLevel, component: string, message: string, data?: Record<
 
 async function persistToSupabase(entry: LogEntry) {
   try {
+    // Dynamic import keeps @supabase/supabase-js out of the entry chunk —
+    // the landing page imports the logger but must not ship the SDK.
+    const { getSupabaseClient } = await import('./supabase');
     await getSupabaseClient().from('logs').insert({
       level: entry.l,
       component: entry.c,

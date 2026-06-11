@@ -1,3 +1,4 @@
+import type { RealtimeChannel } from '@supabase/supabase-js';
 import { logger } from './lib/logger';
 import type { WireEnvelope, WireEvent, PhotoSessionDTO } from './wire';
 import { applyEvent, initialState, type SessionState, type SessionStatus } from './sessionState';
@@ -40,6 +41,7 @@ export class SessionClient {
 
   private bootstrap?: SessionBootstrap;
   private realtimeSub?: RealtimeSubscription;
+  private frameChannel?: RealtimeChannel;
   private peer?: SessionPeer;
 
   readonly displayName: string;
@@ -92,6 +94,7 @@ export class SessionClient {
         },
       });
 
+      this.subscribeToFrameBroadcast(this.bootstrap.session.id);
       this.startPeerSync(this.bootstrap);
       await this.announceJoin();
       this.state = { ...this.state, status: 'connected' };
@@ -108,6 +111,10 @@ export class SessionClient {
     if (this.realtimeSub) {
       void this.realtimeSub.unsubscribe();
       this.realtimeSub = undefined;
+    }
+    if (this.frameChannel) {
+      void getSupabaseClient().removeChannel(this.frameChannel);
+      this.frameChannel = undefined;
     }
     this.peer?.cleanup();
     this.peer = undefined;
@@ -197,6 +204,25 @@ export class SessionClient {
       return;
     }
     this.handleEvent(env.event);
+  }
+
+  /**
+   * Live preview frames arrive via Supabase Realtime Broadcast (no DB writes).
+   * The legacy previewFrame handling in handleEventRow stays as a fallback for
+   * older hosts that still insert frames into session_events.
+   */
+  private subscribeToFrameBroadcast(sessionUuid: string) {
+    logger.info('SessionClient', 'Subscribing to frame broadcast', { sessionUuid });
+    this.frameChannel = getSupabaseClient()
+      .channel(`session-frames:${sessionUuid}`, { config: { broadcast: { self: false } } })
+      .on('broadcast', { event: 'preview_frame' }, ({ payload }) => this.handleBroadcastFrame(payload))
+      .subscribe();
+  }
+
+  private handleBroadcastFrame(payload: unknown) {
+    const frame = payload as { jpeg?: string; senderId?: string } | null;
+    if (!frame?.jpeg || frame.senderId === this.participantId) return;
+    this.applyFrame(frame.jpeg);
   }
 
   private applyBootstrap(bootstrap: SessionBootstrap) {

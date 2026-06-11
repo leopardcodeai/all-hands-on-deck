@@ -1,5 +1,5 @@
 import { logger } from './lib/logger';
-import { getSupabaseClient } from './lib/supabase';
+import { getSupabaseClient, supabaseConfig } from './lib/supabase';
 import { createSession, type SessionBootstrap } from './services/sessionService';
 import { subscribeToSessionRealtime } from './services/realtimeService';
 import type { WireEvent, WireEnvelope, ParticipantDTO } from './wire';
@@ -94,9 +94,40 @@ export class CaptainClient {
     }
   }
 
+  /**
+   * Preview frames go out via Supabase Realtime Broadcast (stateless REST,
+   * fire-and-forget) instead of session_events inserts — no DB rows for ~3fps
+   * frame traffic. All other event types still go through the table.
+   */
   async sendPreviewFrame(jpeg: string) {
-    if (!jpeg) return;
-    await this.send({ previewFrame: { jpeg, capturedAt: new Date().toISOString() } });
+    if (!jpeg || !this.bootstrap) return;
+    const body = JSON.stringify({
+      messages: [{
+        topic: `session-frames:${this.bootstrap.session.id}`,
+        event: 'preview_frame',
+        payload: {
+          jpeg: jpeg.replace(/^data:image\/\w+;base64,/, ''),
+          capturedAt: new Date().toISOString(),
+          senderId: this.participantId,
+        },
+      }],
+    });
+    try {
+      const response = await fetch(`${supabaseConfig.url}/realtime/v1/api/broadcast`, {
+        method: 'POST',
+        headers: {
+          apikey: supabaseConfig.anonKey,
+          Authorization: `Bearer ${supabaseConfig.anonKey}`,
+          'Content-Type': 'application/json',
+        },
+        body,
+      });
+      if (!response.ok) {
+        logger.error('CaptainClient', 'Preview frame broadcast rejected', { status: response.status });
+      }
+    } catch (e) {
+      logger.error('CaptainClient', 'Preview frame broadcast failed', { error: String(e) });
+    }
   }
 
   async sendFinalPhoto(jpeg: string) {
