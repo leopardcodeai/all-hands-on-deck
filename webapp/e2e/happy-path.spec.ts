@@ -1,4 +1,19 @@
 import { test, expect } from "@playwright/test";
+import { readFileSync } from "fs";
+import { resolve } from "path";
+
+// The host page can only reach an active session ("LIVE") when Supabase
+// credentials are configured (.env.local). In CI there are none, so the
+// session-dependent assertions are gated and the graceful no-backend
+// fallback is asserted instead.
+const HAS_BACKEND = (() => {
+  try {
+    const env = readFileSync(resolve(process.cwd(), ".env.local"), "utf8");
+    return /^VITE_SUPABASE_URL=.+/m.test(env) && /^VITE_SUPABASE_ANON_KEY=.+/m.test(env);
+  } catch {
+    return false;
+  }
+})();
 
 function collectSevereConsoleMessages(page: import("@playwright/test").Page) {
   const messages: string[] = [];
@@ -130,6 +145,7 @@ test.describe("Happy Path — Navigation", () => {
 
 test.describe("Happy Path — Host Page", () => {
   test("renders host page and starts active session", async ({ page }) => {
+    test.skip(!HAS_BACKEND, "needs Supabase credentials (.env.local)");
     const msgs = collectSevereConsoleMessages(page);
     await page.goto("/host");
     await page.waitForLoadState("domcontentloaded");
@@ -137,16 +153,27 @@ test.describe("Happy Path — Host Page", () => {
     expect(msgs).toHaveLength(0);
   });
 
+  test("shows graceful fallback without Supabase credentials", async ({ page }) => {
+    test.skip(HAS_BACKEND, "covered by the active-session test when configured");
+    await page.goto("/host");
+    await page.waitForLoadState("domcontentloaded");
+    // Session creation fails → error state with retry, never a blank page.
+    await expect(page.getByText(/Supabase is not configured/i)).toBeVisible({ timeout: 10000 });
+    await expect(page.getByRole("button", { name: "Try Again" })).toBeVisible();
+  });
+
   test("shows back button on host page", async ({ page }) => {
     await page.goto("/host");
     await page.waitForLoadState("domcontentloaded");
-    await expect(page.locator("button:has-text('‹')")).toBeVisible();
+    // Active session renders the ‹ icon button (aria-label "Back"); the
+    // no-backend fallback renders a labeled Back button — same role+name.
+    await expect(page.getByRole("button", { name: "Back" }).first()).toBeVisible({ timeout: 10000 });
   });
 
   test("navigates to home on back click", async ({ page }) => {
     await page.goto("/host");
     await page.waitForLoadState("domcontentloaded");
-    await page.locator("button:has-text('‹')").first().click();
+    await page.getByRole("button", { name: "Back" }).first().click();
     await page.waitForURL(/\/$/);
   });
 
@@ -156,14 +183,17 @@ test.describe("Happy Path — Host Page", () => {
     await page.goto("/host");
     await page.waitForLoadState("domcontentloaded");
     await page.waitForTimeout(1000);
-    const hasError = await page.getByText(/Camera|Denied|Error/i).isVisible().catch(() => false);
+    const hasError = await page.getByText(/Camera|Denied|Error|not configured/i).isVisible().catch(() => false);
     if (hasError) {
-      await expect(page.getByText(/Camera|Denied/i)).toBeVisible();
+      await expect(page.getByText(/Camera|Denied|not configured/i).first()).toBeVisible();
     }
-    expect(msgs.length).toBeLessThan(3);
+    if (HAS_BACKEND) {
+      expect(msgs.length).toBeLessThan(3);
+    }
   });
 
   test("host page layout matches iOS-style top bar", async ({ page }) => {
+    test.skip(!HAS_BACKEND, "top bar only renders with an active session");
     await page.goto("/host");
     await page.waitForLoadState("domcontentloaded");
     const backBtn = page.locator("button:has-text('‹')");
