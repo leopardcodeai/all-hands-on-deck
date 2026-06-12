@@ -18,8 +18,12 @@ export class SupabaseSessionSignaling implements SessionPeerSignaling {
   }
 
   subscribeSignals(peerId: string, handler: (signal: SignalMessage) => void): () => void {
+    // Random suffix: supabase-js reuses channel instances per topic, and
+    // re-adding postgres_changes listeners to a subscribed channel throws
+    // (StrictMode remounts race the async removeChannel). The filter does
+    // not depend on the topic name.
     const channel = this.client
-      .channel(`signals:${this.sessionId}:${peerId}`)
+      .channel(`signals:${this.sessionId}:${peerId}:${Math.random().toString(36).slice(2, 8)}`)
       .on(
         'postgres_changes',
         { event: 'INSERT', schema: 'public', table: 'session_events', filter: `session_id=eq.${this.sessionId}` },

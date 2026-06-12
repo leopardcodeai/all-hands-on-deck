@@ -47,8 +47,14 @@ export interface SubscribeSessionRealtimeInput {
 export function subscribeToSessionRealtime(input: SubscribeSessionRealtimeInput): RealtimeSubscription {
   const client = input.client ?? getSupabaseClient();
   const deduper = new EventDeduper();
+  // Unique suffix: supabase-js returns the *existing* channel instance for a
+  // repeated topic, and adding postgres_changes listeners to an already
+  // subscribed channel throws. React StrictMode remounts hit exactly that
+  // (disconnect's removeChannel is still in flight when the next connect
+  // runs). postgres_changes filtering is independent of the topic name, so a
+  // per-subscription suffix sidesteps the reuse without changing semantics.
   const channel: RealtimeChannel = client
-    .channel(`session:${input.sessionId}`)
+    .channel(`session:${input.sessionId}:${Math.random().toString(36).slice(2, 8)}`)
     .on(
       'postgres_changes',
       { event: 'INSERT', schema: 'public', table: 'session_events', filter: `session_id=eq.${input.sessionId}` },
