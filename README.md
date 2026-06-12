@@ -4,53 +4,33 @@
 [![Webapp CI](https://github.com/leopardcodeai/all-hands-on-deck/actions/workflows/webapp-ci.yml/badge.svg)](https://github.com/leopardcodeai/all-hands-on-deck/actions/workflows/webapp-ci.yml)
 [![Server CI](https://github.com/leopardcodeai/all-hands-on-deck/actions/workflows/server-ci.yml/badge.svg)](https://github.com/leopardcodeai/all-hands-on-deck/actions/workflows/server-ci.yml)
 
-```
-                                    ╭───────────────────────────╮
-                                    │     ☠️  ALL HANDS ON DECK  │
-                                    │   ▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔   │
-              ▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄│▔▔▔▔▔▔▔▔▔▔▔▔│▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄
-            ╔╝                                     ☠️                    ╚╗
-           ╔╝    ,｡oO7                                 🏴                ╚╗
-          ╔╝    /‾‾‾‾‾‾‾\    ┌─────────────────┐     ⚓                 ╚╗
-          ║    |  (⌐■_■)  |   │  LeopardCode.AI │                      ║
-          ║    |   /|»|\   |   │  AI Agent 🤖   │    ▄▄▄▄▄▄▄▄▄▄       ║
-         ╔╝     \   ]|[   /    │  AI First Mate   │   ╱          ╲     ╔╝
-         ║       \_/| |\_/     └─────────────────┘   █  SHIP THE  █     ║
-         ║        ═══╧═══            ⚙️ ⚡           █   PHOTO!   █     ║
-        ╔╝    ~~~╱╲~~~~╱╲~~~~~~~~~~~~╱╲~~~~~~~~~    ╲          ╱     ╔╝
-        ║  ~~~╱    ╲╱    ╲~~~~~~~~╱    ╲~~~~~~╲~~    ▀▀▀▀▀▀▀▀▀▀      ║
-        ║ ╱                        🐆🦜           ╲~~╲              ║
-       ╔╝╱   vibecoded with ❤️ by LeopardCode.AI             ╲  ╲            ╔╝
-       ╚══════════════════════════════════════════════════════════════╝
-                         ~  ~  free & open source  ~  ~
-```
+**Everyone sees the group photo before it's taken.**
 
-> vibecoded with ❤️ by LeopardCode.AI
-> *"Everyone sees the group photo before it's taken."*
+All Hands on Deck is an iOS-first group photo app with a live shared viewfinder. One person sets up their iPhone as the camera; everyone else sees the frame in real time on their own devices — natively on iOS/watchOS or in any browser, with no installation required.
 
-iOS-first MVP for a live-viewfinder group photo. One person sets up their iPhone as the camera; everyone else sees the frame live on their devices — natively or in a browser, no installation required.
+Built and maintained by [LeopardCode.AI](https://leopardcode.ai).
 
 ---
 
 ## The Experiment
 
-This app was built entirely by **vibecoding with Claude Code** — describing what we wanted, watching the AI write it, and steering iteration by iteration. No human wrote a single line of Swift, TypeScript, or SQL by hand.
+This app was built end-to-end through **agentic coding with Claude Code** — describing intent, reviewing AI-generated implementations, and steering iteration by iteration. No Swift, TypeScript, or SQL was written by hand.
 
-The bet was: can a solo developer with an idea, a capable AI coding agent, and zero budget ship a real, multi-platform app — iOS, watchOS, web — without writing code, without paying for servers, and without a team?
+The hypothesis: can a solo developer with an idea, a capable AI coding agent, and zero infrastructure budget ship a real, multi-platform product — iOS, watchOS, and web — without a team?
 
 **Stack — 100% free and open source:**
 
-| Layer | Tech | Cost |
-|-------|------|------|
+| Layer | Technology | Cost |
+|-------|------------|------|
 | iOS + Watch App | SwiftUI, Multipeer Connectivity, Vision | $0 |
 | Web Viewer | Vite, React, TypeScript | $0 |
 | Project Config | XcodeGen | $0 |
 | Realtime Backend | Supabase (free tier) | $0 |
 | Web Hosting | Vercel (free tier) | $0 |
-| CI / CD | GitHub Actions | $0 |
-| AI Copilot | Claude Code | Free during beta |
+| CI/CD | GitHub Actions | $0 |
+| AI Coding Agent | Claude Code | — |
 
-The result: a fully functional group-photo app with live viewfinder streaming, AI-powered best-shot burst capture, face-in-frame detection, Apple Watch remote control, universal links, reactions, web viewers with no install, and a proper test suite — all without a backend bill or a single manual `git commit`.
+The result: a fully functional group-photo app with live viewfinder streaming, AI-powered best-shot burst capture, face-in-frame detection, Apple Watch remote control, universal links, reactions, install-free web viewers, and a complete test suite — without a backend bill.
 
 ---
 
@@ -59,6 +39,15 @@ The result: a fully functional group-photo app with live viewfinder streaming, A
 | iOS — Home | iOS — Viewer (live frame) | Web — Captain | Web — Viewer (live frame) |
 |---|---|---|---|
 | ![iOS Home](docs/screenshots/ios_01_home_join_crew.jpg) | ![iOS Viewer](docs/screenshots/ios_08_viewer_session_live.jpg) | ![Web Captain](docs/screenshots/web_host_captain.jpg) | ![Web Viewer](docs/screenshots/web_join_live_frame.jpg) |
+
+## Key Features
+
+- **Live shared viewfinder** — every participant sees the camera frame in real time
+- **AI best-shot capture** — burst capture with Vision-based selection of the best frame
+- **Face-in-frame detection** — confirms everyone is visible before the shot
+- **Apple Watch remote** — trigger and monitor the session from the wrist
+- **Install-free web viewers** — join via universal link in any browser
+- **Reactions** — real-time feedback from viewers to the photographer
 
 ## Quick Start
 
@@ -79,15 +68,21 @@ cd server && npm ci && npm run dev
 
 | Directory | Purpose |
 |-----------|---------|
-| `AllHandsOnDeck/` | iOS App (SwiftUI) |
+| `AllHandsOnDeck/` | iOS app (SwiftUI) |
 | `AllHandsOnDeckTests/` | XCTest unit tests |
 | `AllHandsOnDeckUITests/` | XCUITest UI tests |
-| `AllHandsOnDeckWatch/` | Apple Watch companion |
+| `AllHandsOnDeckWatch/` | Apple Watch companion app |
 | `webapp/` | Vite + React web viewer |
-| `server/` | Node/TS signaling & token server |
-| `supabase/` | Database migrations & config |
+| `server/` | Node/TypeScript signaling & token server |
+| `supabase/` | Database migrations & configuration |
 | `scripts/` | E2E test & utility scripts |
 | `docs/` | Full documentation |
+
+## Architecture
+
+**Tech stack:** SwiftUI, Multipeer Connectivity, Vision, Supabase (Postgres + Realtime Broadcast), Vite/React, WebSocket relay.
+
+**Streaming (since 2026-06):** Live preview frames travel over **Supabase Realtime Broadcast** (ephemeral pub/sub, no database writes). The events table carries only low-volume control messages, kept clean by a pg_cron job. The webapp is code-split — the landing page loads ~78 kB gzipped instead of 148 kB.
 
 ## Documentation
 
@@ -100,8 +95,10 @@ cd server && npm ci && npm run dev
 
 ## Status
 
-Feature-complete, App Store ready. Web viewers are a beta feature.
+Feature-complete and App Store ready. Web viewers are currently a beta feature.
 
-**Tech stack:** SwiftUI, Multipeer Connectivity, Vision, Supabase (Postgres + Realtime Broadcast), Vite/React, WebSocket relay.
+---
 
-**Streaming architecture (since 2026-06):** Live preview frames travel over **Supabase Realtime Broadcast** (ephemeral pub/sub, no database writes) instead of `session_events` inserts — the events table now carries only low-volume control messages, and a pg_cron job keeps it clean. The webapp is code-split, so the landing page loads ~78 kB gzipped instead of 148 kB.
+<p align="center">
+  <sub>Built with agentic coding by <a href="https://leopardcode.ai">LeopardCode.AI</a> — free & open source</sub>
+</p>
