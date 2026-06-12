@@ -72,6 +72,8 @@ fix/AHOD-{id}-short-description
 
 ## Commands
 
+> **Xcode beta machines:** if only `/Applications/Xcode-beta.app` is installed and `xcode-select -p` points at CommandLineTools, prefix all `xcodebuild`/`xcrun` calls with `DEVELOPER_DIR=/Applications/Xcode-beta.app/Contents/Developer`. Xcode 27's simulator GUI is "Device Hub"; `idb ui tap` does not work there (SimulatorKit removed).
+
 ```bash
 # iOS
 xcodebuild -project AllHandsOnDeck.xcodeproj -scheme AllHandsOnDeck -destination 'platform=iOS Simulator,name=iPhone 17 Pro Max' build
@@ -128,6 +130,7 @@ Flash stays for: answering questions, checking status, creating plans, simple ed
 
 | Date | Version | Reason | Agent |
 |-------|---------|-------|-------|
+| 2026-06-12 | — | **Streaming architecture change:** preview frames moved from `session_events` INSERTs to Supabase Realtime Broadcast (iOS: REST send + Phoenix-WS receive, webapp: supabase-js channel); webapp code-split (entry 148→78 kB gzip); DB hygiene migration + pg_cron retention | Pro |
 | 2026-06-06 | 2.4.2 → 2.4.3 | Startscreen redesign with glassmorphism, host/join tabs, background glow animations, E2E stability fixes | Pro |
 | 2026-05-03 | 2.3.4 → 2.3.9 | DesignLabels centralization, viewer crew popup, retake fix, countdown sync, QR pirate flag, adaptive grid | Pro |
 
@@ -138,6 +141,7 @@ Flash stays for: answering questions, checking status, creating plans, simple ed
 
 | Date | Issue | Description | Status |
 |-------|-------|-------------|--------|
+| 2026-06-12 | — | Perf pass: Realtime-Broadcast frames (both platforms), polling filters (`type=neq.previewFrame`, `limit`, server-side sender filter), Supabase advisor fixes (duplicate indexes, RLS initplan, search_path, revoke `rls_auto_enable`, logs size cap), pg_cron cleanup; verified live on iPhone 17 Pro sim (iOS 27) + Playwright; built & tested under Xcode 27 beta | ✅ Pushed (e3639f7…4f46ac6) |
 | 2026-05-04 | APP-78 | Happy Path E2E Test: 3-device (iOS Host + iOS Viewer + Safari Webapp) | ✅ Merged |
 | 2026-05-04 | APP-79 | Better Software Developer — project structure, CI, coding rules | ✅ Done |
 | 2026-05-04 | APP-80 | Host View UI Fix: notch spacing + bottom buttons more compact + DesignLabels | ✅ Done |

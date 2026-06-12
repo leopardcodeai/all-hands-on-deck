@@ -124,7 +124,7 @@ Web Viewers are a **Beta** feature in the app UI and policy. Use them for MVP te
 1. iPhone A → enable "Allow Web Viewers" with **BETA** badge → "Start Group Photo".
 2. QR panel shows a code pointing to `http://<mac>:5173/join/<sessionId>`.
 3. iPhone B Safari or Mac browser → scan QR / open URL.
-4. Web app connects to backend WebSocket → receives `sessionMetadata`, then live frames.
+4. Web app joins via Supabase → receives `sessionMetadata` (events table) and live frames (Realtime Broadcast).
 5. Host starts 10s timer → both clients (Multipeer native + Web) see synchronized countdown.
 6. Photo capture → web viewer shows final photo + "Save" button.
 
@@ -152,10 +152,14 @@ flowchart TD
     P2PVideo --> JoinApp
     P2PVideo --> WebApp
 
+    HostApp --> Broadcast["Supabase Realtime Broadcast: preview frames (no DB writes)"]
+    Broadcast --> JoinApp
+    Broadcast --> WebApp
+
     HostApp --> Realtime["Supabase Realtime fallback"]
     JoinApp --> Realtime
     WebApp --> Realtime
-    Realtime --> SessionEvents["session_events: sync, fallback, signaling"]
+    Realtime --> SessionEvents["session_events: control events, signaling"]
 
     HostUser --> Capture["Start timer / capture now"]
     Capture --> HostApp
@@ -238,7 +242,18 @@ Frame Pipeline:
               ├── InFrameDetector.ingest (vision)
               └── transport.send(.previewFrame)
                   ├── Multipeer (.unreliable)
-                  └── WebSocket (JSON, base64)
+                  └── Supabase Realtime Broadcast
+                      (POST /realtime/v1/api/broadcast — ephemeral,
+                       no session_events INSERT, no storage)
+
+Frame Receive (remote viewers):
+  topic  session-frames:{sessions.id}
+  event  preview_frame   payload { jpeg, capturedAt, senderId }
+    ├── webapp:  supabase-js channel.on('broadcast', …)   (SessionClient.ts)
+    └── iOS:     SupabaseRealtimeFrameChannel (Phoenix WS,
+                 phx_join + 25s heartbeat + reconnect)
+  Control events (countdown, capture, reactions, …) still go through
+  the session_events table; a pg_cron job purges old rows every 30 min.
 ```
 
 ```
@@ -388,7 +403,7 @@ xcodegen generate && xcodebuild test \
 
 ## What's deliberately left out
 
-- **WebRTC**: WebSocket relay handles 3 fps preview just fine. WebRTC would only be worthwhile at 30 fps or bidirectional audio.
+- **WebRTC**: Realtime Broadcast handles 3 fps preview just fine. WebRTC would only be worthwhile at 30 fps or bidirectional audio.
 - **Persistent photo gallery / event mode**: no backend state, no accounts. Sessions are ephemeral, TTL 30 min, then GC.
 - **Smile detection**: Vision has no direct smile score on iOS (CoreImage has a weak `CIDetectorSmile`, not worth it). Extensible via CoreML later.
 

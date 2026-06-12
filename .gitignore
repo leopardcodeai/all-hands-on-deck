@@ -65,3 +65,6 @@ venv/
 .agent/
 .github/agents/
 .github/agent/
+
+# Local full-res page screenshots (downscaled copies live in docs/screenshots/)
+/screenshots/

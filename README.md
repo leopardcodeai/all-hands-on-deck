@@ -54,6 +54,12 @@ The result: a fully functional group-photo app with live viewfinder streaming, A
 
 ---
 
+## Screenshots
+
+| iOS — Home | iOS — Viewer (live frame) | Web — Captain | Web — Viewer (live frame) |
+|---|---|---|---|
+| ![iOS Home](docs/screenshots/ios_01_home_join_crew.jpg) | ![iOS Viewer](docs/screenshots/ios_08_viewer_session_live.jpg) | ![Web Captain](docs/screenshots/web_host_captain.jpg) | ![Web Viewer](docs/screenshots/web_join_live_frame.jpg) |
+
 ## Quick Start
 
 ```bash
@@ -96,4 +102,6 @@ cd server && npm ci && npm run dev
 
 Feature-complete, App Store ready. Web viewers are a beta feature.
 
-**Tech stack:** SwiftUI, Multipeer Connectivity, Vision, Supabase, Vite/React, WebSocket relay.
+**Tech stack:** SwiftUI, Multipeer Connectivity, Vision, Supabase (Postgres + Realtime Broadcast), Vite/React, WebSocket relay.
+
+**Streaming architecture (since 2026-06):** Live preview frames travel over **Supabase Realtime Broadcast** (ephemeral pub/sub, no database writes) instead of `session_events` inserts — the events table now carries only low-volume control messages, and a pg_cron job keeps it clean. The webapp is code-split, so the landing page loads ~78 kB gzipped instead of 148 kB.
