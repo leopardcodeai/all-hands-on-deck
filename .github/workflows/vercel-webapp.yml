@@ -35,7 +35,7 @@ jobs:
       VITE_ENABLE_LIVEKIT_BETA: ${{ vars.VITE_ENABLE_LIVEKIT_BETA }}
       VITE_LIVEKIT_TOKEN_ENDPOINT: ${{ vars.VITE_LIVEKIT_TOKEN_ENDPOINT }}
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       - uses: actions/setup-node@v6
         with:
@@ -80,7 +80,7 @@ jobs:
       VITE_ENABLE_LIVEKIT_BETA: ${{ vars.VITE_ENABLE_LIVEKIT_BETA }}
       VITE_LIVEKIT_TOKEN_ENDPOINT: ${{ vars.VITE_LIVEKIT_TOKEN_ENDPOINT }}
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       - uses: actions/setup-node@v6
         with:
