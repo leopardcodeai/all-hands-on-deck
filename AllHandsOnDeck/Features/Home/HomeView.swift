@@ -146,7 +146,7 @@ struct HomeView: View {
                         }
                     }
             }
-            
+
             Button {
                 withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
                     activeTab = .host
@@ -343,7 +343,7 @@ struct AmbientGlowView: View {
                 .frame(width: 300, height: 300)
                 .blur(radius: 50)
                 .offset(x: animate ? -40 : -80, y: animate ? -100 : -150)
-            
+
             // Orb 2
             Circle()
                 .fill(RadialGradient(

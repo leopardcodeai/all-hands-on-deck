@@ -73,10 +73,11 @@ enum SupabaseFrameBroadcast {
         let event: String
         let payload: BroadcastPayload?
 
-        struct BroadcastPayload: Decodable {
-            let event: String?
-            let payload: FramePayload?
-        }
+    }
+
+    private struct BroadcastPayload: Decodable {
+        let event: String?
+        let payload: FramePayload?
     }
 
     /// Decodes a raw websocket message into a frame, or `nil` if the message

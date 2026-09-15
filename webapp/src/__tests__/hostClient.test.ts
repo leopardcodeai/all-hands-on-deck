@@ -78,6 +78,13 @@ describe('CaptainClient', () => {
     expect(activeState.sessionId).toBe('uuid-123');
   });
 
+  it('advertises the supported captain-only capture policy', async () => {
+    await client.startSession('Captain');
+    const metadata = insertSpy.mock.calls.map(([row]) => row as any)
+      .find(row => row.type === 'sessionMetadata').payload.event.sessionMetadata;
+    expect(metadata.triggerPermission).toBe('hostOnly');
+  });
+
   it('sets finalPhotoBase64 after sendFinalPhoto', async () => {
     await client.startSession('Captain');
 

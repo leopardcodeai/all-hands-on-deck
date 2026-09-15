@@ -883,3 +883,17 @@ a { color: var(--gold); }
   box-shadow: 0 8px 30px rgba(243,189,46,0.45);
 }
 
+
+/* Keep keyboard focus visible and respect the device motion preference. */
+:where(button, a, input):focus-visible {
+  outline: 2px solid var(--gold);
+  outline-offset: 4px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation: none !important;
+    transition: none !important;
+    scroll-behavior: auto !important;
+  }
+}

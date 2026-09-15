@@ -5,6 +5,20 @@
  */
 
 export const DesignLabels = {
+  pirateJokes: [
+    "Why is pirating so addictive? Lose one hand and ye get hooked!",
+    "What's a pirate's fav letter? Ye think it's R — but it's the C!",
+    "How much did peg leg and hook cost? An arm and a leg!",
+    "What d'ye call a pirate who skips class? Captain Hooky!",
+    "Why couldn't the pirate play cards? He was standing on the deck!",
+    "What's a pirate's fav country? ARRRgentina!",
+    "What did the ocean say to the pirate? Nothing — it just waved!",
+  ],
+  appNameFirstLine: 'All Hands',
+  appNameSecondLine: 'On Deck',
+  webHostingHint: 'Crew members can join in a browser using your session code or QR code.',
+  loading: 'Loading…',
+  browserCapturePolicy: 'The captain controls the timer and shutter in browser-hosted sessions.',
   // Buttons
   cancel: 'Cancel',
   close: 'Close',

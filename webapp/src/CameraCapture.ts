@@ -19,7 +19,13 @@ export async function startCamera(): Promise<CameraCapture> {
   video.srcObject = stream;
   video.playsInline = true;
   video.muted = true;
-  await video.play();
+  try {
+    await video.play();
+  } catch (error) {
+    stream.getTracks().forEach(track => track.stop());
+    video.srcObject = null;
+    throw error;
+  }
   logger.info('Camera', 'Video element playing', { width: video.videoWidth, height: video.videoHeight });
 
   const PHOTO_WIDTH = 1080;

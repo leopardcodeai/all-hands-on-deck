@@ -11,21 +11,22 @@ struct IdentitySettingsView: View {
             ZStack {
                 LeopardWallpaperView()
                 ScrollView {
-                    VStack(spacing: 20) {
+                    VStack(spacing: Spacing.xl) {
                         rankCard
                         customNameSection
                         gameCenterSection
                         progressSection
                     }
-                    .padding(20)
+                    .padding(Spacing.xl)
                 }
             }
-            .navigationTitle(String(localized: "identity.settings.title"))
+            .navigationTitle(DesignLabels.identitySettingsTitle)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) {
-                    Button(String(localized: "OK")) { dismiss() }
+                    Button(DesignLabels.done) { dismiss() }
                         .foregroundStyle(Theme.gold)
+                        .accessibilityIdentifier("identity_done")
                 }
             }
         }
@@ -45,7 +46,7 @@ struct IdentitySettingsView: View {
                 .font(.system(size: 13, weight: .medium, design: .rounded))
                 .foregroundStyle(Theme.mist)
                 .multilineTextAlignment(.center)
-                .padding(.horizontal, 16)
+                .padding(.horizontal, Spacing.lg)
         }
         .frame(maxWidth: .infinity)
         .padding(.vertical, 28)
@@ -54,21 +55,25 @@ struct IdentitySettingsView: View {
     }
 
     private var customNameSection: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            label("identity.customName.label", image: "person.fill")
+        VStack(alignment: .leading, spacing: Spacing.md) {
+            label(DesignLabels.identityCustomNameLabel, image: "person.fill")
 
-            TextField(String(localized: "identity.customName.placeholder"), text: $identity.customName)
+            TextField(DesignLabels.identityCustomNamePlaceholder, text: $identity.customName)
+                .accessibilityIdentifier("identity_custom_name")
+                .accessibilityLabel(DesignLabels.identityCustomNameLabel)
+                .submitLabel(.done)
+                .onSubmit { nameFieldFocused = false }
                 .textFieldStyle(.plain)
                 .foregroundStyle(Theme.bone)
                 .tint(Theme.gold)
                 .focused($nameFieldFocused)
-                .padding(.horizontal, 16)
-                .frame(height: 48)
+                .padding(.horizontal, Spacing.lg)
+                .frame(height: Spacing.buttonHeight)
                 .background(Color.white.opacity(0.08))
-                .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+                .clipShape(RoundedRectangle(cornerRadius: Spacing.cornerMd, style: .continuous))
 
             if !identity.customName.trimmingCharacters(in: .whitespaces).isEmpty {
-                Text(String(localized: "identity.customName.hint"))
+                Text(DesignLabels.identityCustomNameHint)
                     .font(.caption)
                     .foregroundStyle(Theme.mist)
             }
@@ -76,8 +81,8 @@ struct IdentitySettingsView: View {
     }
 
     private var gameCenterSection: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            label("identity.gamecenter.label", image: "gamecontroller.fill")
+        VStack(alignment: .leading, spacing: Spacing.md) {
+            label(DesignLabels.identityGameCenterLabel, image: "gamecontroller.fill")
 
             HStack {
                 VStack(alignment: .leading, spacing: 3) {
@@ -85,17 +90,17 @@ struct IdentitySettingsView: View {
                         Text(alias)
                             .font(.system(size: 15, weight: .heavy, design: .rounded))
                             .foregroundStyle(Theme.bone)
-                        Text(String(localized: "identity.gamecenter.connected"))
+                        Text(DesignLabels.identityGameCenterConnected)
                             .font(.caption)
                             .foregroundStyle(Theme.signal)
                     } else {
-                        Text(String(localized: "identity.gamecenter.disconnected"))
+                        Text(DesignLabels.identityGameCenterDisconnected)
                             .font(.system(size: 14, weight: .medium, design: .rounded))
                             .foregroundStyle(Theme.mist)
                     }
                 }
                 Spacer()
-                Toggle("", isOn: Binding(
+                Toggle(DesignLabels.identityGameCenterLabel, isOn: Binding(
                     get: { identity.useGameCenter },
                     set: { on in
                         if on {
@@ -106,15 +111,16 @@ struct IdentitySettingsView: View {
                     }
                 ))
                 .labelsHidden()
+                .accessibilityIdentifier("identity_game_center")
                 .tint(Theme.gold)
             }
-            .padding(.horizontal, 16)
+            .padding(.horizontal, Spacing.lg)
             .padding(.vertical, 12)
             .background(Color.white.opacity(0.08))
-            .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+            .clipShape(RoundedRectangle(cornerRadius: Spacing.cornerMd, style: .continuous))
 
             if identity.useGameCenter && !gc.isAuthenticated {
-                Text(String(localized: "identity.gamecenter.notSignedIn"))
+                Text(DesignLabels.identityGameCenterNotSignedIn)
                     .font(.caption)
                     .foregroundStyle(Theme.amber)
             }
@@ -122,10 +128,10 @@ struct IdentitySettingsView: View {
     }
 
     private var progressSection: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            label("identity.progress.label", image: "chart.bar.fill")
+        VStack(alignment: .leading, spacing: Spacing.md) {
+            label(DesignLabels.identityProgressLabel, image: "chart.bar.fill")
 
-            let points = UserDefaults.standard.integer(forKey: "identity.actionPoints")
+            let points = identity.actionPoints
             let nextRank = PirateRank(rawValue: identity.earnedRank.rawValue + 1)
             let nextThreshold = nextRank?.threshold ?? Int.max
             let current = identity.earnedRank
@@ -135,7 +141,7 @@ struct IdentitySettingsView: View {
                     Text("\(points)")
                         .font(.system(size: 28, weight: .black, design: .rounded))
                         .foregroundStyle(Theme.gold)
-                    Text(String(localized: "identity.progress.points"))
+                    Text(DesignLabels.identityProgressPoints)
                         .font(.system(size: 14, weight: .medium))
                         .foregroundStyle(Theme.mist)
                         .padding(.top, 6)
@@ -158,25 +164,26 @@ struct IdentitySettingsView: View {
                             .tint(Theme.gold)
                     }
                 } else {
-                    Text(String(localized: "identity.progress.maxRank"))
+                    Text(DesignLabels.identityProgressMaxRank)
                         .font(.caption)
                         .foregroundStyle(Theme.signal)
                 }
             }
-            .padding(16)
+            .padding(Spacing.lg)
             .background(Color.white.opacity(0.08))
-            .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+            .clipShape(RoundedRectangle(cornerRadius: Spacing.cornerMd, style: .continuous))
 
-            Text(String(localized: "identity.progress.hint"))
+            Text(DesignLabels.identityProgressHint)
                 .font(.caption)
                 .foregroundStyle(Theme.mist)
         }
     }
 
-    private func label(_ key: String, image: String) -> some View {
-        Label(String(localized: String.LocalizationValue(key)),
-              systemImage: image)
+    private func label(_ title: String, image: String) -> some View {
+        Label(title, systemImage: image)
             .font(.system(size: 13, weight: .heavy, design: .rounded))
             .foregroundStyle(Theme.mist)
     }
 }
+
+#Preview { IdentitySettingsView() }
