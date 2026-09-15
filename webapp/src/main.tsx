@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom/client';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { logger } from './lib/logger';
 import './styles.css';
+import { DesignLabels } from './DesignLabels';
 
 // Route-level code splitting: the landing page must not pull in the
 // Supabase/session/camera code that only /host and /join need.
@@ -22,7 +23,7 @@ window.addEventListener('unhandledrejection', (e) => {
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     <BrowserRouter>
-      <Suspense fallback={null}>
+      <Suspense fallback={<div className="center-stack" role="status">{DesignLabels.loading}</div>}>
         <Routes>
           <Route path="/" element={<HomePage />} />
           <Route path="/host" element={<CaptainPage />} />

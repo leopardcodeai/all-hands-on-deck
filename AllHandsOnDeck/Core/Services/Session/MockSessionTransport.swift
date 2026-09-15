@@ -27,7 +27,7 @@ final class MockSessionTransport: SessionTransport {
         statusSubject.send(.connecting)
         try? await Task.sleep(nanoseconds: 100_000_000)
         statusSubject.send(.connected)
-        
+
         if role == .viewer {
             // Simulate host sending initial metadata and joining
             let mockSession = PhotoSession(

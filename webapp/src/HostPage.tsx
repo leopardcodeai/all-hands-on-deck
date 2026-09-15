@@ -6,7 +6,6 @@ import { DesignLabels } from './DesignLabels';
 import { QRCodePanel } from './components/QRCodePanel';
 
 const TIMER_OPTIONS = [5, 10, 20, 30];
-type TriggerPermission = 'captainOnly' | 'everyoneCanStartTimer' | 'viewersCanRequest';
 
 export function CaptainPage() {
   const navigate = useNavigate();
@@ -19,10 +18,10 @@ export function CaptainPage() {
   const [showQR, setShowQR] = useState(true);
   const [showSettings, setShowSettings] = useState(false);
   const [timerDuration, setTimerDuration] = useState(10);
-  const [triggerPermission, setTriggerPermission] = useState<TriggerPermission>('everyoneCanStartTimer');
   const [jpegQuality, setJpegQuality] = useState(0.3);
   const [frameWidth, setFrameWidth] = useState(240);
   const videoRef = useRef<HTMLVideoElement>(null);
+  const countdownGeneration = useRef(0);
 
   const client = useMemo(() => new CaptainClient(), []);
 
@@ -40,13 +39,18 @@ export function CaptainPage() {
 
   // Auto-start session immediately on mount
   useEffect(() => {
+    let cancelled = false;
+    let ownedCamera: CameraCapture | undefined;
     void (async () => {
-      if (state !== null) return;
       try {
         const cam = await startCamera();
+        if (cancelled) { cam.stop(); return; }
+        ownedCamera = cam;
         setCamera(cam);
-        await client.startSession('Captain');
+        await client.startSession(DesignLabels.captain);
       } catch (e: unknown) {
+        ownedCamera?.stop();
+        if (cancelled) return;
         if (e instanceof DOMException && e.name === 'NotAllowedError') {
           setCamError('Camera access denied.');
         } else if (e instanceof DOMException && e.name === 'NotFoundError') {
@@ -56,13 +60,16 @@ export function CaptainPage() {
         }
       }
     })();
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+    return () => { cancelled = true; countdownGeneration.current++; ownedCamera?.stop(); };
+  }, [client]);
 
   const capturePhoto = useCallback(async () => {
     if (!camera || !state || state.status !== 'active') return;
+    const generation = ++countdownGeneration.current;
     setCountdown(timerDuration);
     for (let i = timerDuration - 1; i >= 0; i--) {
       await new Promise(r => setTimeout(r, 1000));
+      if (generation !== countdownGeneration.current) return;
       setCountdown(i);
     }
     setCountdown(null);
@@ -128,7 +135,7 @@ export function CaptainPage() {
             </div>
           </div>
 
-          <FrameSender camera={camera!} client={client} active={state.status === 'active' && !state.finalPhotoBase64} />
+          <FrameSender camera={camera!} client={client} quality={jpegQuality} frameWidth={frameWidth} active={state.status === 'active' && !state.finalPhotoBase64} />
 
           {countdown !== null && countdown > 0 && <div className="countdown">{countdown > 9 ? '' : countdown}</div>}
           <div className={`flash${flash ? ' on' : ''}`} />
@@ -142,7 +149,7 @@ export function CaptainPage() {
           {!state.finalPhotoBase64 && !showSettings && (
             <div className="overlay-bottom">
               {countdown !== null ? (
-                <button className="btn-primary" style={{ background: 'var(--crimson)', boxShadow: '0 8px 24px rgba(235,88,92,0.35)', width: '100%', maxWidth: 320 }} onClick={() => { setCountdown(null); }}>✕ {DesignLabels.cancel}</button>
+                <button className="btn-primary" style={{ background: 'var(--crimson)', boxShadow: '0 8px 24px rgba(235,88,92,0.35)', width: '100%', maxWidth: 320 }} onClick={() => { countdownGeneration.current++; setCountdown(null); }}>✕ {DesignLabels.cancel}</button>
               ) : (
                 <div className="overlay-bottom-inner">
                   <button className="btn-primary" style={{ flex: 1 }} onClick={capturePhoto}>⏱ {DesignLabels.timer(timerDuration)}</button>
@@ -177,16 +184,7 @@ export function CaptainPage() {
                       ))}
                     </div>
                   </div>
-                  <div>
-                    <p style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--mist)', margin: '0 0 6px' }}>Trigger Permission</p>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                      {(['captainOnly', 'everyoneCanStartTimer', 'viewersCanRequest'] as const).map(p => (
-                        <button key={p} className={p === triggerPermission ? 'btn-primary' : 'btn-secondary'} style={{ padding: '10px 14px', fontSize: 12, textAlign: 'left', justifyContent: 'flex-start' }} onClick={() => setTriggerPermission(p)}>
-                          {p === 'captainOnly' ? '👑 Captain Only' : p === 'everyoneCanStartTimer' ? '👥 Pirate can trigger' : '🙋 Pirate asks — Captain decides'}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
+                  <p className="muted-note">{DesignLabels.browserCapturePolicy}</p>
                   <div>
                     <p style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--mist)', margin: '0 0 6px' }}>Quality</p>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>

@@ -4,6 +4,18 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Fixed — 2026-09-15 App audit (2.4.4)
+- Pasted web invitation URLs now preserve the session code and case-sensitive token; malformed and overlong codes are rejected.
+- Web preview quality and resolution settings now apply to transmitted frames.
+- Timer cancellation now prevents capture, including after navigation. Browser-hosted sessions accurately advertise captain-only capture; removed ineffective permission buttons.
+- Host navigation releases the camera, including delayed permission results and startup failures.
+- Landing page legal links resolve to existing documents; added loading feedback, keyboard focus, reduced-motion support, and English page language.
+- Removed the ineffective nearby-only toggle from browser hosting and clarified web access.
+- iOS identity settings use centralized labels, accessible controls, keyboard dismissal, and service-owned persistence reads.
+- Refreshed compatible web/server dependency lockfiles; both npm audits report zero vulnerabilities.
+- Aligned iOS marketing version with the web version. The old DebugOverlayView.swift no longer exists in this repository.
+
+
 ### Changed — 2026-06-12 Streaming & Performance
 - **Preview frames now travel over Supabase Realtime Broadcast** (topic `session-frames:{sessions.id}`, event `preview_frame`) instead of `session_events` INSERTs — no more database churn from ~3 fps frame traffic (was 42 MB / 95% of all rows after ~100 test sessions)
 - iOS host sends frames via REST `POST /realtime/v1/api/broadcast` (fire-and-forget); iOS viewers receive through a new minimal Phoenix-websocket client (`SupabaseRealtimeFrameChannel.swift`) with heartbeat + reconnect

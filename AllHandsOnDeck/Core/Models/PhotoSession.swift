@@ -43,7 +43,7 @@ struct PhotoSession: Identifiable, Hashable, Codable, Sendable {
     /// 8-character random ID. Not guessable, short enough to display.
     static func makeShortID() -> String {
         let alphabet = Array("ABCDEFGHJKLMNPQRSTUVWXYZ23456789") // omits ambiguous chars
-        return String((0..<8).map { _ in alphabet.randomElement()! })
+        return String((0..<8).map { _ in alphabet[Int.random(in: alphabet.indices)] })
     }
 
     /// Override the join base URL via UserDefaults["joinBaseURL"] or the
