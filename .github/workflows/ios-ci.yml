@@ -8,6 +8,7 @@ on:
       - 'AllHandsOnDeckTests/**'
       - 'AllHandsOnDeckWatch/**'
       - 'project.yml'
+      - 'scripts/*ci_xcconfig.py'
       - '.github/workflows/ios-ci.yml'
   pull_request:
     paths:
@@ -15,6 +16,7 @@ on:
       - 'AllHandsOnDeckTests/**'
       - 'AllHandsOnDeckWatch/**'
       - 'project.yml'
+      - 'scripts/*ci_xcconfig.py'
       - '.github/workflows/ios-ci.yml'
 
 permissions:
@@ -62,14 +64,8 @@ jobs:
           LIVEKIT_TOKEN_ENDPOINT: ${{ vars.VITE_LIVEKIT_TOKEN_ENDPOINT }}
           LIVEKIT_BETA_ENABLED: ${{ vars.VITE_ENABLE_LIVEKIT_BETA }}
         run: |
-          cat > Secrets.xcconfig <<EOF
-          SUPABASE_URL = ${SUPABASE_URL}
-          SUPABASE_ANON_KEY = ${SUPABASE_ANON_KEY}
-          WEB_JOIN_BASE_URL = ${WEB_JOIN_BASE_URL}
-          TEAM_ID = LPHP8KBWW8
-          LIVEKIT_TOKEN_ENDPOINT = ${LIVEKIT_TOKEN_ENDPOINT}
-          LIVEKIT_BETA_ENABLED = ${LIVEKIT_BETA_ENABLED}
-          EOF
+          python3 -m unittest discover -s scripts -p 'test_write_ci_xcconfig.py'
+          python3 scripts/write_ci_xcconfig.py
 
       - name: Generate project
         run: xcodegen generate
@@ -117,6 +113,7 @@ jobs:
             -scheme "$SCHEME" \
             -destination "${{ steps.sim.outputs.destination }}" \
             -only-testing:AllHandsOnDeckTests \
+            -only-testing:AllHandsOnDeckUITests/HappyPathUITests/test_identitySettingsControlsAreAccessible \
             -enableCodeCoverage YES \
             -resultBundlePath TestResults.xcresult \
             CODE_SIGNING_ALLOWED=NO \
