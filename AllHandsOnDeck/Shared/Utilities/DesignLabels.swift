@@ -4,6 +4,20 @@ import SwiftUI
 /// All 3 surfaces (host, viewer, webapp) reference these for consistency.
 /// English is the default language; no localization fallback.
 enum DesignLabels {
+    // MARK: - Identity settings
+    static let identitySettingsTitle = String(localized: "identity.settings.title")
+    static let identityCustomNameLabel = String(localized: "identity.customName.label")
+    static let identityCustomNamePlaceholder = String(localized: "identity.customName.placeholder")
+    static let identityCustomNameHint = String(localized: "identity.customName.hint")
+    static let identityGameCenterLabel = String(localized: "identity.gamecenter.label")
+    static let identityGameCenterConnected = String(localized: "identity.gamecenter.connected")
+    static let identityGameCenterDisconnected = String(localized: "identity.gamecenter.disconnected")
+    static let identityGameCenterNotSignedIn = String(localized: "identity.gamecenter.notSignedIn")
+    static let identityProgressLabel = String(localized: "identity.progress.label")
+    static let identityProgressPoints = String(localized: "identity.progress.points")
+    static let identityProgressMaxRank = String(localized: "identity.progress.maxRank")
+    static let identityProgressHint = String(localized: "identity.progress.hint")
+
     // MARK: - Buttons
     static let cancel = "Cancel"
     static let close = "Close"

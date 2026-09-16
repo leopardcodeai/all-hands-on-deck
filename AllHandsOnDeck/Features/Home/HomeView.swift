@@ -146,7 +146,7 @@ struct HomeView: View {
                         }
                     }
             }
-            
+
             Button {
                 withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
                     activeTab = .host
@@ -328,6 +328,7 @@ struct HomeView: View {
 // MARK: - Ambient Glow
 
 struct AmbientGlowView: View {
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var animate = false
 
     var body: some View {
@@ -343,7 +344,7 @@ struct AmbientGlowView: View {
                 .frame(width: 300, height: 300)
                 .blur(radius: 50)
                 .offset(x: animate ? -40 : -80, y: animate ? -100 : -150)
-            
+
             // Orb 2
             Circle()
                 .fill(RadialGradient(
@@ -357,11 +358,14 @@ struct AmbientGlowView: View {
                 .offset(x: animate ? 80 : 40, y: animate ? 150 : 200)
         }
         .onAppear {
+            guard !reduceMotion,
+                  !ProcessInfo.processInfo.arguments.contains("-disableAnimations") else { return }
             withAnimation(.easeInOut(duration: 8).repeatForever(autoreverses: true)) {
                 animate.toggle()
             }
         }
         .allowsHitTesting(false)
+        .accessibilityHidden(true)
     }
 }
 

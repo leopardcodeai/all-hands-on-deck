@@ -17,13 +17,30 @@ final class HappyPathUITests: XCTestCase {
         app.launchArguments = [
             "-useMockTransport", "YES",
             "-allowWebJoinDefault", "YES",
-            "-bypassCameraPermission"
+            "-bypassCameraPermission",
+            "-disableAnimations"
         ]
         app.launch()
     }
 
     override func tearDownWithError() throws {
         app.terminate()
+    }
+
+    func test_identitySettingsControlsAreAccessible() throws {
+        let settings = app.buttons["Identity settings"]
+        XCTAssertTrue(settings.waitForExistence(timeout: 5))
+        settings.tap()
+        XCTAssertTrue(app.textFields["identity_custom_name"].waitForExistence(timeout: 5))
+        let gameCenter = app.switches["identity_game_center"]
+        XCTAssertTrue(gameCenter.exists)
+        XCTAssertFalse(gameCenter.label.isEmpty)
+        let screenshot = XCTAttachment(screenshot: app.screenshot())
+        screenshot.name = "Identity settings"
+        screenshot.lifetime = .keepAlways
+        add(screenshot)
+        app.buttons["identity_done"].tap()
+        XCTAssertTrue(settings.waitForExistence(timeout: 5))
     }
 
     // MARK: - Host: Session Lifecycle ──────────────────────────────────────────
@@ -242,7 +259,7 @@ final class HappyPathUITests: XCTestCase {
         // Initially on Join Crew tab
         XCTAssertTrue(app.buttons["Join Session"].waitForExistence(timeout: 5))
         XCTAssertTrue(app.buttons["Nearby Sessions"].exists)
-        
+
         // Switch to Captain tab
         let captainTab = app.buttons["Captain"]
         if captainTab.waitForExistence(timeout: 5) {

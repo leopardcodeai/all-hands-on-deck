@@ -21,6 +21,7 @@ function uuid(): string {
 
 export class CaptainClient {
   private bootstrap?: SessionBootstrap;
+  private generation = 0;
   private realtimeSub?: ReturnType<typeof subscribeToSessionRealtime>;
   private listeners = new Set<Listener>();
   private state: CaptainState;
@@ -44,16 +45,19 @@ export class CaptainClient {
   private notify() { for (const l of this.listeners) l(this.state); }
 
   async startSession(displayName: string) {
+    const generation = ++this.generation;
     logger.info('CaptainClient', 'Starting session', { displayName });
     this.state = { ...this.state, status: 'creating' };
     this.notify();
 
     try {
-      this.bootstrap = await createSession({
+      const bootstrap = await createSession({
         hostName: displayName,
         anonymousId: this.participantId,
         peerId: this.participantId,
       });
+      if (generation !== this.generation) return;
+      this.bootstrap = bootstrap;
       logger.info('CaptainClient', 'Session created', { code: this.bootstrap.session.code, id: this.bootstrap.session.id });
 
       this.state = {
@@ -81,7 +85,7 @@ export class CaptainClient {
           createdAt: new Date().toISOString(),
           expiresAt: this.bootstrap.session.expires_at ?? new Date(Date.now() + 600_000).toISOString(),
           timerDuration: 10,
-          triggerPermission: 'everyoneCanStartTimer',
+          triggerPermission: 'hostOnly',
           isDiscoverableNearby: false,
           allowWebJoin: true,
           allowFinalPhotoDownload: true,
@@ -143,6 +147,8 @@ export class CaptainClient {
   }
 
   stop() {
+    this.generation++;
+    this.bootstrap = undefined;
     logger.info('CaptainClient', 'Stopping');
     this.realtimeSub?.unsubscribe();
     this.listeners.clear();

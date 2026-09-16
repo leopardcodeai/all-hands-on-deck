@@ -28,7 +28,7 @@ final class IdentityService: ObservableObject {
     /// The rank earned based on accumulated action points.
     @Published private(set) var earnedRank: PirateRank = .cabinBoy
 
-    private var actionPoints: Int {
+    private(set) var actionPoints: Int {
         get { UserDefaults.standard.integer(forKey: "identity.actionPoints") }
         set {
             UserDefaults.standard.set(newValue, forKey: "identity.actionPoints")

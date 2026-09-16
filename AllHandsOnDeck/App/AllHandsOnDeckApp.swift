@@ -6,6 +6,9 @@ struct AllHandsOnDeckApp: App {
     @StateObject private var linkHandler = UniversalLinkHandler()
 
     init() {
+        if ProcessInfo.processInfo.arguments.contains("-disableAnimations") {
+            UIView.setAnimationsEnabled(false)
+        }
         UINavigationBar.appearance().tintColor = UIColor(Theme.gold)
     }
 
