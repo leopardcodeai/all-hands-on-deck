@@ -328,6 +328,7 @@ struct HomeView: View {
 // MARK: - Ambient Glow
 
 struct AmbientGlowView: View {
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var animate = false
 
     var body: some View {
@@ -357,11 +358,14 @@ struct AmbientGlowView: View {
                 .offset(x: animate ? 80 : 40, y: animate ? 150 : 200)
         }
         .onAppear {
+            guard !reduceMotion,
+                  !ProcessInfo.processInfo.arguments.contains("-disableAnimations") else { return }
             withAnimation(.easeInOut(duration: 8).repeatForever(autoreverses: true)) {
                 animate.toggle()
             }
         }
         .allowsHitTesting(false)
+        .accessibilityHidden(true)
     }
 }
 

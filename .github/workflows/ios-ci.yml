@@ -115,7 +115,6 @@ jobs:
             -scheme "$SCHEME" \
             -destination "${{ steps.sim.outputs.destination }}" \
             -only-testing:AllHandsOnDeckTests \
-            -only-testing:AllHandsOnDeckUITests/HappyPathUITests/test_identitySettingsControlsAreAccessible \
             -enableCodeCoverage YES \
             -resultBundlePath TestResults.xcresult \
             CODE_SIGNING_ALLOWED=NO \
@@ -132,6 +131,7 @@ jobs:
             -scheme "$SCHEME" \
             -destination "${{ steps.sim.outputs.destination }}" \
             -only-testing:AllHandsOnDeckUITests/HappyPathUITests/test_homeScreen_hasAllButtons \
+            -only-testing:AllHandsOnDeckUITests/HappyPathUITests/test_identitySettingsControlsAreAccessible \
             -only-testing:AllHandsOnDeckUITests/HappyPathUITests/test_hostChromeButtonsStayWithinSafeLayoutBands \
             -only-testing:AllHandsOnDeckUITests/HappyPathUITests/test_navigationBack_fromHostSession \
             CODE_SIGNING_ALLOWED=NO \

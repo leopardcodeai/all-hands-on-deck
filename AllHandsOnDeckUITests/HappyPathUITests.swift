@@ -17,7 +17,8 @@ final class HappyPathUITests: XCTestCase {
         app.launchArguments = [
             "-useMockTransport", "YES",
             "-allowWebJoinDefault", "YES",
-            "-bypassCameraPermission"
+            "-bypassCameraPermission",
+            "-disableAnimations"
         ]
         app.launch()
     }
