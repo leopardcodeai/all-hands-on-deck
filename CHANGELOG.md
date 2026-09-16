@@ -12,7 +12,7 @@ All notable changes to this project will be documented in this file.
 - Landing page legal links resolve to existing documents; added loading feedback, keyboard focus, reduced-motion support, and English page language.
 - Removed the ineffective nearby-only toggle from browser hosting and clarified web access.
 - iOS identity settings use centralized labels, accessible controls, keyboard dismissal, and service-owned persistence reads.
-- Refreshed compatible web/server dependency lockfiles; both npm audits report zero vulnerabilities.
+- Refreshed web/server dependency manifests and lockfiles, including validated Vitest 5 migration; both npm audits report zero vulnerabilities.
 - Aligned iOS marketing version with the web version. The old DebugOverlayView.swift no longer exists in this repository.
 
 

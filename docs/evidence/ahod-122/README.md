@@ -6,7 +6,7 @@
 - Web hosting: apply preview size/quality controls, stop camera tracks on navigation and startup failure, discard late session creation, make countdown cancellation prevent capture.
 - Browser capture policy: advertise `hostOnly` and explain captain-controlled capture. The previous permission buttons did not implement viewer-triggered capture; they have been removed. iOS capture permissions are unchanged.
 - iOS identity settings: centralized localized labels, named accessible controls, Done keyboard action, service-owned persistence read, spacing tokens.
-- Dependencies: compatible lockfile updates in webapp/server; zero npm audit findings. Already-merged upstream TypeScript/jsdom major upgrades retained. No external Swift packages are configured in project.yml.
+- Dependencies: updated manifests and lockfiles in webapp/server, including validated Vitest 5.0.1 migration; zero npm audit findings. Already-merged upstream TypeScript/jsdom major upgrades retained. No external Swift packages are configured in project.yml.
 - Version: 2.4.4 on web home/join and iOS marketing version. DebugOverlayView.swift no longer exists.
 - SwiftLint: fixed six existing findings and moved the analyzer-only rule to analyzer_rules.
 
@@ -30,3 +30,7 @@
 Physical multi-device camera/Watch testing and App Store publishing are not covered by this audit. Browser-hosted viewer-triggered capture remains unsupported and is now presented accurately. Preview bandwidth varies with the selected quality and frame size; no production latency benchmark was performed.
 
 Linear workspace unavailable; the user explicitly authorized GitHub-only tracking for this work.
+
+## CI follow-up — 2026-09-16
+
+Fixed CI xcconfig URL escaping (raw `//` was parsed as a comment); added four generator tests and deterministic test fixtures for PRs without secrets. CI now includes the identity UI test and UI-test path filters. CodeQL dependency PR #129 merged after review and green checks.
