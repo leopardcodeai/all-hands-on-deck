@@ -11,7 +11,8 @@
     "test:watch": "vitest",
     "typecheck": "tsc -b --noEmit",
     "test:e2e": "npx playwright test",
-    "test:all": "npm test && npm run test:e2e"
+    "test:all": "npm test && npm run test:e2e",
+    "shoot": "node scripts/shoot.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.116.0",

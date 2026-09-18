@@ -40,6 +40,19 @@ The result: a fully functional group-photo app with live viewfinder streaming, A
 |---|---|---|---|
 | ![iOS Home](docs/screenshots/ios_01_home_join_crew.jpg) | ![iOS Viewer](docs/screenshots/ios_08_viewer_session_live.jpg) | ![Web Captain](docs/screenshots/web_host_captain.jpg) | ![Web Viewer](docs/screenshots/web_join_live_frame.jpg) |
 
+**The green surface in the two web shots is a test image, not the app.** Both
+were taken by a scripted run against a real session, and the captain's camera
+in that run is Chrome's fake capture device: a plain green field with a shape
+drifting across it. That is what the viewer then receives, which is the point
+of the second picture. With a real camera the same areas show the camera.
+
+Retake them with `npm run shoot` in `webapp/`. The script opens the captain
+page, waits for the session to go live, reads the session code off the page and
+joins the viewer on it, so both pictures always come from the same session. It
+needs Supabase credentials in `webapp/.env.local`; without them the captain
+page never reaches LIVE and the script stops instead of saving an empty picture.
+`npm run shoot -- --dry-run` opens everything and writes nothing.
+
 ## Key Features
 
 - **Live shared viewfinder** — every participant sees the camera frame in real time
