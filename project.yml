@@ -1,0 +1,178 @@
+name: AllHandsOnDeck
+
+# ─── Global options ──────────────────────────────────────────────────────────
+options:
+  bundleIdPrefix: app.captainleopard
+  deploymentTarget:
+    iOS: "17.0"
+    watchOS: "10.0"
+  createIntermediateGroups: true
+  xcodeVersion: "26.4"
+  groupSortPosition: top
+  developmentLanguage: en
+  organizationName: "Alexander Brunker"
+  generateSchemes: true
+
+
+# ─── Shared build settings ───────────────────────────────────────────────────
+settings:
+  base:
+    SWIFT_VERSION: "5.0"
+    MARKETING_VERSION: "2.4.4"
+    CURRENT_PROJECT_VERSION: "1"
+    DEVELOPMENT_TEAM: LPHP8KBWW8
+    CODE_SIGN_STYLE: Automatic
+    DEBUG_INFORMATION_FORMAT: dwarf-with-dsym
+
+# ─── Targets ─────────────────────────────────────────────────────────────────
+targets:
+
+  # ── iOS App ────────────────────────────────────────────────────────────────
+  AllHandsOnDeck:
+    type: application
+    platform: iOS
+    deploymentTarget: "17.0"
+
+    sources:
+      - path: AllHandsOnDeck/App
+      - path: AllHandsOnDeck/Core
+      - path: AllHandsOnDeck/Features
+      - path: AllHandsOnDeck/Resources
+      - path: AllHandsOnDeck/Shared
+
+    info:
+      path: AllHandsOnDeck/Resources/Info.plist
+      properties:
+        CFBundleName: All Hands On Deck
+        CFBundleDisplayName: All Hands
+        NSCameraUsageDescription: "All Hands On Deck uses the camera to stream a live viewfinder to your crew and to scan QR codes for joining sessions."
+        NSPhotoLibraryAddUsageDescription: "Saves the final crew photo to your photo library."
+        SUPABASE_URL: $(SUPABASE_URL)
+        SUPABASE_ANON_KEY: $(SUPABASE_ANON_KEY)
+        WEB_JOIN_BASE_URL: $(WEB_JOIN_BASE_URL)
+        LIVEKIT_TOKEN_ENDPOINT: $(LIVEKIT_TOKEN_ENDPOINT)
+        LIVEKIT_BETA_ENABLED: $(LIVEKIT_BETA_ENABLED)
+        NSLocalNetworkUsageDescription: "Finds nearby iPhones for the live crew photo preview session."
+        NSBonjourServices:
+          - _allhands._tcp
+          - _allhands._udp
+        CFBundleURLTypes:
+          - CFBundleURLName: app.captainleopard.allhands
+            CFBundleURLSchemes:
+              - allhands
+        UISupportedInterfaceOrientations:
+          - UIInterfaceOrientationPortrait
+        UIRequiresFullScreen: true
+        UILaunchScreen:
+          UIColorName: LaunchBackground   # matches Theme.abyss — no white flash on cold launch
+        UIApplicationSupportsIndirectInputEvents: true
+        # App Store export-compliance shortcut: HTTPS-only counts as exempt
+        # so we don't need a per-release encryption-export filing.
+        ITSAppUsesNonExemptEncryption: false
+
+    entitlements:
+      path: AllHandsOnDeck/AllHandsOnDeck.entitlements
+
+    configFiles:
+      Debug: Debug.xcconfig
+      Release: Release.xcconfig
+
+    settings:
+      base:
+        PRODUCT_NAME: AllHandsOnDeck
+        PRODUCT_BUNDLE_IDENTIFIER: app.captainleopard.allhands
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES: YES
+        LD_RUNPATH_SEARCH_PATHS: $(inherited) @executable_path/Frameworks
+        DEVELOPMENT_TEAM: LPHP8KBWW8
+        CODE_SIGN_STYLE: Automatic
+        ENABLE_TESTABILITY: YES
+
+    dependencies:
+      - sdk: GameKit.framework
+        embed: false
+
+    # dependencies:                        # ── re-enable Watch ──
+    #   - target: AllHandsOnDeckWatch
+    #     embed: true
+    #     codeSign: true
+
+  # ── Watch App (disabled — uncomment dependencies above + this target to re-enable)
+  # AllHandsOnDeckWatch:
+  #   type: application
+  #   platform: watchOS
+  #   deploymentTarget: "10.0"
+  #
+  #   sources:
+  #     - path: AllHandsOnDeckWatch
+  #       excludes:
+  #         - "README.md"
+  #     # WatchProtocol.swift is shared — referenced from the iOS source tree
+  #     - path: AllHandsOnDeck/Services/Watch/WatchProtocol.swift
+  #
+  #   info:
+  #     path: AllHandsOnDeckWatch/Resources/Info.plist
+  #     properties:
+  #       CFBundleName: All Hands Watch
+  #       WKApplication: true
+  #
+  #   settings:
+  #     base:
+  #       PRODUCT_BUNDLE_IDENTIFIER: app.captainleopard.allhands.watchkitapp
+  #       ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+  #       WK_COMPANION_APP_BUNDLE_IDENTIFIER: app.captainleopard.allhands
+
+  # ── Unit Tests ─────────────────────────────────────────────────────────────
+  AllHandsOnDeckTests:
+    type: bundle.unit-test
+    platform: iOS
+    deploymentTarget: "17.0"
+
+    sources:
+      - path: AllHandsOnDeckTests
+        excludes:
+          - "README.md"
+
+    settings:
+      base:
+        PRODUCT_NAME: AllHandsOnDeckTests
+        PRODUCT_BUNDLE_IDENTIFIER: app.captainleopard.allhands.tests
+        GENERATE_INFOPLIST_FILE: YES
+        DEVELOPMENT_TEAM: LPHP8KBWW8
+        CODE_SIGN_STYLE: Automatic
+        TEST_HOST: $(BUILT_PRODUCTS_DIR)/AllHandsOnDeck.app/AllHandsOnDeck
+        BUNDLE_LOADER: $(TEST_HOST)
+
+    dependencies:
+      - target: AllHandsOnDeck
+
+  # ── UI Tests (XCUITest) ─────────────────────────────────────────────────────
+  AllHandsOnDeckUITests:
+    type: bundle.ui-testing
+    platform: iOS
+    deploymentTarget: "17.0"
+
+    sources:
+      - path: AllHandsOnDeckUITests
+
+    settings:
+      base:
+        PRODUCT_NAME: AllHandsOnDeckUITests
+        PRODUCT_BUNDLE_IDENTIFIER: app.captainleopard.allhands.uitests
+        GENERATE_INFOPLIST_FILE: YES
+        DEVELOPMENT_TEAM: LPHP8KBWW8
+        CODE_SIGN_STYLE: Automatic
+
+    dependencies:
+      - target: AllHandsOnDeck
+
+# ─── Schemes ──────────────────────────────────────────────────────────────────
+schemes:
+  AllHandsOnDeck:
+    build:
+      targets:
+        AllHandsOnDeck: [run, test, profile, analyze, archive]
+    test:
+      targets:
+        - AllHandsOnDeckTests
+        - AllHandsOnDeckUITests

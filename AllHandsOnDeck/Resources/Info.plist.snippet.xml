@@ -1,0 +1,50 @@
+<!--
+  Drop these keys into your Xcode target's Info.plist.
+
+  PFLICHT-Keys über alle Steps:
+   - NSCameraUsageDescription            Host-Kamera + QR-Scanner
+   - NSPhotoLibraryAddUsageDescription   Final-Foto speichern
+   - NSLocalNetworkUsageDescription      Multipeer-Discovery
+   - NSBonjourServices                   "_allhands._tcp/_udp"
+   - CFBundleURLTypes                    Custom-URL-Scheme "allhands://"
+                                          für Step 7 Universal-Links-Fallback
+
+  Universal-Links-Setup (Step 7):
+   - Associated Domains Capability hinzufügen (Target → Signing → +).
+   - Eintrag: applinks:allhands.leopardcode.ai
+     (deine Domain ersetzen — und sicherstellen dass der Server unter
+     /.well-known/apple-app-site-association das passende AASA-File
+     liefert; ein Beispiel liegt in `server/public/.well-known/`).
+-->
+
+<key>NSCameraUsageDescription</key>
+<string>All Hands on Deck nutzt die Kamera, um den Bildausschnitt live an deine Crew zu streamen — und um QR-Codes zum Beitreten zu scannen.</string>
+
+<key>NSPhotoLibraryAddUsageDescription</key>
+<string>Damit das fertige Gruppenfoto in deiner Mediathek landet.</string>
+
+<key>NSLocalNetworkUsageDescription</key>
+<string>Findet andere iPhones in der Nähe für die Live-Vorschau eurer Gruppenfoto-Session.</string>
+
+<key>NSBonjourServices</key>
+<array>
+    <string>_allhands._tcp</string>
+    <string>_allhands._udp</string>
+</array>
+
+<key>CFBundleURLTypes</key>
+<array>
+    <dict>
+        <key>CFBundleURLName</key>
+        <string>app.captainleopard.allhands</string>
+        <key>CFBundleURLSchemes</key>
+        <array>
+            <string>allhands</string>
+        </array>
+    </dict>
+</array>
+
+<key>UISupportedInterfaceOrientations</key>
+<array>
+    <string>UIInterfaceOrientationPortrait</string>
+</array>

@@ -1,0 +1,12 @@
+{
+  "applinks": {
+    "details": [
+      {
+        "appIDs": ["LPHP8KBWW8.app.captainleopard.allhands"],
+        "components": [
+          { "/": "/join/*", "comment": "Group photo session join link" }
+        ]
+      }
+    ]
+  }
+}

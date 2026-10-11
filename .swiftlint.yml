@@ -1,0 +1,38 @@
+# SwiftLint Rules — All Hands on Deck
+baseline: SwiftLintBaseline.json
+
+opt_in_rules:
+  - empty_count
+  - explicit_init
+  - force_unwrapping
+  - implicitly_unwrapped_optional
+  - missing_docs
+  - notification_center_detachment
+  - operator_usage_whitespace
+  - sorted_imports
+
+analyzer_rules:
+  - unused_import
+
+disabled_rules:
+  - function_body_length
+  - type_body_length
+  - file_length
+  - identifier_name
+  - function_parameter_count
+
+included:
+  - AllHandsOnDeck
+  - AllHandsOnDeckUITests
+
+excluded:
+  - AllHandsOnDeckWatch
+  - server
+  - webapp
+  - scripts
+  - build
+
+line_length: 140
+
+force_unwrapping:
+  severity: error

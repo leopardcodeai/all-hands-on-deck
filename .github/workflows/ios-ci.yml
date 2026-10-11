@@ -1,0 +1,146 @@
+name: iOS CI
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'AllHandsOnDeck/**'
+      - 'AllHandsOnDeckTests/**'
+      - 'AllHandsOnDeckUITests/**'
+      - 'AllHandsOnDeckWatch/**'
+      - 'project.yml'
+      - 'scripts/*ci_xcconfig.py'
+      - '.github/workflows/ios-ci.yml'
+  pull_request:
+    paths:
+      - 'AllHandsOnDeck/**'
+      - 'AllHandsOnDeckTests/**'
+      - 'AllHandsOnDeckUITests/**'
+      - 'AllHandsOnDeckWatch/**'
+      - 'project.yml'
+      - 'scripts/*ci_xcconfig.py'
+      - '.github/workflows/ios-ci.yml'
+
+permissions:
+  contents: read
+
+# Opt JS-based actions into Node 24; Node 20 is being removed Sep 2026.
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
+
+jobs:
+  build-test:
+    runs-on: macos-14
+    timeout-minutes: 30
+    env:
+      SCHEME: AllHandsOnDeck
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Select latest Xcode 16+
+        run: |
+          # Pick the newest installed Xcode ≥ 16 — GitHub's macos-14 image keeps
+          # multiple side by side and rotates through them as Apple releases.
+          XC_PATH="$(find /Applications -maxdepth 1 -type d -name 'Xcode_*.app' 2>/dev/null \
+            | sort -V | tail -1)"
+          if [ -z "$XC_PATH" ]; then
+            echo "::error::No Xcode found in /Applications" && exit 1
+          fi
+          sudo xcode-select -s "$XC_PATH"
+          xcodebuild -version
+
+      - name: Install build tooling
+        run: |
+          brew list xcodegen >/dev/null 2>&1 || brew install xcodegen
+          brew list xcbeautify >/dev/null 2>&1 || brew install xcbeautify
+          brew list swiftlint >/dev/null 2>&1 || brew install swiftlint
+
+      - name: SwiftLint
+        run: swiftlint --strict --config .swiftlint.yml
+
+      - name: Prepare CI secrets config
+        env:
+          SUPABASE_URL: ${{ vars.VITE_SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+          WEB_JOIN_BASE_URL: https://remotecameraapp.vercel.app
+          LIVEKIT_TOKEN_ENDPOINT: ${{ vars.VITE_LIVEKIT_TOKEN_ENDPOINT }}
+          LIVEKIT_BETA_ENABLED: ${{ vars.VITE_ENABLE_LIVEKIT_BETA }}
+        run: |
+          python3 -m unittest discover -s scripts -p 'test_write_ci_xcconfig.py'
+          python3 scripts/write_ci_xcconfig.py
+
+      - name: Generate project
+        run: xcodegen generate
+
+      - name: Pick a destination simulator
+        id: sim
+        run: |
+          # Pin to a specific (name, OS) pair — `OS=latest` triggers xcodebuild's
+          # "multiple matching destinations" warning when several runtimes are installed.
+          PICKED_NAME=""
+          PICKED_OS=""
+          for NAME in "iPhone 17" "iPhone 16" "iPhone 15" "iPhone 14"; do
+            # First match per device wins; jq isn't always present, so parse with awk.
+            OS_VER="$(xcrun simctl list devices available \
+              | awk -v name="$NAME" '
+                  /^-- iOS / { ver=$3; next }
+                  $0 ~ name " \\(" && ver != "" { print ver; exit }
+                ')"
+            if [ -n "$OS_VER" ]; then
+              PICKED_NAME="$NAME"
+              PICKED_OS="$OS_VER"
+              break
+            fi
+          done
+          if [ -z "$PICKED_NAME" ]; then
+            echo "::error::No supported iPhone simulator available"
+            xcrun simctl list devices available
+            exit 1
+          fi
+          DEST="platform=iOS Simulator,name=$PICKED_NAME,OS=$PICKED_OS"
+          echo "Using destination: $DEST"
+          echo "destination=$DEST" >> "$GITHUB_OUTPUT"
+
+      - name: Resolve dependencies
+        run: |
+          xcodebuild -resolvePackageDependencies \
+            -project AllHandsOnDeck.xcodeproj \
+            -scheme "$SCHEME"
+
+      - name: Build & run unit tests
+        run: |
+          set -o pipefail
+          xcodebuild test \
+            -project AllHandsOnDeck.xcodeproj \
+            -scheme "$SCHEME" \
+            -destination "${{ steps.sim.outputs.destination }}" \
+            -only-testing:AllHandsOnDeckTests \
+            -enableCodeCoverage YES \
+            -resultBundlePath TestResults.xcresult \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGN_IDENTITY= \
+            DEVELOPMENT_TEAM= \
+            | xcbeautify --renderer github-actions
+
+      - name: Run UI tests (XCUITest — no sign-in needed)
+        run: |
+          set -o pipefail
+          xcodebuild test \
+            -project AllHandsOnDeck.xcodeproj \
+            -scheme "$SCHEME" \
+            -destination "${{ steps.sim.outputs.destination }}" \
+            -only-testing:AllHandsOnDeckUITests/HappyPathUITests/test_homeScreen_hasAllButtons \
+            -only-testing:AllHandsOnDeckUITests/HappyPathUITests/test_identitySettingsControlsAreAccessible \
+            -only-testing:AllHandsOnDeckUITests/HappyPathUITests/test_hostChromeButtonsStayWithinSafeLayoutBands \
+            -only-testing:AllHandsOnDeckUITests/HappyPathUITests/test_navigationBack_fromHostSession \
+            CODE_SIGNING_ALLOWED=NO \
+            | xcbeautify --renderer github-actions --quiet
+
+      - name: Upload xcresult bundle
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: ios-test-results
+          path: TestResults.xcresult
+          retention-days: 7

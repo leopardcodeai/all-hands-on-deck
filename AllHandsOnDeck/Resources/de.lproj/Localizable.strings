@@ -1,0 +1,131 @@
+/* ── HomeView ── */
+"AllHands\nOnDeck" = "AllHands\nOnDeck";
+"The Captain's Live Crew Photo Preview" = "Die Live-Vorschau für dein Crew-Foto";
+"Gruppenfoto starten" = "Crew-Foto starten";
+"Session beitreten" = "Session beitreten";
+"Nearby Sessions" = "Nearby Sessions";
+"Web-Viewer erlauben" = "Web-Viewer erlauben";
+"\"Alle sehen das Gruppenfoto, bevor es aufgenommen wird.\"" = "\"Alle sehen das Crew-Foto, bevor es aufgenommen wird.\"";
+"Aus für reine Nearby-Nutzung." = "Aus für reine Nearby-Nutzung.";
+"Backend bereit – Web-Viewer können beitreten." = "Backend bereit – Web-Viewer können beitreten.";
+
+/* ── HostSessionView ── */
+"OK" = "OK";
+"Schließen" = "Schließen";
+"Auflösung" = "Auflösung";
+"Sessions enden automatisch nach Ablauf der TTL — kein Speichern, keine Accounts, keine Spuren." = "Sessions enden automatisch nach Ablauf der TTL — kein Speichern, keine Accounts, keine Spuren.";
+"Anfrage von der Crew — bestätige in den Einstellungen." = "Anfrage von der Crew — bestätige in den Einstellungen.";
+"Abbrechen" = "Abbrechen";
+"Jetzt" = "Jetzt";
+"Timer" = "Timer";
+"Wer darf auslösen?" = "Wer darf auslösen?";
+"Best-Shot Burst" = "Best-Shot Burst";
+"5 Aufnahmen, KI wählt die beste." = "5 Aufnahmen, KI wählt die beste.";
+"Noch einmal" = "Noch einmal";
+"Speichern" = "Speichern";
+
+/* ── BurstPickerView ── */
+"Best Shot Burst" = "Best Shot Burst";
+"KI-Ranking nach Gesichtern, offenen Augen und Schärfe." = "KI-Ranking nach Gesichtern, offenen Augen und Schärfe.";
+"⭐︎ Beste" = "⭐︎ Beste";
+"Bewerte…" = "Bewerte…";
+"Verwerfen" = "Verwerfen";
+
+/* ── NearbySessionsView ── */
+"Sessions in deinem WLAN / Bluetooth-Bereich." = "Sessions in deinem WLAN / Bluetooth-Bereich.";
+"Suche Sessions in der Nähe…" = "Suche Sessions in der Nähe…";
+"Beim ersten Mal fragt iOS nach einer\nLocal-Network-Berechtigung." = "Beim ersten Mal fragt iOS nach einer\nLocal-Network-Berechtigung.";
+"Beide Geräte müssen App geöffnet, im selben WLAN sein und Local-Network-Zugriff erlaubt haben." = "Beide Geräte müssen App geöffnet, im selben WLAN sein und Local-Network-Zugriff erlaubt haben.";
+
+/* ── PermissionView ── */
+"Kamera-Zugriff benötigt" = "Kamera-Zugriff benötigt";
+"Damit deine Crew sehen kann, was die Kamera sieht, brauchen wir Zugriff auf die iPhone-Kamera." = "Damit deine Crew sehen kann, was die Kamera sieht, brauchen wir Zugriff auf die iPhone-Kamera.";
+"Zugriff erlauben" = "Zugriff erlauben";
+
+/* ── ViewerSessionView ── */
+"Verbindung verloren" = "Verbindung verloren";
+"Captain ist außer Reichweite. Versuch es noch einmal von der Nearby-Liste aus." = "Captain ist außer Reichweite. Versuch es noch einmal von der Nearby-Liste aus.";
+"Session nicht gefunden" = "Session nicht gefunden";
+"Stelle sicher, dass beide im selben WLAN sind und die App offen ist." = "Stelle sicher, dass beide im selben WLAN sind und die App offen ist.";
+"Warte auf Captain's Bildausschnitt…" = "Warte auf Captain's Bildausschnitt…";
+"Stillhalten — gleich klickt's." = "Stillhalten — gleich klickt's.";
+"Verbinde mit Session…" = "Verbinde mit Session…";
+"Session beendet" = "Session beendet";
+"Zurück" = "Zurück";
+
+/* ── JoinSessionView ── */
+"Beitreten" = "Beitreten";
+"Session-Code von Captain eingeben oder QR-Code scannen." = "Session-Code von Captain eingeben oder QR-Code scannen.";
+"Verbinden" = "Verbinden";
+"QR-Code scannen" = "QR-Code scannen";
+"QR-Code enthält keine Session-ID." = "QR-Code enthält keine Session-ID.";
+
+/* ── Misc ── */
+"Code" = "Code";
+"Crew" = "Crew";
+"Bereit" = "Bereit";
+"Kamera nicht verfügbar." = "Kamera nicht verfügbar.";
+
+/* ── Dynamic format strings ── */
+"nearby.hostStartingSession" = "%@ startet ein Crew-Foto";
+"burst.shotNumber" = "Aufnahme %d";
+"host.startTimer" = "Start %ds";
+"home.resumeIn" = "Fortsetzen (%ds)";
+"result.closingIn" = "Schließt in %d…";
+
+/* ── Alert titles ── */
+"Hinweis" = "Hinweis";
+"Session abgelaufen" = "Session abgelaufen";
+
+/* ── Reactions (Reaction.label) ── */
+"reaction.ready" = "Bereit";
+"reaction.waitMoment" = "Warte kurz";
+"reaction.again" = "Noch mal";
+"reaction.cantSeeMe" = "Sehe mich nicht";
+"reaction.raiseCamera" = "Kamera höher";
+"reaction.moveLeft" = "Weiter links";
+"reaction.moveRight" = "Weiter rechts";
+
+/* ── In-frame hints (InFrameStatus.headline) ── */
+"inframe.noFaces" = "Niemand im Bild";
+"inframe.allInside" = "Alle drin";
+"inframe.someClipped" = "Jemand wird abgeschnitten";
+"inframe.skewedLeft" = "Gruppe steht zu weit links";
+"inframe.skewedRight" = "Gruppe steht zu weit rechts";
+"inframe.tooHigh" = "Kameraposition zu tief";
+"inframe.tooLow" = "Kameraposition zu hoch";
+
+/* ── TriggerPermission ── */
+"trigger.hostOnly.title" = "Nur Captain";
+"trigger.hostOnly.subtitle" = "Du allein gibst das Kommando.";
+"trigger.everyoneCanStartTimer.title" = "Crew darf auslösen";
+"trigger.everyoneCanStartTimer.subtitle" = "Jeder an Bord kann den Timer starten.";
+"trigger.viewersCanRequest.title" = "Crew fragt — Captain entscheidet";
+"trigger.viewersCanRequest.subtitle" = "Anfrage an dich, du bestätigst.";
+
+/* ── Pirate Ranks ── */
+"rank.cabinBoy"      = "Schiffsjunge";
+"rank.deckhand"      = "Matrose";
+"rank.boatswain"     = "Bootsmann";
+"rank.gunner"        = "Kanonier";
+"rank.navigator"     = "Navigator";
+"rank.quartermaster" = "Quartiermeister";
+"rank.firstMate"     = "Erster Offizier";
+"rank.captain"       = "Kapitän";
+"rank.commodore"     = "Kommodore";
+"rank.admiral"       = "Admiral";
+"rank.pirateKing"    = "Piratenkönig";
+
+/* ── Identity Settings ── */
+"identity.settings.title"           = "Identität";
+"identity.customName.label"         = "Eigener Name";
+"identity.customName.placeholder"   = "z.B. Alex";
+"identity.customName.hint"          = "Überschreibt alles — kein Rang angehängt.";
+"identity.gamecenter.label"         = "Game Center";
+"identity.gamecenter.connected"     = "Verbunden";
+"identity.gamecenter.disconnected"  = "Nicht angemeldet";
+"identity.gamecenter.notSignedIn"   = "Im App-Store unter Einstellungen → Game Center anmelden.";
+"identity.progress.label"           = "Rang-Fortschritt";
+"identity.progress.points"          = "Punkte";
+"identity.progress.hint"            = "Sessions hosten, Fotos machen, Reaktionen senden — alles zählt.";
+"identity.progress.maxRank"         = "Piratenkönig! Alle huldigen dem Herrscher der sieben Meere! 👑";
